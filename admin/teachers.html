@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Teachers – Admin – lvlBase ⚡</title>
+  <link rel="manifest" href="../manifest.json">
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../css/main.css">
+  <link rel="stylesheet" href="../css/admin-bento.css">
+  <script>
+    (function() {
+      var u = JSON.parse(localStorage.getItem('lvlbase_current_user') || 'null');
+      var d = JSON.parse(localStorage.getItem('lvlbase_admin_session') || 'null');
+      if (!(u && u.role === 'admin') && !(d && d.loggedIn && Date.now() - d.loginTime < 28800000)) {
+        window.location.replace('login.html');
+      }
+    })();
+  </script>
+</head>
+<body>
+  <div id="page-loader" style="position:fixed;inset:0;background:#0A0A14;display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:9999;gap:1rem;transition:opacity 0.3s ease">
+    <div style="font-size:2.5rem">⚡</div>
+    <div style="color:#6C63FF;font-weight:700;font-size:0.95rem;letter-spacing:0.05em">lvlBase Admin</div>
+    <div class="admin-loader-bar"></div>
+  </div>
+
+  <div id="sa-sidebar-root"></div>
+
+  <main class="sa-main" id="sa-main" style="opacity:0;transition:opacity 0.25s ease">
+    <div class="sa-topbar">
+      <div style="display:flex;align-items:center;gap:0.75rem">
+        <button id="hamburger-btn" onclick="document.getElementById('sa-sidebar').classList.toggle('open')" style="background:none;border:none;cursor:pointer;color:#F5F5FF;font-size:1.2rem;display:none">&#x2630;</button>
+        <div class="sa-topbar-title">Teacher Management</div>
+      </div>
+      <div class="sa-topbar-actions">
+        <span id="admin-clock" style="font-size:0.78rem;color:#8892A4"></span>
+        <span style="font-size:0.82rem;color:#8892A4">Welcome, <strong style="color:#F5F5FF">Super Admin</strong></span>
+        <a href="../index.html" style="padding:0.4rem 0.9rem;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);border-radius:10px;color:#F5F5FF;font-size:0.8rem;text-decoration:none">View Site</a>
+      </div>
+    </div>
+    <div class="sa-content">
+      <div class="section-heading">Teacher Management</div>
+      <p class="section-sub">View, manage and moderate all registered teachers</p>
+      <div class="sa-table-wrap">
+        <div class="sa-table-head">
+          <div class="sa-table-head-title">All Teachers</div>
+          <div class="sa-table-head-actions">
+            <input type="text" class="sa-input" style="width:200px" placeholder="Search name/email…" oninput="filterTeachers(this.value)" id="teachers-search">
+            <select class="sa-input sa-select" style="width:130px" onchange="renderTeachersTable()" id="teachers-status-filter"><option value="">All Status</option><option value="approved">Active</option><option value="pending">Pending</option><option value="banned">Banned</option></select>
+          </div>
+        </div>
+        <div class="ov-auto"><table class="sa-table"><thead><tr><th>#</th><th>Teacher</th><th>School</th><th>Subjects</th><th>Status</th><th>Joined</th><th>Actions</th></tr></thead><tbody id="teachers-tbody"></tbody></table></div>
+      </div>
+  
+    </div>
+  </main>
+
+  <div id="toast-container" class="toast-container"></div>
+  <script src="../js/popup.js"></script>
+  <script src="shared.js"></script>
+  <script>
+
+    function initPage(){renderTeachersTable();}
+    function filterTeachers(q){document.getElementById('teachers-search').value=q;renderTeachersTable();}
+    function renderTeachersTable(){
+      var search=(document.getElementById('teachers-search')||{}).value||'',sf=(document.getElementById('teachers-status-filter')||{}).value||'';
+      var users=getAllUsers().filter(function(u){return u.role==='teacher';});
+      if(sf)users=users.filter(function(u){return u.status===sf;});
+      if(search)users=users.filter(function(u){return (u.displayName+u.email).toLowerCase().includes(search.toLowerCase());});
+      var tbody=document.getElementById('teachers-tbody');if(!tbody)return;
+      if(!users.length){tbody.innerHTML='<tr><td colspan="7" style="text-align:center;color:#8892A4;padding:1.5rem">No teachers found.</td></tr>';return;}
+      tbody.innerHTML=users.map(function(u,i){var subs=(u.subjects&&u.subjects.length?u.subjects.join(', '):'-');return '<tr><td style="color:#8892A4">'+(i+1)+'</td><td><div style="font-weight:700">'+esc(u.displayName)+'</div><div style="font-size:0.75rem;color:#8892A4">'+esc(u.email)+'</div></td><td style="font-size:0.82rem">'+getSchoolName(u.schoolId)+'</td><td style="font-size:0.82rem;color:#8892A4">'+esc(subs)+'</td><td><span class="badge '+(u.status==='approved'?'badge-green':u.status==='banned'?'badge-red':'badge-amber')+'">'+esc(u.status||'active')+'</span></td><td style="font-size:0.75rem;color:#8892A4">'+new Date(u.createdAt||Date.now()).toLocaleDateString('en-IN')+'</td><td><div class="abg">'+(u.status==='banned'?'<button class="ab ab-unban" onclick="unbanUser(''+esc(u.uid)+'',''+esc(u.displayName)+'')">Unban</button>':'<button class="ab ab-ban" onclick="banUser(''+esc(u.uid)+'',''+esc(u.displayName)+'')">Ban</button>')+'</div></td></tr>';}).join('');
+    }
+  
+    document.addEventListener('DOMContentLoaded', function() {
+      initAdminPage('teachers');
+      if (typeof initPage === 'function') initPage();
+    });
+  </script>
+</body>
+</html>

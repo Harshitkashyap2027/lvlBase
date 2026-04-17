@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Leaderboard – Admin – lvlBase ⚡</title>
+  <link rel="manifest" href="../manifest.json">
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../css/main.css">
+  <link rel="stylesheet" href="../css/admin-bento.css">
+  <script>
+    (function() {
+      var u = JSON.parse(localStorage.getItem('lvlbase_current_user') || 'null');
+      var d = JSON.parse(localStorage.getItem('lvlbase_admin_session') || 'null');
+      if (!(u && u.role === 'admin') && !(d && d.loggedIn && Date.now() - d.loginTime < 28800000)) {
+        window.location.replace('login.html');
+      }
+    })();
+  </script>
+</head>
+<body>
+  <div id="page-loader" style="position:fixed;inset:0;background:#0A0A14;display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:9999;gap:1rem;transition:opacity 0.3s ease">
+    <div style="font-size:2.5rem">⚡</div>
+    <div style="color:#6C63FF;font-weight:700;font-size:0.95rem;letter-spacing:0.05em">lvlBase Admin</div>
+    <div class="admin-loader-bar"></div>
+  </div>
+
+  <div id="sa-sidebar-root"></div>
+
+  <main class="sa-main" id="sa-main" style="opacity:0;transition:opacity 0.25s ease">
+    <div class="sa-topbar">
+      <div style="display:flex;align-items:center;gap:0.75rem">
+        <button id="hamburger-btn" onclick="document.getElementById('sa-sidebar').classList.toggle('open')" style="background:none;border:none;cursor:pointer;color:#F5F5FF;font-size:1.2rem;display:none">&#x2630;</button>
+        <div class="sa-topbar-title">Leaderboard Manager</div>
+      </div>
+      <div class="sa-topbar-actions">
+        <span id="admin-clock" style="font-size:0.78rem;color:#8892A4"></span>
+        <span style="font-size:0.82rem;color:#8892A4">Welcome, <strong style="color:#F5F5FF">Super Admin</strong></span>
+        <a href="../index.html" style="padding:0.4rem 0.9rem;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);border-radius:10px;color:#F5F5FF;font-size:0.8rem;text-decoration:none">View Site</a>
+      </div>
+    </div>
+    <div class="sa-content">
+      <div class="section-heading">Leaderboard Manager</div>
+      <p class="section-sub">View, control and reset global &amp; school leaderboards</p>
+      <div class="bento-grid mb-3">
+        <div class="bc bc-purple bento-1"><div class="bc-stat-label">Total Students</div><div class="bc-stat-value text-purple" id="lb-total">0</div><div class="bc-stat-change">On leaderboard</div></div>
+        <div class="bc bc-green bento-1"><div class="bc-stat-label">Top XP</div><div class="bc-stat-value text-success" id="lb-topxp">0</div><div class="bc-stat-change">#1 student</div></div>
+        <div class="bc bc-amber bento-1"><div class="bc-stat-label">Avg XP</div><div class="bc-stat-value text-accent" id="lb-avgxp">0</div><div class="bc-stat-change">Per student</div></div>
+        <div class="bc bc-yellow bento-2" style="display:flex;align-items:center;gap:1.5rem;flex-wrap:wrap">
+          <div><div class="bc-stat-label" style="margin-bottom:0.5rem">School Filter</div><select class="sa-input sa-select" id="lb-school-filter" onchange="renderLeaderboard()" style="width:180px"><option value="">All Schools</option></select></div>
+          <div style="margin-top:1rem"><button onclick="resetLeaderboardXP()" style="padding:0.55rem 1.2rem;border:none;border-radius:10px;font-weight:700;cursor:pointer;background:rgba(255,68,68,0.18);color:#FF4444;font-family:inherit;font-size:0.83rem">Reset All XP</button></div>
+        </div>
+      </div>
+      <div class="sa-table-wrap">
+        <div class="sa-table-head">
+          <div class="sa-table-head-title">Live Leaderboard</div>
+          <div class="sa-table-head-actions">
+            <input type="text" class="sa-input" style="width:200px" placeholder="Search student…" oninput="filterLeaderboard(this.value)">
+            <button class="ab ab-view" onclick="exportLeaderboard()">Export CSV</button>
+          </div>
+        </div>
+        <div class="ov-auto"><table class="sa-table"><thead><tr><th>Rank</th><th>Student</th><th>School</th><th>XP</th><th>Rank Title</th><th>Streak</th><th>Battles Won</th><th>Actions</th></tr></thead><tbody id="lb-tbody"></tbody></table></div>
+      </div>
+  
+    </div>
+  </main>
+
+  <div id="toast-container" class="toast-container"></div>
+  <script src="../js/popup.js"></script>
+  <script src="shared.js"></script>
+  <script>
+
+    var _lbSearch='';
+    function initPage(){renderLeaderboard();}
+    function filterLeaderboard(q){_lbSearch=q;renderLeaderboard();}
+    function renderLeaderboard(){
+      var students=getAllUsers().filter(function(u){return u.role==='student';});
+      var schoolF=(document.getElementById('lb-school-filter')||{}).value||'';
+      var sel=document.getElementById('lb-school-filter');
+      if(sel&&sel.options.length<=1){getAllSchools().forEach(function(s){var o=document.createElement('option');o.value=s.id;o.textContent=s.name;sel.appendChild(o);});}
+      if(schoolF)students=students.filter(function(u){return u.schoolId===schoolF;});
+      if(_lbSearch){var lbQ=_lbSearch.toLowerCase();students=students.filter(function(u){return (u.displayName+u.email).toLowerCase().includes(lbQ);});}
+      students.sort(function(a,b){return (b.totalXP||0)-(a.totalXP||0);});
+      document.getElementById('lb-total').textContent=students.length;
+      document.getElementById('lb-topxp').textContent=students.length?(students[0].totalXP||0).toLocaleString():0;
+      var avg=students.length?Math.round(students.reduce(function(s,u){return s+(u.totalXP||0);},0)/students.length):0;
+      document.getElementById('lb-avgxp').textContent=avg.toLocaleString();
+      var tbody=document.getElementById('lb-tbody');
+      if(!students.length){tbody.innerHTML='<tr><td colspan="8" style="text-align:center;color:#8892A4;padding:1.5rem">No students found.</td></tr>';return;}
+      var medals=['🥇','🥈','🥉'];
+      tbody.innerHTML=students.map(function(u,i){return '<tr><td style="font-weight:700;font-size:1.1rem">'+(medals[i]||(i+1))+'</td><td><div style="font-weight:700">'+esc(u.displayName)+'</div><div style="font-size:0.75rem;color:#8892A4">'+esc(u.email)+'</div></td><td style="font-size:0.82rem">'+getSchoolName(u.schoolId)+'</td><td style="font-weight:700;color:#6C63FF">'+(parseInt(u.totalXP)||0).toLocaleString()+'</td><td><span class="badge badge-purple">'+getRank(parseInt(u.totalXP)||0)+'</span></td><td style="color:#FFD60A">'+(parseInt(u.streak)||0)+'d</td><td>'+(parseInt(u.battlesWon)||0)+'</td><td><div class="abg"><button class="ab ab-boost" onclick="boostUserXP(\''+esc(u.uid)+'\',\''+esc(u.displayName)+'\')">+XP</button><button class="ab ab-ban" onclick="resetStudentXP(\''+esc(u.uid)+'\',\''+esc(u.displayName)+'\')">Reset XP</button></div></td></tr>';}).join('');
+    }
+    function resetStudentXP(uid,name){lvlPopup.confirm('Reset XP','Reset all XP for '+name+' to 0?',{confirmLabel:'Reset',confirmStyle:'danger',type:'error'}).then(function(c){if(!c)return;var u=getAllUsers(),i=u.findIndex(function(x){return x.uid===uid;});if(i!==-1){u[i].totalXP=0;saveUsers(u);}lvlPopup.toast(name+' XP reset to 0','warning');auditLog('XP Reset',name);renderLeaderboard();});}
+    function resetLeaderboardXP(){lvlPopup.confirm('Reset ALL XP','This will set every student's XP to 0. Cannot be undone!',{confirmLabel:'Reset All',confirmStyle:'danger',type:'error'}).then(function(c){if(!c)return;var u=getAllUsers();u.forEach(function(x){if(x.role==='student')x.totalXP=0;});saveUsers(u);lvlPopup.toast('All student XP reset to 0','warning');auditLog('Full XP Reset','All students');renderLeaderboard();});}
+    function exportLeaderboard(){var students=getAllUsers().filter(function(u){return u.role==='student';}).sort(function(a,b){return (b.totalXP||0)-(a.totalXP||0);});var csv='Rank,Name,Email,School,XP,Rank Title,Streak\n'+students.map(function(u,i){return (i+1)+',"'+esc(u.displayName)+'","'+esc(u.email)+'","'+getSchoolName(u.schoolId)+'",'+(u.totalXP||0)+',"'+getRank(u.totalXP||0)+'",'+(u.streak||0);}).join('\n');var blob=new Blob([csv],{type:'text/csv'}),a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='leaderboard-'+new Date().toISOString().slice(0,10)+'.csv';a.click();auditLog('Leaderboard exported','CSV');}
+  
+    document.addEventListener('DOMContentLoaded', function() {
+      initAdminPage('leaderboard');
+      if (typeof initPage === 'function') initPage();
+    });
+  </script>
+</body>
+</html>

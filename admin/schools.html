@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Schools – Admin – lvlBase ⚡</title>
+  <link rel="manifest" href="../manifest.json">
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../css/main.css">
+  <link rel="stylesheet" href="../css/admin-bento.css">
+  <script>
+    (function() {
+      var u = JSON.parse(localStorage.getItem('lvlbase_current_user') || 'null');
+      var d = JSON.parse(localStorage.getItem('lvlbase_admin_session') || 'null');
+      if (!(u && u.role === 'admin') && !(d && d.loggedIn && Date.now() - d.loginTime < 28800000)) {
+        window.location.replace('login.html');
+      }
+    })();
+  </script>
+</head>
+<body>
+  <div id="page-loader" style="position:fixed;inset:0;background:#0A0A14;display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:9999;gap:1rem;transition:opacity 0.3s ease">
+    <div style="font-size:2.5rem">⚡</div>
+    <div style="color:#6C63FF;font-weight:700;font-size:0.95rem;letter-spacing:0.05em">lvlBase Admin</div>
+    <div class="admin-loader-bar"></div>
+  </div>
+
+  <div id="sa-sidebar-root"></div>
+
+  <main class="sa-main" id="sa-main" style="opacity:0;transition:opacity 0.25s ease">
+    <div class="sa-topbar">
+      <div style="display:flex;align-items:center;gap:0.75rem">
+        <button id="hamburger-btn" onclick="document.getElementById('sa-sidebar').classList.toggle('open')" style="background:none;border:none;cursor:pointer;color:#F5F5FF;font-size:1.2rem;display:none">&#x2630;</button>
+        <div class="sa-topbar-title">School Management</div>
+      </div>
+      <div class="sa-topbar-actions">
+        <span id="admin-clock" style="font-size:0.78rem;color:#8892A4"></span>
+        <span style="font-size:0.82rem;color:#8892A4">Welcome, <strong style="color:#F5F5FF">Super Admin</strong></span>
+        <a href="../index.html" style="padding:0.4rem 0.9rem;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);border-radius:10px;color:#F5F5FF;font-size:0.8rem;text-decoration:none">View Site</a>
+      </div>
+    </div>
+    <div class="sa-content">
+      <div class="section-heading">School Management</div>
+      <p class="section-sub">Verify, reject or manage school registrations</p>
+      <div class="sa-table-wrap">
+        <div class="sa-table-head">
+          <div class="sa-table-head-title">All Schools</div>
+          <div class="sa-table-head-actions">
+            <input type="text" class="sa-input" style="width:200px" placeholder="Search…" oninput="filterSchools(this.value)">
+            <select class="sa-input sa-select" style="width:150px" onchange="renderSchoolsTable()" id="school-filter">
+              <option value="all">All Status</option><option value="pending">Pending</option><option value="verified">Verified</option><option value="rejected">Rejected</option>
+            </select>
+          </div>
+        </div>
+        <div class="ov-auto"><table class="sa-table"><thead><tr><th>School</th><th>Principal</th><th>Location</th><th>Admin Email</th><th>Registered</th><th>Status</th><th>Actions</th></tr></thead><tbody id="schools-tbody"></tbody></table></div>
+      </div>
+  
+    </div>
+  </main>
+
+  <div id="toast-container" class="toast-container"></div>
+  <script src="../js/popup.js"></script>
+  <script src="shared.js"></script>
+  <script>
+
+    var _schoolSearch='';
+    function initPage(){renderSchoolsTable();}
+    function filterSchools(q){_schoolSearch=q;renderSchoolsTable();}
+    function renderSchoolsTable(){
+      var f=(document.getElementById('school-filter')||{}).value||'all';
+      var schools=getAllSchools();
+      if(f!=='all')schools=schools.filter(function(s){return s.status===f;});
+      if(_schoolSearch)schools=schools.filter(function(s){return (s.name+s.adminEmail+(s.city||'')+(s.principal||'')).toLowerCase().includes(_schoolSearch.toLowerCase());});
+      var tbody=document.getElementById('schools-tbody');
+      if(!schools.length){tbody.innerHTML='<tr><td colspan="7" style="text-align:center;color:#8892A4;padding:1.5rem">No schools found.</td></tr>';return;}
+      tbody.innerHTML=schools.map(function(s){
+        return '<tr><td><div style="font-weight:700">'+esc(s.name)+'</div><div style="font-size:0.75rem;color:#8892A4">'+(s.totalStudents?esc(String(s.totalStudents))+' cap':'')+'</div></td><td>'+esc(s.principal||'-')+'</td><td style="font-size:0.82rem;color:#8892A4">'+esc((s.city||'')+', '+(s.state||''))+'</td><td style="font-size:0.8rem;color:#8892A4">'+esc(s.adminEmail||'-')+'</td><td style="font-size:0.78rem;color:#8892A4">'+new Date(s.createdAt||Date.now()).toLocaleDateString('en-IN')+'</td><td><span class="badge '+(s.status==='verified'?'badge-green':s.status==='rejected'?'badge-red':'badge-amber')+'">'+(s.status==='verified'?'Verified':s.status==='rejected'?'Rejected':'Pending')+'</span></td><td><div class="abg">'+(s.status!=='verified'?'<button class="ab ab-verify" onclick="verifySchool(''+esc(s.id)+'')">Verify</button>':'')+(s.status!=='rejected'?'<button class="ab ab-reject" onclick="rejectSchool(''+esc(s.id)+'')">Reject</button>':'')+'</div></td></tr>';
+      }).join('');
+    }
+    function verifySchool(id){lvlPopup.confirm('Verify School','Grant this school full dashboard access?',{confirmLabel:'Verify',confirmStyle:'success'}).then(function(c){if(!c)return;var sc=getAllSchools(),i=sc.findIndex(function(s){return s.id===id;});if(i!==-1){sc[i].status='verified';sc[i].verifiedAt=new Date().toISOString();delete sc[i].adminPassword;saveSchools(sc);}lvlPopup.toast('School verified!','success');auditLog('School verified',id);renderSchoolsTable();updateBadges();});}
+    function rejectSchool(id){lvlPopup.confirm('Reject School','The school admin will lose platform access.',{confirmLabel:'Reject',confirmStyle:'danger',type:'error'}).then(function(c){if(!c)return;var sc=getAllSchools(),i=sc.findIndex(function(s){return s.id===id;});if(i!==-1){sc[i].status='rejected';delete sc[i].adminPassword;saveSchools(sc);}lvlPopup.toast('School rejected.','warning');auditLog('School rejected',id);renderSchoolsTable();updateBadges();});}
+  
+    document.addEventListener('DOMContentLoaded', function() {
+      initAdminPage('schools');
+      if (typeof initPage === 'function') initPage();
+    });
+  </script>
+</body>
+</html>
