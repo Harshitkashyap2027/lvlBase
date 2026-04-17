@@ -3,8 +3,8 @@
 // inline scripts in HTML pages can use them without ES module syntax.
 
 import {
-  auth, db, FIREBASE_LIVE,
-  signInWithEmailAndPassword, createUserWithEmailAndPassword, firebaseSignOut,
+  auth, db, googleProvider, FIREBASE_LIVE,
+  signInWithEmailAndPassword, createUserWithEmailAndPassword, firebaseSignOut, signInWithPopup,
   doc, setDoc, getDoc, collection, query, where, getDocs, serverTimestamp
 } from './firebase-config.js';
 
@@ -70,6 +70,22 @@ window.fb = {
       if (snap.empty) return null;
       return snap.docs[0].data();
     } catch (e) { console.warn('Firestore getUserByEmail failed:', e.message); return null; }
+  },
+
+  /** Sign in with Google popup. Returns the user credential. */
+  async signInWithGoogle() {
+    if (!FIREBASE_LIVE || !auth || !googleProvider) return null;
+    return await signInWithPopup(auth, googleProvider);
+  },
+
+  /** Fetch all verified schools from Firestore. Returns array or null. */
+  async getSchools() {
+    if (!FIREBASE_LIVE || !db) return null;
+    try {
+      const q = query(collection(db, 'schools'), where('status', '==', 'verified'));
+      const snap = await getDocs(q);
+      return snap.docs.map(d => d.data());
+    } catch (e) { console.warn('Firestore getSchools failed:', e.message); return null; }
   }
 };
 
