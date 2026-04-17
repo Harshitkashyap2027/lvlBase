@@ -149,6 +149,7 @@
     </div>
   </div>
 
+  <script type="module" src="js/firebase-bridge.js"></script>
   <script src="js/popup.js"></script>
   <script>
     let currentStep = 1;
@@ -229,9 +230,7 @@
         formData.phone = document.getElementById('school-phone').value.trim();
         formData.email = document.getElementById('school-email').value.trim();
         formData.adminEmail = document.getElementById('admin-email').value.trim();
-        // Password is validated but NOT stored - only used for login hash
-        const rawPw = document.getElementById('admin-password').value;
-        formData._pwLen = rawPw.length; // store only length for validation reference
+        formData.adminPassword = document.getElementById('admin-password').value;
       }
     }
 
@@ -259,9 +258,9 @@
       document.getElementById('submit-text').style.display = 'none';
       document.getElementById('submit-spinner').style.display = 'inline-block';
 
-      setTimeout(() => {
+      async function doSubmit() {
         try {
-          // Save school to localStorage
+          // Save school to localStorage (always, as fallback)
           const schools = JSON.parse(localStorage.getItem('lvlbase_schools') || '[]');
           const school = {
             id: 'school_' + Date.now(),
@@ -275,14 +274,43 @@
             email: formData.email,
             website: formData.website || '',
             totalStudents: formData.totalStudents || '',
-            adminEmail: formData.adminEmail,
+            adminEmail: formData.adminEmail.toLowerCase(),
             adminName: formData.adminName,
+            adminPassword: formData.adminPassword,  // required for localStorage login
             status: 'pending',
             createdAt: new Date().toISOString(),
             verifiedAt: null
           };
           schools.push(school);
           localStorage.setItem('lvlbase_schools', JSON.stringify(schools));
+
+          // Create Firebase Auth account for school admin + save school to Firestore
+          if (window.fb && window.fb.live) {
+            try {
+              // Create Firebase Auth account for admin (password handled by Firebase Auth)
+              const cred = await window.fb.signUp(formData.adminEmail, formData.adminPassword);
+              const uid = cred.user.uid;
+
+              // Save school data to Firestore (password NOT stored in Firestore — Firebase Auth handles it)
+              const firestoreSchool = { ...school, adminUid: uid };
+              delete firestoreSchool.adminPassword;
+              await window.fb.saveSchool(firestoreSchool);
+
+              // Save admin user profile to Firestore
+              await window.fb.saveUser(uid, {
+                uid,
+                email: formData.adminEmail.toLowerCase(),
+                displayName: formData.adminName,
+                role: 'school_admin',
+                schoolId: school.id,
+                status: 'pending',
+                createdAt: new Date().toISOString()
+              });
+            } catch (fbErr) {
+              // Log Firebase error but don't block the flow — localStorage save already succeeded
+              console.warn('Firebase save warning:', fbErr.message);
+            }
+          }
 
           // Build WhatsApp message
           const waMsg = `Hello Admin,\n\n*New School Registration on lvlBase* 🏫\n\n📋 *School Details:*\n🏫 School Name: ${school.name}\n👤 Principal: ${school.principal}\n👨‍💼 Admin: ${school.adminName}\n📍 Address: ${school.address}, ${school.city}, ${school.state} - ${school.pincode}\n📞 Phone: ${school.phone}\n📧 Email: ${school.email}\n🌐 Website: ${school.website || 'N/A'}\n👨‍🎓 Students: ${school.totalStudents || 'N/A'}\n\nPlease verify this school at:\n👉 https://lvlbase.vercel.app/admin/\n\nThank you!`;
@@ -301,9 +329,10 @@
           document.getElementById('submit-text').style.display = 'inline';
           document.getElementById('submit-spinner').style.display = 'none';
         }
-      }, 900);
+      }
+
+      setTimeout(doSubmit, 900);
     }
   </script>
-  <script src="js/popup.js"></script>
 </body>
 </html>

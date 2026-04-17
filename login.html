@@ -80,6 +80,7 @@
     </div>
   </div>
 
+  <script type="module" src="js/firebase-bridge.js"></script>
   <script src="js/popup.js"></script>
   <script>
     // Redirect if already logged in
@@ -96,7 +97,7 @@
       return map[role] || 'dashboard.html';
     }
 
-    function handleLogin() {
+    async function handleLogin() {
       const email = document.getElementById('login-email').value.trim();
       const password = document.getElementById('login-password').value;
       if (!email || !password) { lvlPopup.toast('Please fill in all fields', 'error'); return; }
@@ -107,22 +108,20 @@
       document.getElementById('login-spinner').style.display = 'inline-block';
       document.getElementById('login-error').style.display = 'none';
 
-      setTimeout(() => {
-        try {
-          const profile = loginUser(email, password);
-          lvlPopup.toast('Welcome back, ' + profile.displayName + '! 🎮', 'success');
-          setTimeout(() => window.location.href = getDashboardUrl(profile.role), 700);
-        } catch(e) {
-          document.getElementById('login-error').textContent = e.message;
-          document.getElementById('login-error').style.display = 'block';
-          btn.disabled = false;
-          document.getElementById('login-text').style.display = 'inline';
-          document.getElementById('login-spinner').style.display = 'none';
-        }
-      }, 600);
+      try {
+        const profile = await loginUser(email, password);
+        lvlPopup.toast('Welcome back, ' + profile.displayName + '! 🎮', 'success');
+        setTimeout(() => window.location.href = getDashboardUrl(profile.role), 700);
+      } catch(e) {
+        document.getElementById('login-error').textContent = e.message;
+        document.getElementById('login-error').style.display = 'block';
+        btn.disabled = false;
+        document.getElementById('login-text').style.display = 'inline';
+        document.getElementById('login-spinner').style.display = 'none';
+      }
     }
 
-    function loginUser(email, password) {
+    async function loginUser(email, password) {
       const lower = email.toLowerCase().trim();
       // Super admin
       if (lower === 'admin@lvlbase.com' && password === 'admin123') {
@@ -131,6 +130,58 @@
         localStorage.setItem('lvlbase_user_profile', JSON.stringify(p));
         return p;
       }
+
+      // Try Firebase Auth when available
+      if (window.fb && window.fb.live) {
+        try {
+          const cred = await window.fb.signIn(lower, password);
+          const uid = cred.user.uid;
+
+          // Check if this is a school admin in Firestore
+          const schoolData = await window.fb.getSchoolByAdminEmail(lower);
+          if (schoolData) {
+            const p = {
+              uid,
+              email: lower,
+              displayName: schoolData.adminName || schoolData.principal,
+              role: 'school_admin',
+              status: schoolData.status === 'verified' ? 'approved' : 'pending',
+              schoolId: schoolData.id,
+              schoolStatus: schoolData.status
+            };
+            localStorage.setItem('lvlbase_current_user', JSON.stringify(p));
+            localStorage.setItem('lvlbase_user_profile', JSON.stringify(p));
+            return p;
+          }
+
+          // Regular user — fetch profile from Firestore
+          let userData = await window.fb.getUser(uid);
+          if (!userData) {
+            // Try matching by email in local storage
+            const users = JSON.parse(localStorage.getItem('lvlbase_all_users') || '[]');
+            userData = users.find(u => u.email && u.email.toLowerCase() === lower) || null;
+          }
+          if (userData) {
+            userData.lastLogin = new Date().toISOString();
+            localStorage.setItem('lvlbase_current_user', JSON.stringify(userData));
+            localStorage.setItem('lvlbase_user_profile', JSON.stringify(userData));
+            return userData;
+          }
+
+          // Firebase Auth succeeded but no profile found — create minimal profile
+          const p = { uid, email: lower, displayName: lower.split('@')[0], role: 'student', status: 'active' };
+          localStorage.setItem('lvlbase_current_user', JSON.stringify(p));
+          localStorage.setItem('lvlbase_user_profile', JSON.stringify(p));
+          return p;
+        } catch (fbErr) {
+          // Firebase auth failed — fall through to localStorage check
+          if (fbErr.code && fbErr.code !== 'auth/user-not-found' && fbErr.code !== 'auth/wrong-password' && fbErr.code !== 'auth/invalid-credential') {
+            throw new Error(fbErr.message || 'Login failed');
+          }
+        }
+      }
+
+      // Fallback: localStorage-based login
       // School admin
       const schools = JSON.parse(localStorage.getItem('lvlbase_schools') || '[]');
       const school = schools.find(s => s.adminEmail && s.adminEmail.toLowerCase() === lower && s.adminPassword === password);
@@ -144,7 +195,6 @@
       const users = JSON.parse(localStorage.getItem('lvlbase_all_users') || '[]');
       const user = users.find(u => u.email && u.email.toLowerCase() === lower);
       if (!user) throw new Error('No account found with this email. Please sign up first.');
-      // Demo: any password works (no password hashing in this localStorage demo)
       user.lastLogin = new Date().toISOString();
       const idx = users.findIndex(u => u.uid === user.uid);
       if (idx !== -1) { users[idx] = user; localStorage.setItem('lvlbase_all_users', JSON.stringify(users)); }

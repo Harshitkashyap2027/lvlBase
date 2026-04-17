@@ -142,6 +142,10 @@
   <script type="module">
     import { startListening, stopListening, getIsListening, speak, stopSpeaking, getIsSpeaking,
              setTTSEnabled, getTTSEnabled, STT_SUPPORTED, TTS_SUPPORTED } from './js/voice-ai.js';
+    import { GEMINI_API_URL } from './js/ai-assistant.js';
+
+    // ── Gemini API key — paste your key from https://aistudio.google.com/app/apikey ──
+    const GEMINI_API_KEY = "YOUR_GEMINI_API_KEY";
 
     // ── Voice support detection ───────────────────────────────────────────────
     let ttsOn = true;
@@ -263,14 +267,35 @@
       showTyping();
       document.getElementById('send-btn').disabled = true;
 
-      const delay = 600 + Math.random() * 800;
-      setTimeout(() => {
-        removeTyping();
-        const response = getResponse(text);
-        addMessage(response, false);
-        document.getElementById('send-btn').disabled = false;
-        input.focus();
-      }, delay);
+      let response;
+      // Try Gemini API first
+      try {
+        const res = await fetch(`${GEMINI_API_URL}?key=${GEMINI_API_KEY}`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            contents: [{
+              parts: [{ text: `You are Sage, an AI study companion for Indian school students (grades 6–12). Answer this question helpfully and concisely: ${text}` }]
+            }]
+          })
+        });
+        if (res.ok) {
+          const data = await res.json();
+          response = data?.candidates?.[0]?.content?.parts?.[0]?.text || null;
+        }
+      } catch (_) {
+        // Network error or API unavailable — fall back to local responses
+      }
+
+      // Fall back to local responses if Gemini failed or returned nothing
+      if (!response) {
+        response = getResponse(text);
+      }
+
+      removeTyping();
+      addMessage(response, false);
+      document.getElementById('send-btn').disabled = false;
+      input.focus();
     }
 
     window.sendQuick = function(prompt) {

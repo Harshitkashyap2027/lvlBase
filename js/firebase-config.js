@@ -6,29 +6,32 @@
 // Get it from: Firebase Console → Project settings → Cloud Messaging → Web Push certificates
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-import { getAuth, GoogleAuthProvider } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-import { getFirestore, doc, getDoc, setDoc, updateDoc, onSnapshot, collection, query, orderBy, limit, serverTimestamp }
+import { getAuth, GoogleAuthProvider,
+         signInWithEmailAndPassword, createUserWithEmailAndPassword,
+         signOut as firebaseSignOut }
+  from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+import { getFirestore, doc, getDoc, setDoc, updateDoc, onSnapshot, collection, query,
+         orderBy, limit, where, getDocs, serverTimestamp }
   from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 import { getMessaging, getToken, onMessage } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-messaging.js";
 import { getStorage } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-storage.js";
 
-// ─── Your Firebase project credentials ────────────────────────────────────────
+// ─── Firebase project credentials ─────────────────────────────────────────────
 const firebaseConfig = {
-  apiKey: "YOUR_API_KEY",
-  authDomain: "YOUR_AUTH_DOMAIN",
-  projectId: "YOUR_PROJECT_ID",
-  storageBucket: "YOUR_STORAGE_BUCKET",
-  messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
-  appId: "YOUR_APP_ID",
-  measurementId: "YOUR_MEASUREMENT_ID" // remove if Google Analytics is not enabled
+  apiKey: "AIzaSyAO6FNdpr87WPGjXEdfEs5bjB_4T2ZpzZg",
+  authDomain: "lvlbase.firebaseapp.com",
+  projectId: "lvlbase",
+  storageBucket: "lvlbase.firebasestorage.app",
+  messagingSenderId: "493311771136",
+  appId: "1:493311771136:web:35428db96267a1f55c4ee5",
+  measurementId: "G-5GRYW6F3M8"
 };
 
 // Your VAPID (Web Push) public key — from Firebase Console → Cloud Messaging
 export const FCM_VAPID_KEY = "YOUR_VAPID_KEY";
 
-// Set FIREBASE_LIVE = true once you have real credentials in firebaseConfig above.
-// When false, all Firebase calls are silently skipped and localStorage demo mode is used.
-export const FIREBASE_LIVE = false;
+// Firebase is now live with real credentials.
+export const FIREBASE_LIVE = true;
 
 // ─── Initialise ───────────────────────────────────────────────────────────────
 let app, auth, db, googleProvider, messaging, storage;
@@ -113,4 +116,5 @@ export function onForegroundMessage(callback) {
 }
 
 export { app, auth, db, googleProvider, messaging, storage,
-         doc, getDoc, setDoc, updateDoc, onSnapshot, collection, query, orderBy, limit, serverTimestamp };
+         doc, getDoc, setDoc, updateDoc, onSnapshot, collection, query, orderBy, limit, serverTimestamp,
+         where, getDocs, signInWithEmailAndPassword, createUserWithEmailAndPassword, firebaseSignOut };
