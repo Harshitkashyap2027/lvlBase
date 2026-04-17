@@ -34,13 +34,20 @@
     .chat-input:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 3px rgba(108,99,255,0.15); }
     .send-btn { width: 44px; height: 44px; border-radius: 50%; background: linear-gradient(135deg, var(--primary), var(--primary-dark)); border: none; color: white; font-size: 1.1rem; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: var(--transition); flex-shrink: 0; }
     .send-btn:hover { transform: scale(1.1); }
-    .thinking-dots { display: flex; gap: 4px; align-items: center; }
-    .thinking-dot { width: 6px; height: 6px; background: var(--text-muted); border-radius: 50%; animation: bounce 1s ease-in-out infinite; }
-    .thinking-dot:nth-child(2) { animation-delay: 0.15s; }
-    .thinking-dot:nth-child(3) { animation-delay: 0.3s; }
-    .welcome-msg { text-align: center; padding: 3rem 1rem; color: var(--text-muted); }
-    .welcome-msg .big-emoji { font-size: 4rem; margin-bottom: 1rem; }
-    @media (max-width: 768px) { .chat-sidebar { display: none; } }
+    .voice-btn { width: 44px; height: 44px; border-radius: 50%; border: none; color: white; font-size: 1.1rem; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: var(--transition); flex-shrink: 0; }
+    .voice-btn-mic { background: linear-gradient(135deg, #00D1B2, #009e86); }
+    .voice-btn-mic.listening { background: linear-gradient(135deg, #FF4444, #cc0000); animation: pulse-ring 1s ease-in-out infinite; }
+    .voice-btn-tts { background: linear-gradient(135deg, #FFA500, #e08700); }
+    .voice-btn-tts.tts-off { background: rgba(255,255,255,0.1); color: var(--text-muted); }
+    @keyframes pulse-ring { 0%,100% { box-shadow: 0 0 0 0 rgba(255,68,68,0.5); } 50% { box-shadow: 0 0 0 8px rgba(255,68,68,0); } }
+    .listening-banner { display: none; align-items: center; gap: 0.5rem; padding: 0.5rem 0.75rem; background: rgba(255,68,68,0.1); border: 1px solid rgba(255,68,68,0.3); border-radius: var(--radius); font-size: 0.8rem; color: #FF4444; font-weight: 600; margin-bottom: 0.5rem; }
+    .listening-banner.active { display: flex; }
+    .voice-bar { width: 4px; height: 14px; background: #FF4444; border-radius: 2px; animation: voiceBar 0.6s ease-in-out infinite alternate; }
+    .voice-bar:nth-child(2) { animation-delay: 0.1s; height: 10px; }
+    .voice-bar:nth-child(3) { animation-delay: 0.2s; height: 18px; }
+    .voice-bar:nth-child(4) { animation-delay: 0.3s; height: 8px; }
+    @keyframes voiceBar { from { transform: scaleY(0.5); } to { transform: scaleY(1.5); } }
+    .voice-not-supported { font-size: 0.75rem; color: var(--text-muted); padding: 0.25rem 0; }
   </style>
 </head>
 <body>
@@ -112,34 +119,62 @@
           <button class="btn btn-ghost btn-sm" onclick="sendQuick('English grammar tips')">📚 English</button>
           <button class="btn btn-ghost btn-sm" onclick="sendQuick('Study tips')">💡 Tips</button>
         </div>
+        <!-- Listening status banner -->
+        <div class="listening-banner" id="listening-banner">
+          <div class="voice-bar"></div><div class="voice-bar"></div><div class="voice-bar"></div><div class="voice-bar"></div>
+          <span id="interim-text">Listening… speak now</span>
+        </div>
         <div class="chat-input-row">
-          <textarea class="chat-input" id="chat-input" placeholder="Ask Sage anything... (e.g., 'Explain quadratic equations')" rows="1" onkeydown="handleKeyDown(event)"></textarea>
+          <textarea class="chat-input" id="chat-input" placeholder="Ask Sage anything… or tap 🎤 to speak" rows="1" onkeydown="handleKeyDown(event)"></textarea>
+          <!-- Mic button -->
+          <button class="voice-btn voice-btn-mic" id="mic-btn" title="Voice input" onclick="toggleMic()">🎤</button>
+          <!-- TTS toggle -->
+          <button class="voice-btn voice-btn-tts" id="tts-btn" title="Toggle voice responses" onclick="toggleTTS()">🔊</button>
           <button class="send-btn" onclick="sendMessage()" id="send-btn">➤</button>
         </div>
+        <div id="voice-support-msg" class="voice-not-supported" style="display:none"></div>
       </div>
     </div>
   </div>
 
   <div id="toast-container" class="toast-container"></div>
 
-  <script>
+  <script type="module">
+    import { startListening, stopListening, getIsListening, speak, stopSpeaking, getIsSpeaking,
+             setTTSEnabled, getTTSEnabled, STT_SUPPORTED, TTS_SUPPORTED } from './js/voice-ai.js';
+
+    // ── Voice support detection ───────────────────────────────────────────────
+    let ttsOn = true;
+    const supportMsg = document.getElementById('voice-support-msg');
+    if (!STT_SUPPORTED) {
+      supportMsg.style.display = 'block';
+      supportMsg.textContent = '⚠️ Voice input not supported in this browser. Use Chrome or Edge for full voice features.';
+      document.getElementById('mic-btn').disabled = true;
+      document.getElementById('mic-btn').style.opacity = '0.4';
+    }
+    if (!TTS_SUPPORTED) {
+      document.getElementById('tts-btn').disabled = true;
+      document.getElementById('tts-btn').style.opacity = '0.4';
+    }
+
+    // ── AI Responses ─────────────────────────────────────────────────────────
     const AI_RESPONSES = {
       greeting: ["Hello, Champion! 👋 I'm Sage, your AI study companion. What would you like to learn today?", "Hey there, Scholar! ⚡ Ready to level up your knowledge? Ask me anything!", "Hi! 🌟 I'm here to help you master your subjects. What's on your mind?"],
       math_algebra: "**Algebra Fundamentals** 📊\n\nAlgebra uses letters to represent unknown values.\n\n**Golden Rule:** Whatever you do to one side, do to the other!\n\n**Solving equations step-by-step:**\nExample: 2x + 5 = 13\n• Step 1: 2x = 13 - 5 = 8\n• Step 2: x = 8 ÷ 2 = **4** ✅\n\n**Tips:**\n• Isolate the variable\n• Keep equations balanced\n• Check your answer by substituting back\n• Practice with BODMAS: Brackets, Orders, Division, Multiplication, Addition, Subtraction",
       math_geometry: "**Geometry Essentials** 📐\n\nKey formulas to remember:\n\n• **Circle:** Area = πr², Circumference = 2πr\n• **Rectangle:** Area = l×w, Perimeter = 2(l+w)\n• **Triangle:** Area = ½×b×h\n• **Sum of angles in triangle** = 180°\n• **Pythagorean theorem:** a² + b² = c²\n\n**Pro Tip:** Always draw a diagram! Visual representation makes geometry 3x easier. Label all known values first. 🎨",
       math: "Great math question! 📐 **Mathematics Tips:**\n\n• **Show every step** – partial marks matter!\n• For algebra: **isolate the variable**\n• For geometry: **draw diagrams first**\n• For word problems: **identify given + unknown**\n• For percentages: **x% of N = (x/100) × N**\n\nWhat specific math topic do you need help with? (algebra, geometry, trigonometry, statistics?)",
-      science_biology: "**Biology Key Concepts** 🧬\n\n**Cell Organelles:**\n• **Nucleus:** Control center (contains DNA)\n• **Mitochondria:** Powerhouse (produces ATP energy)\n• **Ribosomes:** Protein synthesis\n• **Cell membrane:** Controls entry/exit\n\n**Photosynthesis:**\n6CO₂ + 6H₂O + Light → C₆H₁₂O₆ + 6O₂\n\n**Respiration:**\nC₆H₁₂O₆ + 6O₂ → 6CO₂ + 6H₂O + Energy\n\n**Mnemonic for Kingdoms:** *Kings Play Chess On Fine Green Silk* (Kindom, Phylum, Class, Order, Family, Genus, Species) 🌱",
+      science_biology: "**Biology Key Concepts** 🧬\n\n**Cell Organelles:**\n• **Nucleus:** Control center (contains DNA)\n• **Mitochondria:** Powerhouse (produces ATP energy)\n• **Ribosomes:** Protein synthesis\n• **Cell membrane:** Controls entry/exit\n\n**Photosynthesis:**\n6CO₂ + 6H₂O + Light → C₆H₁₂O₆ + 6O₂\n\n**Respiration:**\nC₆H₁₂O₆ + 6O₂ → 6CO₂ + 6H₂O + Energy\n\n**Mnemonic for Kingdoms:** *Kings Play Chess On Fine Green Silk* 🌱",
       science_chemistry: "**Chemistry Fundamentals** ⚗️\n\n**Periodic Table Tips:**\n• Groups (vertical columns): Same valence electrons\n• Periods (horizontal rows): Same electron shells\n• Metals on left, Non-metals on right\n\n**Common Reactions:**\n• Acid + Base → Salt + Water\n• Metal + Acid → Salt + H₂\n• Combustion: Fuel + O₂ → CO₂ + H₂O\n\n**Balancing Equations:**\n1. Write unbalanced equation\n2. Count atoms on each side\n3. Add coefficients (not subscripts!)\n4. Verify balance ⚖️",
       science_physics: "**Physics Core Concepts** ⚡\n\n**Newton's Laws:**\n1. **Inertia:** Objects stay at rest/motion unless acted upon\n2. **F = ma** (Force = mass × acceleration)\n3. **Action-Reaction:** Every action has equal & opposite reaction\n\n**Key Formulas:**\n• Speed = Distance ÷ Time\n• KE = ½mv²\n• PE = mgh\n• Ohm's Law: V = IR\n• Power = Work ÷ Time\n\n**Study Tip:** Always check your **units** – they tell you what formula to use! 🔭",
-      science: "Science covers three amazing areas! 🔬\n\n**Biology** 🧬 – Life and living organisms\n**Chemistry** ⚗️ – Matter and reactions\n**Physics** ⚡ – Forces, energy, and motion\n\n**Study Tips:**\n• For Biology: Use mnemonics and diagrams\n• For Chemistry: Balance equations systematically\n• For Physics: Understand concepts, then formulas\n• Practice past papers under timed conditions\n\nWhich branch would you like to explore deeper?",
+      science: "Science covers three amazing areas! 🔬\n\n**Biology** 🧬 – Life and living organisms\n**Chemistry** ⚗️ – Matter and reactions\n**Physics** ⚡ – Forces, energy, and motion\n\n**Study Tips:**\n• For Biology: Use mnemonics and diagrams\n• For Chemistry: Balance equations systematically\n• For Physics: Understand concepts, then formulas\n\nWhich branch would you like to explore deeper?",
       english_grammar: "**English Grammar Guide** ✍️\n\n**Parts of Speech:**\n• **Noun:** Person, place, thing (dog, school, joy)\n• **Verb:** Action/state (run, is, become)\n• **Adjective:** Describes noun (beautiful, old)\n• **Adverb:** Describes verb/adjective (quickly, very)\n\n**Common Mistakes:**\n• Your vs **You're** (possessive vs 'you are')\n• Their/There/**They're**\n• Its vs **It's** (possessive vs 'it is')\n\n**Perfect vs Simple:**\n• Simple Past: 'She *went*'\n• Present Perfect: 'She *has gone*' ✅",
-      english_literature: "**Literature Analysis** 📖\n\n**Key Literary Devices:**\n• **Simile:** Comparison using 'like/as' – 'brave as a lion'\n• **Metaphor:** Direct comparison – 'life is a journey'\n• **Personification:** Human qualities to non-humans\n• **Alliteration:** Repeated consonants – 'Peter Piper picked'\n• **Irony:** Saying opposite of what you mean\n\n**Essay Structure (PEEL):**\n1. **P**oint – State your argument\n2. **E**vidence – Quote from text\n3. **E**xplain – Analyze the evidence\n4. **L**ink – Connect back to question\n\n**Famous Works:** Shakespeare, Dickens, Austen, Tagore 🎭",
-      english: "English mastery opens every door! 📚\n\n**Four Key Areas:**\n• **Reading:** Comprehension, inference, vocabulary\n• **Writing:** Essays, letters, stories, reports\n• **Grammar:** Rules for correct language use\n• **Literature:** Analyzing texts and poetry\n\n**Daily Habits:**\n• 📖 Read for 20 minutes daily\n• 📝 Learn 5 new words per day\n• ✍️ Write short journal entries\n• 🎧 Listen to English podcasts/news\n\nWhich aspect needs most work for you?",
-      study_tips: "**Ultimate Study Guide** 📚⚡\n\n**The Pomodoro Technique:**\n• 25 minutes focused study\n• 5 minute break\n• After 4 sessions → 15-30 min break\n\n**Active Recall (50% better than re-reading!):**\n• Test yourself instead of just reading\n• Use flashcards and practice questions\n• Close the book and write what you remember\n\n**Spaced Repetition:**\n• Review: Day 1 → Day 3 → Day 7 → Day 21\n\n**Feynman Technique:**\nExplain it to a child. If you can't, you don't know it well enough!\n\n🧠 **Your brain is most alert 1-2 hours after waking. Use that time!**",
-      rank: "**Ranking System Guide** 🏆\n\n• ⚫ **E-Rank** – 0 XP (Starting rank)\n• 🟢 **D-Rank** – 500 XP (Apprentice)\n• 🔵 **C-Rank** – 1,500 XP (Scholar)\n• 🟣 **B-Rank** – 3,500 XP (Expert)\n• 🟡 **A-Rank** – 7,000 XP (Master)\n• 🔴 **S-Rank** – 15,000 XP (Legend)\n• ⭐ **SS-Rank** – 30,000 XP (Mythic!)\n\n**Earn XP by:**\n• ✅ Correct quiz answer: +10 XP\n• 💯 Perfect quiz: +50 bonus XP\n• ⚔️ Win a battle: +75 XP\n• 🔥 Daily login: +20 XP\n• 🎯 Complete goal: +100 XP\n\n**Streak bonus:** Up to +50% extra XP! Keep your streak alive! 🔥",
-      battle: "**Battle Strategy Guide** ⚔️\n\n**Battle Types:**\n• 🤖 **Solo Training** – AI opponents, low risk, great for practice\n• ⚔️ **Duel Mode** – 1v1, earn rank XP\n• 🏰 **Guild War** – Team battles\n\n**Winning Tips:**\n1. **Answer quickly** – speed gives bonus damage\n2. **Perfect answers** restore your HP\n3. Choose opponents at **your level first**\n4. Use your **guild's specialty** subject\n5. **Maintain a streak** for multiplied damage!\n\n**Subject Strategy:**\n• Pick your strongest subject\n• Study weaknesses before ranking up\n• Practice quizzes before important battles ⚡",
-      guild: "**Guild System** 🏰\n\n**Choose based on your strongest subject:**\n\n🌙 **Shadow Guild:** +15% Math & Logic XP\n💧 **Azure Order:** +15% Science XP\n🔥 **Inferno Legion:** +20% Battle XP\n⚡ **Titan Brotherhood:** +15% English XP\n✨ **Zenith Circle:** +10% XP on Everything\n\n**Guild Benefits:**\n• XP multiplier in specialty\n• Guild leaderboard rankings\n• Team battle bonuses\n• Exclusive guild achievement badge\n\n**My recommendation:** Choose the guild matching your **strongest subject** to maximize XP gain! You can change guilds every 30 days. 🎯",
-      fallback: ["That's a great question! 🤔 I'm specialized in:\n• 📐 **Mathematics**\n• 🔬 **Science** (Physics, Chemistry, Biology)\n• 📚 **English** (Grammar, Literature, Writing)\n• 🎯 **Study strategies**\n• ⚔️ **Battle tips**\n• 🏆 **Ranking system**\n\nCould you be more specific? The more context you give me, the better I can help!", "Hmm, let me help you better! 💭\n\nTry asking things like:\n• 'Explain photosynthesis'\n• 'How do I solve quadratic equations?'\n• 'Tips for memorizing vocabulary'\n• 'What is Newton's second law?'\n\nI'm your 24/7 study buddy! 🤖"]
+      english_literature: "**Literature Analysis** 📖\n\n**Key Literary Devices:**\n• **Simile:** Comparison using 'like/as' – 'brave as a lion'\n• **Metaphor:** Direct comparison – 'life is a journey'\n• **Personification:** Human qualities to non-humans\n• **Alliteration:** Repeated consonants – 'Peter Piper picked'\n• **Irony:** Saying opposite of what you mean\n\n**Essay Structure (PEEL):**\n1. **P**oint – State your argument\n2. **E**vidence – Quote from text\n3. **E**xplain – Analyze the evidence\n4. **L**ink – Connect back to question 🎭",
+      english: "English mastery opens every door! 📚\n\n**Four Key Areas:**\n• **Reading:** Comprehension, inference, vocabulary\n• **Writing:** Essays, letters, stories, reports\n• **Grammar:** Rules for correct language use\n• **Literature:** Analyzing texts and poetry\n\n**Daily Habits:**\n• 📖 Read for 20 minutes daily\n• 📝 Learn 5 new words per day\n• ✍️ Write short journal entries\n\nWhich aspect needs most work for you?",
+      study_tips: "**Ultimate Study Guide** 📚⚡\n\n**The Pomodoro Technique:**\n• 25 minutes focused study\n• 5 minute break\n• After 4 sessions → 15-30 min break\n\n**Active Recall (50% better than re-reading!):**\n• Test yourself instead of just reading\n• Use flashcards and practice questions\n• Close the book and write what you remember\n\n**Spaced Repetition:**\n• Review: Day 1 → Day 3 → Day 7 → Day 21\n\n🧠 **Your brain is most alert 1-2 hours after waking. Use that time!**",
+      rank: "**Ranking System Guide** 🏆\n\n• ⚫ **E-Rank** – 0 XP (Starting rank)\n• 🟢 **D-Rank** – 500 XP (Apprentice)\n• 🔵 **C-Rank** – 1,500 XP (Scholar)\n• 🟣 **B-Rank** – 3,500 XP (Expert)\n• 🟡 **A-Rank** – 7,000 XP (Master)\n• 🔴 **S-Rank** – 15,000 XP (Legend)\n• ⭐ **SS-Rank** – 30,000 XP (Mythic!)\n\n**Earn XP by:**\n• Correct quiz answer: +10 XP\n• Perfect quiz: +50 bonus XP\n• Win a battle: +75 XP\n• Daily login: +20 XP",
+      battle: "**Battle Strategy Guide** ⚔️\n\n**Battle Types:**\n• 🤖 **Solo Training** – AI opponents, low risk, great for practice\n• ⚔️ **Duel Mode** – 1v1, earn rank XP\n• 🏰 **Guild War** – Team battles\n\n**Winning Tips:**\n1. **Answer quickly** – speed gives bonus damage\n2. **Perfect answers** restore your HP\n3. Choose opponents at **your level first**\n4. Use your **guild's specialty** subject\n5. **Maintain a streak** for multiplied damage! ⚡",
+      guild: "**Guild System** 🏰\n\n**Choose based on your strongest subject:**\n\n🌙 **Shadow Guild:** +15% Math & Logic XP\n💧 **Azure Order:** +15% Science XP\n🔥 **Inferno Legion:** +20% Battle XP\n⚡ **Titan Brotherhood:** +15% English XP\n✨ **Zenith Circle:** +10% XP on Everything\n\n**My recommendation:** Choose the guild matching your **strongest subject** to maximize XP gain! You can change guilds every 30 days. 🎯",
+      fallback: ["That's a great question! 🤔 I'm specialized in:\n• 📐 **Mathematics**\n• 🔬 **Science** (Physics, Chemistry, Biology)\n• 📚 **English** (Grammar, Literature, Writing)\n• 🎯 **Study strategies**\n• ⚔️ **Battle tips**\n\nCould you be more specific?", "Hmm, let me help you better! 💭\n\nTry asking things like:\n• 'Explain photosynthesis'\n• 'How do I solve quadratic equations?'\n• 'Tips for memorizing vocabulary'\n\nI'm your 24/7 study buddy! 🤖"]
     };
 
     let messageCount = 0;
@@ -192,6 +227,8 @@
         msgDiv.innerHTML = `<div class="message-bubble">${text}</div>`;
       } else {
         msgDiv.innerHTML = `<div class="ai-avatar">🤖</div><div class="message-bubble">${formatMsg(text)}</div>`;
+        // Speak the AI response if TTS is on
+        if (ttsOn) speak(text);
       }
 
       container.appendChild(msgDiv);
@@ -221,6 +258,7 @@
       input.value = '';
       input.style.height = 'auto';
 
+      stopSpeaking(); // stop any previous TTS before responding
       addMessage(text, true);
       showTyping();
       document.getElementById('send-btn').disabled = true;
@@ -235,10 +273,10 @@
       }, delay);
     }
 
-    function sendQuick(prompt) {
+    window.sendQuick = function(prompt) {
       document.getElementById('chat-input').value = prompt;
       sendMessage();
-    }
+    };
 
     function handleKeyDown(e) {
       if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); }
@@ -247,13 +285,76 @@
       input.style.height = Math.min(input.scrollHeight, 120) + 'px';
     }
 
-    function clearChat() {
+    window.clearChat = function() {
+      stopSpeaking();
       const container = document.getElementById('chat-messages');
       container.innerHTML = `<div class="welcome-msg" id="welcome-msg"><div class="big-emoji">🤖</div><h2 style="font-size:1.3rem;font-weight:800;color:var(--text-light);margin-bottom:0.5rem">Chat cleared! Ready to help again 👋</h2><p>Ask me anything about Math, Science, English, or study strategies!</p></div>`;
       messageCount = 0;
       document.getElementById('msg-count').textContent = 0;
+    };
+
+    // ── Voice input (STT) ─────────────────────────────────────────────────────
+    window.toggleMic = function() {
+      if (getIsListening()) {
+        stopListening();
+        setListeningUI(false);
+        return;
+      }
+      setListeningUI(true);
+      startListening({
+        onResult: (transcript) => {
+          document.getElementById('chat-input').value = transcript;
+          setListeningUI(false);
+          sendMessage();
+        },
+        onInterim: (interim) => {
+          document.getElementById('interim-text').textContent = interim || 'Listening… speak now';
+        },
+        onError: (err) => {
+          setListeningUI(false);
+          const errMsg = err.error === 'not-allowed'
+            ? 'Microphone access denied. Please allow it in browser settings.'
+            : 'Voice input error: ' + (err.error || err.message || 'unknown');
+          addMessage('⚠️ ' + errMsg, false);
+        },
+        onEnd: () => setListeningUI(false)
+      });
+    };
+
+    function setListeningUI(active) {
+      const micBtn = document.getElementById('mic-btn');
+      const banner = document.getElementById('listening-banner');
+      if (active) {
+        micBtn.classList.add('listening');
+        micBtn.textContent = '⏹';
+        banner.classList.add('active');
+        document.getElementById('interim-text').textContent = 'Listening… speak now';
+      } else {
+        micBtn.classList.remove('listening');
+        micBtn.textContent = '🎤';
+        banner.classList.remove('active');
+      }
     }
 
+    // ── TTS toggle ────────────────────────────────────────────────────────────
+    window.toggleTTS = function() {
+      ttsOn = !ttsOn;
+      setTTSEnabled(ttsOn);
+      const btn = document.getElementById('tts-btn');
+      if (ttsOn) {
+        btn.classList.remove('tts-off');
+        btn.textContent = '🔊';
+        btn.title = 'Voice responses ON – click to disable';
+        if (!getIsSpeaking()) speak('Voice responses are now enabled.');
+      } else {
+        stopSpeaking();
+        btn.classList.add('tts-off');
+        btn.textContent = '🔇';
+        btn.title = 'Voice responses OFF – click to enable';
+      }
+    };
+
+    // ── Init ──────────────────────────────────────────────────────────────────
     const profile = JSON.parse(localStorage.getItem('lvlbase_user_profile') || '{}');
     if (profile.totalXP) document.getElementById('nav-xp').textContent = `⚡ ${profile.totalXP} XP`;
 
@@ -261,9 +362,12 @@
       document.getElementById('mobile-menu')?.classList.toggle('open');
     });
 
-    // Welcome message after short delay
+    // Expose handleKeyDown globally
+    window.handleKeyDown = handleKeyDown;
+
+    // Welcome message
     setTimeout(() => {
-      addMessage("Hello! 👋 I'm **Sage**, your AI study companion!\n\nI can help you with:\n• 📐 **Math** – Algebra, Geometry, Trigonometry\n• 🔬 **Science** – Physics, Chemistry, Biology\n• 📚 **English** – Grammar, Literature, Writing\n• 🎯 **Study strategies** and exam tips\n• ⚔️ **Battle** and quiz strategies\n\nWhat would you like to learn today?", false);
+      addMessage("Hello! 👋 I'm **Sage**, your AI study companion!\n\nI can help you with:\n• 📐 **Math** – Algebra, Geometry, Trigonometry\n• 🔬 **Science** – Physics, Chemistry, Biology\n• 📚 **English** – Grammar, Literature, Writing\n• 🎯 **Study strategies** and exam tips\n• ⚔️ **Battle** and quiz strategies\n\nWhat would you like to learn today? You can also tap 🎤 to **speak your question**!", false);
     }, 500);
   </script>
 </body>

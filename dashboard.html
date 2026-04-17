@@ -82,10 +82,15 @@
         <div class="sidebar-label">Practice</div>
         <a href="quiz.html" class="sidebar-link"><span class="icon">🎯</span> Quiz Mode</a>
         <a href="battles.html" class="sidebar-link"><span class="icon">⚔️</span> Battles</a>
+        <a href="guild-wars.html" class="sidebar-link"><span class="icon">🏰</span> Guild Wars</a>
         <a href="ai-assistant.html" class="sidebar-link"><span class="icon">🤖</span> AI Assistant</a>
+        <a href="homework-scanner.html" class="sidebar-link"><span class="icon">📸</span> Homework Scanner</a>
+        <a href="science-lab.html" class="sidebar-link"><span class="icon">🔬</span> Science Lab</a>
 
         <div class="sidebar-label">Progress</div>
         <a href="leaderboard.html" class="sidebar-link"><span class="icon">🏆</span> Leaderboard</a>
+        <a href="competition.html" class="sidebar-link"><span class="icon">🌍</span> World Competition</a>
+        <a href="certificate.html" class="sidebar-link"><span class="icon">🏅</span> Certificates</a>
         <a href="goals.html" class="sidebar-link"><span class="icon">🎯</span> Goals</a>
         <a href="parent-dashboard.html" class="sidebar-link"><span class="icon">👨‍👩‍👧</span> Parent View</a>
 
@@ -276,13 +281,17 @@
         if (el) el.innerHTML = `<div class="stat-icon" style="background:${s.color}20">${s.icon}</div><div class="stat-info"><div class="value">${s.value}</div><div class="label">${s.label}</div><div class="change change-up">${s.change}</div></div>`;
       });
 
-      // Quick actions
+      // Quick actions (includes new features)
       const qa = document.getElementById('quick-actions');
       if (qa) qa.innerHTML = [
         { icon: '🎯', label: 'Start Quiz', href: 'quiz.html' },
         { icon: '⚔️', label: 'Battle', href: 'battles.html' },
-        { icon: '📚', label: 'Study', href: 'subjects.html' },
-        { icon: '🤖', label: 'Ask AI', href: 'ai-assistant.html' }
+        { icon: '🏰', label: 'Guild Wars', href: 'guild-wars.html' },
+        { icon: '🤖', label: 'Ask AI', href: 'ai-assistant.html' },
+        { icon: '📸', label: 'HW Scanner', href: 'homework-scanner.html' },
+        { icon: '🔬', label: 'Science Lab', href: 'science-lab.html' },
+        { icon: '🌍', label: 'World Cup', href: 'competition.html' },
+        { icon: '🏅', label: 'Certificates', href: 'certificate.html' }
       ].map(a => `<a href="${a.href}" class="quick-action"><div class="quick-action-icon">${a.icon}</div><div class="quick-action-label">${a.label}</div></a>`).join('');
 
       // Subject progress

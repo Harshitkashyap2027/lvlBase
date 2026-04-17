@@ -1,5 +1,5 @@
 // ===== lvlBase Service Worker =====
-const CACHE_NAME = 'lvlbase-v1';
+const CACHE_NAME = 'lvlbase-v2';
 const STATIC_ASSETS = [
   '/',
   '/index.html',
@@ -11,6 +11,13 @@ const STATIC_ASSETS = [
   '/school-dashboard.html',
   '/school-signup.html',
   '/quiz.html',
+  '/battles.html',
+  '/ai-assistant.html',
+  '/homework-scanner.html',
+  '/science-lab.html',
+  '/competition.html',
+  '/certificate.html',
+  '/guild-wars.html',
   '/admin/index.html',
   '/css/main.css',
   '/css/dashboard.css',
@@ -23,7 +30,12 @@ const STATIC_ASSETS = [
 self.addEventListener('install', (event) => {
   event.waitUntil(
     caches.open(CACHE_NAME).then((cache) => {
-      return cache.addAll(STATIC_ASSETS.map(url => new Request(url, { cache: 'reload' })));
+      // addAll with individual error handling so one missing asset doesn't fail everything
+      return Promise.allSettled(
+        STATIC_ASSETS.map(url =>
+          cache.add(new Request(url, { cache: 'reload' })).catch(() => {})
+        )
+      );
     }).catch((err) => {
       console.warn('SW install cache error (non-fatal):', err);
     })
@@ -41,9 +53,8 @@ self.addEventListener('activate', (event) => {
   self.clients.claim();
 });
 
-// Fetch: network-first strategy
+// Fetch: network-first strategy, fallback to cache
 self.addEventListener('fetch', (event) => {
-  // Only handle GET requests to same origin
   if (event.request.method !== 'GET') return;
   const url = new URL(event.request.url);
   if (url.origin !== self.location.origin) return;
@@ -51,7 +62,6 @@ self.addEventListener('fetch', (event) => {
   event.respondWith(
     fetch(event.request)
       .then((response) => {
-        // Cache successful responses
         if (response && response.status === 200) {
           const cloned = response.clone();
           caches.open(CACHE_NAME).then((cache) => cache.put(event.request, cloned));
@@ -59,14 +69,56 @@ self.addEventListener('fetch', (event) => {
         return response;
       })
       .catch(() => {
-        // Fallback to cache when offline
         return caches.match(event.request).then((cached) => {
           if (cached) return cached;
-          // Return offline fallback for navigation requests
           if (event.request.mode === 'navigate') {
             return caches.match('/index.html');
           }
         });
       })
+  );
+});
+
+// ─── Push Notifications (Firebase Cloud Messaging) ───────────────────────────
+self.addEventListener('push', (event) => {
+  let data = { title: 'lvlBase ⚡', body: 'You have a new notification!', icon: '/icons/icon-192.png' };
+  try {
+    const payload = event.data ? event.data.json() : {};
+    const n = payload.notification || payload;
+    data = {
+      title: n.title || data.title,
+      body:  n.body  || data.body,
+      icon:  n.icon  || data.icon,
+      badge: '/icons/icon-192.png',
+      data:  n.data  || {}
+    };
+  } catch (_) {}
+
+  event.waitUntil(
+    self.registration.showNotification(data.title, {
+      body:  data.body,
+      icon:  data.icon,
+      badge: data.badge,
+      data:  data.data,
+      vibrate: [200, 100, 200]
+    })
+  );
+});
+
+// Handle notification click – open the relevant page
+self.addEventListener('notificationclick', (event) => {
+  event.notification.close();
+  const url = (event.notification.data && event.notification.data.url) || '/dashboard.html';
+  event.waitUntil(
+    clients.matchAll({ type: 'window', includeUncontrolled: true }).then((windowClients) => {
+      for (const client of windowClients) {
+        if (client.url.includes(self.location.origin) && 'focus' in client) {
+          client.focus();
+          client.navigate(url);
+          return;
+        }
+      }
+      if (clients.openWindow) return clients.openWindow(url);
+    })
   );
 });

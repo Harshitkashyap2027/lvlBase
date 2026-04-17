@@ -1,7 +1,10 @@
 // ===== AUTH MODULE =====
-// Supports both Firebase Auth and localStorage demo mode
+// Supports both Firebase Auth and localStorage demo mode.
+// When FIREBASE_LIVE (firebase-config.js) is true, profiles are synced to Firestore.
 
-export const DEMO_MODE = true; // Set false once Firebase is configured
+import { syncProfileToFirestore, fetchProfileFromFirestore, FIREBASE_LIVE } from './firebase-config.js';
+
+export const DEMO_MODE = !FIREBASE_LIVE;
 
 // Default new user profile
 function createDefaultProfile(uid, email, displayName) {
@@ -77,9 +80,10 @@ export function getUserProfile() {
   return JSON.parse(localStorage.getItem('lvlbase_user_profile') || 'null');
 }
 
-// Save user profile
+// Save user profile (localStorage + optional Firestore sync)
 export function saveUserProfile(profile) {
   localStorage.setItem('lvlbase_user_profile', JSON.stringify(profile));
+  syncProfileToFirestore(profile).catch(() => {});
 }
 
 // Check if authenticated (redirect if not)
