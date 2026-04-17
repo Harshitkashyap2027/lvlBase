@@ -144,10 +144,15 @@
     const container = getToastContainer();
     const toast = document.createElement('div');
     toast.className = `lp-toast lp-${type}`;
-    toast.innerHTML = `
-      <span class="lp-toast-icon">${icons[type] || 'ℹ️'}</span>
-      <span class="lp-toast-msg">${message}</span>
-    `;
+    // Use textContent for the message to prevent XSS from user-supplied strings
+    const iconEl = document.createElement('span');
+    iconEl.className = 'lp-toast-icon';
+    iconEl.textContent = icons[type] || 'ℹ️';
+    const msgEl = document.createElement('span');
+    msgEl.className = 'lp-toast-msg';
+    msgEl.textContent = message;
+    toast.appendChild(iconEl);
+    toast.appendChild(msgEl);
     container.appendChild(toast);
     requestAnimationFrame(() => {
       requestAnimationFrame(() => toast.classList.add('lp-toast-show'));
@@ -167,18 +172,25 @@
 
       const typeClass = options.type || 'info';
 
-      // Build buttons HTML
+      // Build buttons HTML – button labels are developer-supplied strings only
       const buttons = options.buttons || [{ label: 'OK', style: 'primary', action: 'close' }];
+      const escAttr = s => String(s || '').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
       const btnsHtml = buttons.map(btn => {
         if (btn.href) {
-          return `<a href="${btn.href}" class="lp-btn lp-btn-${btn.style || 'primary'}" target="${btn.target || '_self'}">${btn.label}</a>`;
+          return `<a href="${escAttr(btn.href)}" class="lp-btn lp-btn-${escAttr(btn.style || 'primary')}" target="${escAttr(btn.target || '_self')}">${escAttr(btn.label)}</a>`;
         }
-        return `<button class="lp-btn lp-btn-${btn.style || 'primary'}" data-action="${btn.action || 'close'}">${btn.label}</button>`;
+        return `<button class="lp-btn lp-btn-${escAttr(btn.style || 'primary')}" data-action="${escAttr(btn.action || 'close')}">${escAttr(btn.label)}</button>`;
       }).join('');
 
+      // The icon, title, and message are developer-supplied strings.
+      // title and message support intentional HTML markup (e.g. <strong>, <br>).
+      // Callers must NOT pass raw user-supplied data here without escaping it first.
+      const safeIcon = escAttr(options.icon || (typeClass === 'success' ? '✅' : typeClass === 'error' ? '❌' : typeClass === 'warning' ? '⚠️' : 'ℹ️'));
+      const safeTypeClass = escAttr(typeClass);
+      const safeExtraClass = escAttr(options.extraClass || '');
       overlay.innerHTML = `
-        <div class="lp-card lp-${typeClass} ${options.extraClass || ''}">
-          <div class="lp-icon-wrap">${options.icon || (typeClass === 'success' ? '✅' : typeClass === 'error' ? '❌' : typeClass === 'warning' ? '⚠️' : 'ℹ️')}</div>
+        <div class="lp-card lp-${safeTypeClass} ${safeExtraClass}">
+          <div class="lp-icon-wrap">${safeIcon}</div>
           <div class="lp-title">${options.title || ''}</div>
           <div class="lp-message">${options.message || ''}</div>
           <div class="lp-actions">${btnsHtml}</div>

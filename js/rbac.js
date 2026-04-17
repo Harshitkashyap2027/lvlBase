@@ -31,7 +31,11 @@ const ADMIN_WHATSAPP = '919258837596';
 
 // ── Helpers ──
 function getSchools() { return JSON.parse(localStorage.getItem(KEYS.SCHOOLS) || '[]'); }
-function saveSchools(s) { localStorage.setItem(KEYS.SCHOOLS, JSON.stringify(s)); }
+function saveSchools(s) {
+  // Strip any legacy plaintext passwords before storage
+  const clean = s.map(school => { const c = { ...school }; delete c.adminPassword; return c; });
+  localStorage.setItem(KEYS.SCHOOLS, JSON.stringify(clean));
+}
 
 function getAllUsers() { return JSON.parse(localStorage.getItem(KEYS.ALL_USERS) || '[]'); }
 function saveAllUsers(u) { localStorage.setItem(KEYS.ALL_USERS, JSON.stringify(u)); }

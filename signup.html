@@ -268,7 +268,7 @@
           lvlPopup.toast('Student email not found. Ask your child to register first.', 'error');
           return;
         }
-        document.getElementById('student-check-msg').innerHTML = '<span style="color:var(--success)">✅ Student found: ' + child.displayName + '</span>';
+        document.getElementById('student-check-msg').innerHTML = '<span style="color:var(--success)">✅ Student found: ' + child.displayName.replace(/</g,'&lt;').replace(/>/g,'&gt;') + '</span>';
       }
 
       // Load schools

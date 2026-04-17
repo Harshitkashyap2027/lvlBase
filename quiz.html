@@ -262,7 +262,13 @@
       const bank = subject === 'mixed'
         ? [...QUESTION_BANK.math, ...QUESTION_BANK.science, ...QUESTION_BANK.english]
         : (QUESTION_BANK[subject] || QUESTION_BANK.math);
-      return [...bank].sort(() => Math.random()-0.5).slice(0, Math.min(count, bank.length));
+      // Use a Fisher-Yates shuffle for fair question ordering (not a security context)
+      const arr = [...bank];
+      for (let i = arr.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [arr[i], arr[j]] = [arr[j], arr[i]];
+      }
+      return arr.slice(0, Math.min(count, arr.length));
     }
 
     // ── Cheat Detection ──
@@ -382,14 +388,16 @@
         const parent = users.find(p => p.role === 'parent' && p.childUid === user.uid);
         if (parent) {
           const notifs = JSON.parse(localStorage.getItem('lvlbase_notifications') || '[]');
+          // Use plain text for notification messages (no HTML) to avoid XSS when rendered
+          const safeName = String(user.displayName || 'your child').replace(/[<>&"']/g, '');
           notifs.unshift({
             id: 'notif_' + Date.now(),
             type: 'cheat_alert',
             userId: parent.uid,
             schoolId: user.schoolId,
             message: terminated
-              ? `⚠️ EXAM TERMINATED: Your child ${user.displayName} was caught cheating and their exam has been terminated.`
-              : `⚠️ WARNING: Your child ${user.displayName} received warning ${cheatState.warnings}/2 for suspicious activity during an exam.`,
+              ? '\u26A0\uFE0F EXAM TERMINATED: Your child ' + safeName + ' was caught cheating and their exam has been terminated.'
+              : '\u26A0\uFE0F WARNING: Your child ' + safeName + ' received warning ' + cheatState.warnings + '/2 for suspicious activity during an exam.',
             read: false,
             createdAt: new Date().toISOString()
           });
