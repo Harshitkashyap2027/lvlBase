@@ -10,21 +10,6 @@
   <link rel="stylesheet" href="../css/admin-bento.css">
 </head>
 <body>
-<div id="login-screen" class="sa-login-wrapper">
-  <div class="sa-login-card">
-    <div class="sa-login-logo">lvlBase &#x26A1;</div>
-    <p style="text-align:center;color:var(--muted);font-size:0.82rem;margin-bottom:0.5rem">Super Admin Control Panel</p>
-    <div style="text-align:center;margin-bottom:1.75rem">
-      <span style="background:linear-gradient(135deg,rgba(191,90,242,0.2),rgba(108,99,255,0.2));border:1px solid rgba(191,90,242,0.3);border-radius:20px;padding:0.25rem 0.8rem;font-size:0.72rem;font-weight:700;color:#BF5AF2">SUPER ADMIN ONLY</span>
-    </div>
-    <div id="login-error" style="color:#FF4444;font-size:0.84rem;text-align:center;margin-bottom:1rem;display:none;background:rgba(255,68,68,0.1);border:1px solid rgba(255,68,68,0.2);border-radius:12px;padding:0.6rem"></div>
-    <div class="sa-group"><label class="sa-label">Admin Email</label><input type="email" id="admin-email" class="sa-input" placeholder="admin@lvlbase.in"></div>
-    <div class="sa-group"><label class="sa-label">Password</label><input type="password" id="admin-password" class="sa-input" placeholder="Enter password"></div>
-    <button onclick="doLogin()" style="width:100%;padding:0.9rem;border:none;border-radius:14px;font-size:1rem;font-weight:800;cursor:pointer;background:linear-gradient(135deg,#6C63FF,#BF5AF2);color:white;font-family:inherit">Access Admin Panel</button>
-    <div style="text-align:center;margin-top:1.25rem"><a href="../index.html" style="font-size:0.8rem;color:#8892A4">Back to Site</a></div>
-  </div>
-</div>
-
 <div id="admin-screen" style="display:none;width:100%">
   <aside class="sa-sidebar" id="sa-sidebar">
     <div class="sa-sidebar-brand">
@@ -45,6 +30,9 @@
       <button class="sa-nav-link" onclick="showSection('content',this)"><span class="sa-nav-icon">&#x1F4DA;</span>Content</button>
       <button class="sa-nav-link" onclick="showSection('events',this)"><span class="sa-nav-icon">&#x1F389;</span>Events</button>
       <button class="sa-nav-link" onclick="showSection('announcements',this)"><span class="sa-nav-icon">&#x1F4E2;</span>Announcements</button>
+      <div class="sa-nav-label">Engagement</div>
+      <button class="sa-nav-link" onclick="showSection('leaderboard',this)"><span class="sa-nav-icon">&#x1F3C6;</span>Leaderboard</button>
+      <button class="sa-nav-link" onclick="showSection('badges',this)"><span class="sa-nav-icon">&#x1F396;&#xFE0F;</span>Badges &amp; Achievements</button>
       <div class="sa-nav-label">System</div>
       <button class="sa-nav-link" onclick="showSection('reports',this)"><span class="sa-nav-icon">&#x1F4CA;</span>Reports</button>
       <button class="sa-nav-link" onclick="showSection('platform',this)"><span class="sa-nav-icon">&#x2699;&#xFE0F;</span>Platform Controls</button>
@@ -420,6 +408,112 @@
         </div>
       </div>
 
+      <!-- LEADERBOARD MANAGER -->
+      <div class="sa-section" id="section-leaderboard">
+        <div class="section-heading">Leaderboard Manager</div>
+        <p class="section-sub">View, control and reset global &amp; school leaderboards</p>
+        <div class="bento-grid mb-3">
+          <div class="bc bc-purple bento-1">
+            <div class="bc-stat-label">Total Students</div>
+            <div class="bc-stat-value text-purple" id="lb-total">0</div>
+            <div class="bc-stat-change">On leaderboard</div>
+          </div>
+          <div class="bc bc-green bento-1">
+            <div class="bc-stat-label">Top XP</div>
+            <div class="bc-stat-value text-success" id="lb-topxp">0</div>
+            <div class="bc-stat-change">#1 student</div>
+          </div>
+          <div class="bc bc-amber bento-1">
+            <div class="bc-stat-label">Avg XP</div>
+            <div class="bc-stat-value text-accent" id="lb-avgxp">0</div>
+            <div class="bc-stat-change">Per student</div>
+          </div>
+          <div class="bc bc-yellow bento-2" style="display:flex;align-items:center;gap:1.5rem;flex-wrap:wrap">
+            <div>
+              <div class="bc-stat-label" style="margin-bottom:0.5rem">Leaderboard Filter</div>
+              <select class="sa-input sa-select" id="lb-filter" onchange="renderLeaderboard()" style="width:160px">
+                <option value="global">Global (All Schools)</option>
+                <option value="week">This Week</option>
+                <option value="month">This Month</option>
+              </select>
+            </div>
+            <div>
+              <div class="bc-stat-label" style="margin-bottom:0.5rem">School Filter</div>
+              <select class="sa-input sa-select" id="lb-school-filter" onchange="renderLeaderboard()" style="width:160px">
+                <option value="">All Schools</option>
+              </select>
+            </div>
+            <div style="margin-top:1.2rem">
+              <button onclick="resetLeaderboardXP()" style="padding:0.55rem 1.2rem;border:none;border-radius:10px;font-weight:700;cursor:pointer;background:rgba(255,68,68,0.18);color:#FF4444;font-family:inherit;font-size:0.83rem">Reset All XP</button>
+            </div>
+          </div>
+        </div>
+        <div class="sa-table-wrap">
+          <div class="sa-table-head">
+            <div class="sa-table-head-title">Live Leaderboard</div>
+            <div class="sa-table-head-actions">
+              <input type="text" class="sa-input" style="width:200px" placeholder="Search student..." oninput="filterLeaderboard(this.value)">
+              <button class="ab ab-view" onclick="exportLeaderboard()">Export CSV</button>
+            </div>
+          </div>
+          <div class="ov-auto"><table class="sa-table"><thead><tr><th>Rank</th><th>Student</th><th>School</th><th>XP</th><th>Rank Title</th><th>Streak</th><th>Battles Won</th><th>Actions</th></tr></thead><tbody id="lb-tbody"></tbody></table></div>
+        </div>
+      </div>
+
+      <!-- BADGES & ACHIEVEMENTS -->
+      <div class="sa-section" id="section-badges">
+        <div class="section-heading">Badges &amp; Achievements</div>
+        <p class="section-sub">Create badge types, award custom badges and track student achievements</p>
+        <div class="grid-2 mb-3">
+          <div class="bc">
+            <div style="font-weight:700;margin-bottom:1rem">Create Badge Type</div>
+            <div class="sa-group"><label class="sa-label">Badge Name</label><input type="text" id="badge-name" class="sa-input" placeholder="e.g. Math Wizard"></div>
+            <div class="sa-group"><label class="sa-label">Icon (emoji)</label><input type="text" id="badge-icon" class="sa-input" placeholder="🏆"></div>
+            <div class="sa-group"><label class="sa-label">Description</label><input type="text" id="badge-desc" class="sa-input" placeholder="Awarded for excellence in Mathematics"></div>
+            <div class="sa-group"><label class="sa-label">Category</label>
+              <select id="badge-cat" class="sa-input sa-select">
+                <option value="academic">Academic</option>
+                <option value="battle">Battle</option>
+                <option value="streak">Streak</option>
+                <option value="social">Social</option>
+                <option value="special">Special</option>
+              </select>
+            </div>
+            <div class="sa-group"><label class="sa-label">XP Reward</label><input type="number" id="badge-xp" class="sa-input" placeholder="100" min="0"></div>
+            <button onclick="createBadge()" style="width:100%;padding:0.75rem;border:none;border-radius:12px;font-weight:700;cursor:pointer;background:linear-gradient(135deg,#6C63FF,#BF5AF2);color:white;font-family:inherit">Create Badge</button>
+          </div>
+          <div class="bc">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0.75rem">
+              <div style="font-weight:700">Badge Library</div>
+              <span class="badge badge-purple" id="badge-count">0 badges</span>
+            </div>
+            <div id="badge-library" style="max-height:380px;overflow-y:auto"></div>
+          </div>
+        </div>
+        <div class="bc mb-3">
+          <div style="font-weight:700;margin-bottom:1rem">Award Badge to Student</div>
+          <div class="grid-2" style="align-items:end">
+            <div class="sa-group"><label class="sa-label">Select Student</label>
+              <select id="award-student" class="sa-input sa-select">
+                <option value="">Choose student...</option>
+              </select>
+            </div>
+            <div class="sa-group"><label class="sa-label">Select Badge</label>
+              <select id="award-badge" class="sa-input sa-select">
+                <option value="">Choose badge...</option>
+              </select>
+            </div>
+          </div>
+          <button onclick="awardBadge()" style="padding:0.65rem 1.5rem;border:none;border-radius:12px;font-weight:700;cursor:pointer;background:linear-gradient(135deg,#00D1B2,#6C63FF);color:white;font-family:inherit">Award Badge</button>
+        </div>
+        <div class="sa-table-wrap">
+          <div class="sa-table-head">
+            <div class="sa-table-head-title">Recent Badge Awards</div>
+          </div>
+          <div class="ov-auto"><table class="sa-table"><thead><tr><th>Student</th><th>Badge</th><th>Category</th><th>XP Reward</th><th>Awarded At</th><th>By</th></tr></thead><tbody id="badge-awards-tbody"></tbody></table></div>
+        </div>
+      </div>
+
     </div>
   </main>
 </div>
@@ -433,11 +527,6 @@
     var u = JSON.parse(localStorage.getItem('lvlbase_current_user') || 'null');
     if (u && u.role === 'admin') return true;
     try { var d = JSON.parse(localStorage.getItem('lvlbase_admin_session') || 'null'); return d && d.loggedIn && Date.now()-d.loginTime < 28800000; } catch(e) { return false; }
-  }
-
-  function doLogin() {
-    // Redirect to dedicated admin login page
-    window.location.href = 'login.html';
   }
 
   function doLogout() {
@@ -478,9 +567,11 @@
     document.querySelectorAll('.sa-section').forEach(function(s){s.classList.remove('active');});
     var sec=document.getElementById('section-'+id); if(sec)sec.classList.add('active');
     document.querySelectorAll('.sa-nav-link').forEach(function(l){l.classList.remove('active');}); if(btn)btn.classList.add('active');
-    var T={overview:'Dashboard',analytics:'Analytics',schools:'School Management','user-approvals':'User Approvals',users:'User Management',teachers:'Teacher Management',parents:'Parent Management',content:'Content Management',events:'Events',announcements:'Announcements',reports:'Reports',platform:'Platform Controls',audit:'Audit Log'};
+    var T={overview:'Dashboard',analytics:'Analytics',schools:'School Management','user-approvals':'User Approvals',users:'User Management',teachers:'Teacher Management',parents:'Parent Management',content:'Content Management',events:'Events',announcements:'Announcements',reports:'Reports',platform:'Platform Controls',audit:'Audit Log',leaderboard:'Leaderboard Manager',badges:'Badges & Achievements'};
     document.getElementById('topbar-title').textContent=T[id]||id;
     document.getElementById('sa-sidebar').classList.remove('open');
+    if(id==='leaderboard')renderLeaderboard();
+    if(id==='badges'){renderBadgeLibrary();populateBadgeAwardDropdowns();renderBadgeAwards();}
     if(id==='schools')renderSchoolsTable();
     if(id==='user-approvals'){populateSchoolFilter();renderUserApprovals();}
     if(id==='users')renderUsersTable();
@@ -804,6 +895,110 @@
     lvlPopup.toast('Report downloaded!','success');auditLog('Report downloaded',type+' as '+format);
   }
 
+  // ── LEADERBOARD MANAGER ──────────────────────────────────────
+  var _lbSearch='';
+  function filterLeaderboard(q){_lbSearch=q;renderLeaderboard();}
+  function renderLeaderboard() {
+    var students=getAllUsers().filter(function(u){return u.role==='student';});
+    var schoolF=(document.getElementById('lb-school-filter')||{}).value||'';
+    var lbF=(document.getElementById('lb-filter')||{}).value||'global';
+    // Populate school filter first time
+    var sel=document.getElementById('lb-school-filter');
+    if(sel&&sel.options.length<=1){
+      getAllSchools().forEach(function(s){var o=document.createElement('option');o.value=s.id;o.textContent=s.name;sel.appendChild(o);});
+    }
+    if(schoolF)students=students.filter(function(u){return u.schoolId===schoolF;});
+    if(_lbSearch){var lbQ=_lbSearch.toLowerCase();students=students.filter(function(u){return (u.displayName+u.email).toLowerCase().includes(lbQ);});}
+    students.sort(function(a,b){return (b.totalXP||0)-(a.totalXP||0);});
+    document.getElementById('lb-total').textContent=students.length;
+    document.getElementById('lb-topxp').textContent=students.length?(students[0].totalXP||0).toLocaleString():0;
+    var avg=students.length?Math.round(students.reduce(function(s,u){return s+(u.totalXP||0);},0)/students.length):0;
+    document.getElementById('lb-avgxp').textContent=avg.toLocaleString();
+    var tbody=document.getElementById('lb-tbody');
+    if(!students.length){tbody.innerHTML='<tr><td colspan="8" style="text-align:center;color:#8892A4;padding:1.5rem">No students found.</td></tr>';return;}
+    var medals=['🥇','🥈','🥉'];
+    tbody.innerHTML=students.map(function(u,i){
+      var rank=medals[i]||(i+1);
+      return '<tr><td style="font-weight:700;font-size:1.1rem">'+rank+'</td><td><div style="font-weight:700">'+esc(u.displayName)+'</div><div style="font-size:0.75rem;color:#8892A4">'+esc(u.email)+'</div></td><td style="font-size:0.82rem">'+getSchoolName(u.schoolId)+'</td><td style="font-weight:700;color:#6C63FF">'+( u.totalXP||0).toLocaleString()+'</td><td><span class="badge badge-purple">'+getRank(u.totalXP||0)+'</span></td><td style="color:#FFD60A">'+(u.streak||0)+'d</td><td>'+(u.battlesWon||0)+'</td><td><div class="abg"><button class="ab ab-boost" onclick="boostUserXP(\''+esc(u.uid)+'\',\''+esc(u.displayName)+'\')">+XP</button><button class="ab ab-ban" onclick="resetStudentXP(\''+esc(u.uid)+'\',\''+esc(u.displayName)+'\')" style="background:rgba(255,68,68,0.15);color:#FF4444">Reset XP</button></div></td></tr>';
+    }).join('');
+  }
+  function resetStudentXP(uid,name){
+    lvlPopup.confirm('Reset XP','Reset all XP for '+name+' to 0?',{confirmLabel:'Reset',confirmStyle:'danger',type:'error'}).then(function(c){
+      if(!c)return;var u=getAllUsers(),i=u.findIndex(function(x){return x.uid===uid;});
+      if(i!==-1){u[i].totalXP=0;saveUsers(u);}
+      lvlPopup.toast(name+' XP reset to 0','warning');auditLog('XP Reset',name);renderLeaderboard();
+    });
+  }
+  function resetLeaderboardXP(){
+    lvlPopup.confirm('Reset ALL XP','This will set every student\'s XP to 0. Cannot be undone!',{confirmLabel:'Reset All',confirmStyle:'danger',type:'error'}).then(function(c){
+      if(!c)return;var u=getAllUsers();u.forEach(function(x){if(x.role==='student')x.totalXP=0;});saveUsers(u);
+      lvlPopup.toast('All student XP reset to 0','warning');auditLog('Full XP Reset','All students');renderLeaderboard();
+    });
+  }
+  function exportLeaderboard(){
+    var students=getAllUsers().filter(function(u){return u.role==='student';}).sort(function(a,b){return (b.totalXP||0)-(a.totalXP||0);});
+    var csv='Rank,Name,Email,School,XP,Rank Title,Streak\n'+students.map(function(u,i){return (i+1)+',"'+esc(u.displayName)+'","'+esc(u.email)+'","'+getSchoolName(u.schoolId)+'",'+(u.totalXP||0)+',"'+getRank(u.totalXP||0)+'",'+(u.streak||0);}).join('\n');
+    var blob=new Blob([csv],{type:'text/csv'}),a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='leaderboard-'+new Date().toISOString().slice(0,10)+'.csv';a.click();
+    auditLog('Leaderboard exported','CSV');
+  }
+
+  // ── BADGES & ACHIEVEMENTS ─────────────────────────────────────
+  function getBadgeTypes(){return JSON.parse(localStorage.getItem('lvlbase_badge_types')||'[]');}
+  function saveBadgeTypes(b){localStorage.setItem('lvlbase_badge_types',JSON.stringify(b));}
+  function getBadgeAwards(){return JSON.parse(localStorage.getItem('lvlbase_badge_awards')||'[]');}
+  function saveBadgeAwards(a){localStorage.setItem('lvlbase_badge_awards',JSON.stringify(a));}
+
+  function createBadge(){
+    var name=document.getElementById('badge-name').value.trim(),icon=document.getElementById('badge-icon').value.trim()||'🏅',desc=document.getElementById('badge-desc').value.trim(),cat=document.getElementById('badge-cat').value,xp=parseInt(document.getElementById('badge-xp').value)||0;
+    if(!name){lvlPopup.toast('Enter a badge name','error');return;}
+    var badges=getBadgeTypes();
+    badges.push({id:'badge_'+Date.now(),name:name,icon:icon,description:desc,category:cat,xpReward:xp,createdAt:new Date().toISOString()});
+    saveBadgeTypes(badges);
+    document.getElementById('badge-name').value='';document.getElementById('badge-icon').value='';document.getElementById('badge-desc').value='';document.getElementById('badge-xp').value='';
+    lvlPopup.toast('Badge "'+name+'" created!','success');auditLog('Badge created',name);renderBadgeLibrary();populateBadgeAwardDropdowns();
+  }
+  function deleteBadgeType(id){
+    var badges=getBadgeTypes().filter(function(b){return b.id!==id;});saveBadgeTypes(badges);
+    lvlPopup.toast('Badge deleted','info');auditLog('Badge deleted',id);renderBadgeLibrary();populateBadgeAwardDropdowns();
+  }
+  function renderBadgeLibrary(){
+    var badges=getBadgeTypes();
+    var catColors={academic:'badge-purple',battle:'badge-red',streak:'badge-yellow',social:'badge-green',special:'badge-amber'};
+    document.getElementById('badge-count').textContent=badges.length+' badges';
+    var lib=document.getElementById('badge-library');
+    if(!badges.length){lib.innerHTML='<div style="color:#8892A4;font-size:0.82rem">No badge types yet. Create one above.</div>';return;}
+    lib.innerHTML=badges.map(function(b){
+      return '<div style="display:flex;align-items:center;gap:0.75rem;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.08);border-radius:12px;padding:0.7rem;margin-bottom:0.5rem"><div style="font-size:1.6rem">'+b.icon+'</div><div style="flex:1"><div style="font-weight:700;font-size:0.88rem">'+esc(b.name)+'</div><div style="font-size:0.75rem;color:#8892A4">'+esc(b.description)+'</div><div style="margin-top:0.2rem;display:flex;gap:0.4rem"><span class="badge '+(catColors[b.category]||'badge-purple')+'">'+esc(b.category)+'</span><span class="badge badge-yellow">+'+b.xpReward+' XP</span></div></div><button class="ab ab-reject" onclick="deleteBadgeType(\''+esc(b.id)+'\')">&#x1F5D1;</button></div>';
+    }).join('');
+  }
+  function populateBadgeAwardDropdowns(){
+    var students=getAllUsers().filter(function(u){return u.role==='student';});
+    var ss=document.getElementById('award-student');if(ss){ss.innerHTML='<option value="">Choose student...</option>'+students.map(function(u){return '<option value="'+esc(u.uid)+'">'+esc(u.displayName)+' ('+esc(u.email)+')</option>';}).join('');}
+    var badges=getBadgeTypes();
+    var bs=document.getElementById('award-badge');if(bs){bs.innerHTML='<option value="">Choose badge...</option>'+badges.map(function(b){return '<option value="'+esc(b.id)+'">'+b.icon+' '+esc(b.name)+'</option>';}).join('');}
+  }
+  function awardBadge(){
+    var uid=document.getElementById('award-student').value,bid=document.getElementById('award-badge').value;
+    if(!uid||!bid){lvlPopup.toast('Select a student and a badge','error');return;}
+    var users=getAllUsers(),ui=users.findIndex(function(x){return x.uid===uid;});
+    var badge=getBadgeTypes().find(function(b){return b.id===bid;});
+    if(ui===-1||!badge){lvlPopup.toast('Invalid selection','error');return;}
+    // Award XP
+    if(badge.xpReward>0){users[ui].totalXP=(users[ui].totalXP||0)+badge.xpReward;saveUsers(users);}
+    var awards=getBadgeAwards();
+    awards.push({id:'aw_'+Date.now(),studentUid:uid,studentName:users[ui].displayName,badgeId:bid,badgeName:badge.name,badgeIcon:badge.icon,badgeCategory:badge.category,xpReward:badge.xpReward,awardedAt:new Date().toISOString(),awardedBy:'Super Admin'});
+    saveBadgeAwards(awards);
+    lvlPopup.toast(badge.icon+' "'+badge.name+'" awarded to '+users[ui].displayName+'!','success');auditLog('Badge awarded',badge.name+' to '+users[ui].displayName);
+    document.getElementById('award-student').value='';document.getElementById('award-badge').value='';
+    renderBadgeAwards();
+  }
+  function renderBadgeAwards(){
+    var awards=getBadgeAwards().slice().reverse();
+    var tbody=document.getElementById('badge-awards-tbody');if(!tbody)return;
+    if(!awards.length){tbody.innerHTML='<tr><td colspan="6" style="text-align:center;color:#8892A4;padding:1.5rem">No badges awarded yet.</td></tr>';return;}
+    tbody.innerHTML=awards.map(function(a){return '<tr><td style="font-weight:700">'+esc(a.studentName)+'</td><td>'+a.badgeIcon+' '+esc(a.badgeName)+'</td><td><span class="badge badge-purple">'+esc(a.badgeCategory)+'</span></td><td style="color:#FFD60A;font-weight:700">+'+a.xpReward+' XP</td><td style="font-size:0.78rem;color:#8892A4">'+new Date(a.awardedAt).toLocaleString('en-IN')+'</td><td style="font-size:0.78rem;color:#8892A4">'+esc(a.awardedBy||'Admin')+'</td></tr>';}).join('');
+  }
+
   function auditLog(action,detail) {
     var log=JSON.parse(localStorage.getItem('lvlbase_audit_log')||'[]');
     log.push({action:action,detail:detail||'',ts:new Date().toISOString(),ip:'admin'});
@@ -820,13 +1015,12 @@
   function filterAudit(q){renderAuditTable(q);}
   function clearAuditLog(){lvlPopup.confirm('Clear Log','Delete all audit history?',{confirmLabel:'Clear',confirmStyle:'danger'}).then(function(c){if(!c)return;localStorage.removeItem('lvlbase_audit_log');renderAuditTable('');});}
 
-  document.addEventListener('keydown',function(e){if(e.key==='Enter'&&document.getElementById('login-screen').style.display!=='none')doLogin();});
+  document.addEventListener('keydown',function(e){if(e.key==='Escape'){document.getElementById('sa-sidebar').classList.remove('open');}});
   var mq=window.matchMedia('(max-width:768px)');
   function applyMQ(m){var hb=document.getElementById('hamburger-btn');if(hb)hb.style.display=m.matches?'block':'none';}
   applyMQ(mq);if(mq.addEventListener)mq.addEventListener('change',applyMQ);
 
   if(checkSession()){
-    document.getElementById('login-screen').style.display='none';
     document.getElementById('admin-screen').style.display='flex';
     initAdmin();
   } else {
