@@ -416,7 +416,7 @@
 
       <div class="al-group">
         <label class="al-label">Admin Email</label>
-        <input type="email" id="admin-email" class="al-input" placeholder="admin@lvlbase.com" onkeydown="if(event.key==='Enter')doLogin()">
+        <input type="email" id="admin-email" class="al-input" placeholder="admin@lvlbase.in" onkeydown="if(event.key==='Enter')doLogin()">
       </div>
 
       <div class="al-group">
@@ -442,12 +442,31 @@
   <!-- Toast container -->
   <div id="al-toast-container" class="lp-toast-container"></div>
 
-  <script>
+  <script type="module">
+    import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
+    import { getAuth, signInWithEmailAndPassword, onAuthStateChanged }
+      from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js';
+
+    const FIREBASE_CONFIG = {
+      apiKey: "AIzaSyAO6FNdpr87WPGjXEdfEs5bjB_4T2ZpzZg",
+      authDomain: "lvlbase.firebaseapp.com",
+      projectId: "lvlbase",
+      storageBucket: "lvlbase.firebasestorage.app",
+      messagingSenderId: "493311771136",
+      appId: "1:493311771136:web:35428db96267a1f55c4ee5"
+    };
+
+    const ADMIN_EMAIL = 'admin@lvlbase.in';
+
+    const app  = initializeApp(FIREBASE_CONFIG);
+    const auth = getAuth(app);
+
     // ── Redirect if already admin-logged-in ──
-    (function () {
-      const u = JSON.parse(localStorage.getItem('lvlbase_current_user') || 'null');
-      if (u && u.role === 'admin') window.location.href = 'index.html';
-    })();
+    onAuthStateChanged(auth, user => {
+      if (user && user.email && user.email.toLowerCase() === ADMIN_EMAIL) {
+        window.location.href = 'index.html';
+      }
+    });
 
     function togglePw(btn) {
       const inp = btn.previousElementSibling;
@@ -501,6 +520,17 @@
         return;
       }
 
+      const lower = email.toLowerCase().trim();
+
+      // Only the designated admin email is allowed
+      if (lower !== ADMIN_EMAIL) {
+        showErrorPopup(
+          'Access Denied',
+          'This login portal is restricted to platform administrators only.<br><br>If you are a student, teacher, parent or school admin, please use the <strong>regular login page</strong>.'
+        );
+        return;
+      }
+
       // Lock UI
       const btn  = document.getElementById('al-btn');
       const text = document.getElementById('al-btn-text');
@@ -509,15 +539,18 @@
       text.style.display = 'none';
       spin.style.display = 'block';
 
-      // Simulate network latency for demo
-      await new Promise(r => setTimeout(r, 600));
+      try {
+        const credential = await signInWithEmailAndPassword(auth, lower, password);
+        const firebaseUser = credential.user;
 
-      const lower = email.toLowerCase().trim();
+        // Extra safety: ensure the authenticated email matches
+        if (firebaseUser.email.toLowerCase() !== ADMIN_EMAIL) {
+          await auth.signOut();
+          throw new Error('Unauthorized account.');
+        }
 
-      // ── Credential check ──
-      if (lower === 'admin@lvlbase.com' && password === 'admin123') {
         const profile = {
-          uid: 'admin_super',
+          uid: firebaseUser.uid,
           email: lower,
           displayName: 'Platform Admin',
           role: 'admin',
@@ -528,25 +561,30 @@
         localStorage.setItem('lvlbase_current_user', JSON.stringify(profile));
         localStorage.setItem('lvlbase_user_profile', JSON.stringify(profile));
         localStorage.setItem('lvlbase_admin_session', JSON.stringify({ loggedIn: true, loginTime: Date.now() }));
+
         showToast('✅ Welcome, Super Admin! Redirecting…', 'success', 2000);
-        setTimeout(() => window.location.href = 'index.html', 1000);
-        return;
-      }
+        setTimeout(() => { window.location.href = 'index.html'; }, 1000);
+      } catch (err) {
+        btn.disabled = false;
+        text.style.display = 'inline';
+        spin.style.display = 'none';
 
-      // ── Wrong credentials ──
-      btn.disabled = false;
-      text.style.display = 'inline';
-      spin.style.display = 'none';
-
-      if (lower !== 'admin@lvlbase.com') {
-        showErrorPopup(
-          'Access Denied',
-          'This login portal is restricted to platform administrators only.<br><br>If you are a student, teacher, parent or school admin, please use the <strong>regular login page</strong>.'
-        );
-      } else {
-        showError('Incorrect password. Please try again.');
+        const code = err.code || '';
+        if (code === 'auth/wrong-password' || code === 'auth/invalid-credential') {
+          showError('Incorrect password. Please try again.');
+        } else if (code === 'auth/user-not-found') {
+          showError('Admin account not found. Contact support.');
+        } else if (code === 'auth/too-many-requests') {
+          showError('Too many failed attempts. Please wait and try again.');
+        } else {
+          showError(err.message || 'Login failed. Please try again.');
+        }
       }
     }
+
+    // Expose to inline onclick handlers
+    window.doLogin   = doLogin;
+    window.togglePw  = togglePw;
   </script>
 </body>
 </html>

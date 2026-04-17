@@ -18,7 +18,7 @@
       <span style="background:linear-gradient(135deg,rgba(191,90,242,0.2),rgba(108,99,255,0.2));border:1px solid rgba(191,90,242,0.3);border-radius:20px;padding:0.25rem 0.8rem;font-size:0.72rem;font-weight:700;color:#BF5AF2">SUPER ADMIN ONLY</span>
     </div>
     <div id="login-error" style="color:#FF4444;font-size:0.84rem;text-align:center;margin-bottom:1rem;display:none;background:rgba(255,68,68,0.1);border:1px solid rgba(255,68,68,0.2);border-radius:12px;padding:0.6rem"></div>
-    <div class="sa-group"><label class="sa-label">Admin Email</label><input type="email" id="admin-email" class="sa-input" placeholder="admin@lvlbase.com"></div>
+    <div class="sa-group"><label class="sa-label">Admin Email</label><input type="email" id="admin-email" class="sa-input" placeholder="admin@lvlbase.in"></div>
     <div class="sa-group"><label class="sa-label">Password</label><input type="password" id="admin-password" class="sa-input" placeholder="Enter password"></div>
     <button onclick="doLogin()" style="width:100%;padding:0.9rem;border:none;border-radius:14px;font-size:1rem;font-weight:800;cursor:pointer;background:linear-gradient(135deg,#6C63FF,#BF5AF2);color:white;font-family:inherit">Access Admin Panel</button>
     <div style="text-align:center;margin-top:1.25rem"><a href="../index.html" style="font-size:0.8rem;color:#8892A4">Back to Site</a></div>
@@ -428,7 +428,6 @@
 <script src="../js/popup.js"></script>
 <script>
   var CREDS_KEY = 'lvlbase_admin_creds';
-  function getCreds() { try { return JSON.parse(localStorage.getItem(CREDS_KEY)) || { email:'admin@lvlbase.com', password:'admin123' }; } catch(e) { return { email:'admin@lvlbase.com', password:'admin123' }; } }
 
   function checkSession() {
     var u = JSON.parse(localStorage.getItem('lvlbase_current_user') || 'null');
@@ -444,7 +443,18 @@
   function doLogout() {
     localStorage.removeItem('lvlbase_admin_session');
     localStorage.removeItem('lvlbase_current_user');
+    localStorage.removeItem('lvlbase_user_profile');
     auditLog('Admin logout', '-');
+    // Sign out from Firebase if available
+    try {
+      Promise.all([
+        import('https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js'),
+        import('https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js')
+      ]).then(function(modules) {
+        var apps = modules[0].getApps ? modules[0].getApps() : [];
+        if (apps.length) { modules[1].getAuth(apps[0]).signOut().catch(function(){}); }
+      }).catch(function(){});
+    } catch(e) {}
     window.location.href = 'login.html';
   }
 
