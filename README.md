@@ -21,11 +21,13 @@
 2. [Role-Based Portal](#role-based-portal)
 3. [Quick Setup (No Server)](#quick-setup-no-server)
 4. [Firebase Setup](#firebase-setup)
-5. [Admin Access](#admin-access)
-6. [School Registration & Verification](#school-registration--verification)
-7. [File Structure](#file-structure)
-8. [Features by Role](#features-by-role)
-9. [Deployment](#deployment)
+5. [Firestore Security Rules](#firestore-security-rules)
+6. [Realtime Database Rules](#realtime-database-rules)
+7. [Admin Access](#admin-access)
+8. [School Registration & Verification](#school-registration--verification)
+9. [File Structure](#file-structure)
+10. [Features by Role](#features-by-role)
+11. [Deployment](#deployment)
 
 ---
 
@@ -135,32 +137,276 @@ const VAPID_KEY = "YOUR_VAPID_KEY";
 
 > **Never commit real API keys to a public repo.** For production, use environment variables or Firebase App Check.
 
-### Step 6 — Firestore Security Rules (recommended)
+---
 
-In Firebase Console → Firestore → **Rules**, add:
+## Firestore Security Rules
+
+Go to **Firebase Console → Firestore Database → Rules** and paste the following rules.
+
+These rules cover every collection used by lvlBase and enforce the five-role hierarchy (`student`, `teacher`, `parent`, `school_admin`, `admin`).
 
 ```
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-    // Users can read/write their own profile
-    match /users/{userId} {
-      allow read, write: if request.auth != null && request.auth.uid == userId;
+
+    // ── Helper functions ──────────────────────────────────────────────────────
+
+    function isSignedIn() {
+      return request.auth != null;
     }
-    // School admins can read their school
-    match /schools/{schoolId} {
-      allow read: if request.auth != null;
-      allow write: if request.auth != null && 
-        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'school_admin';
+
+    function isOwner(uid) {
+      return isSignedIn() && request.auth.uid == uid;
     }
-    // Super admin has full access
+
+    function myRole() {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role;
+    }
+
+    function mySchool() {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data.schoolId;
+    }
+
+    function isAdmin() {
+      return isSignedIn() && myRole() == 'admin';
+    }
+
+    function isSchoolAdmin() {
+      return isSignedIn() && myRole() == 'school_admin';
+    }
+
+    function isTeacher() {
+      return isSignedIn() && myRole() == 'teacher';
+    }
+
+    function isParent() {
+      return isSignedIn() && myRole() == 'parent';
+    }
+
+    function sameSchool(schoolId) {
+      return isSignedIn() && mySchool() == schoolId;
+    }
+
+    // ── Super admin: unrestricted access ─────────────────────────────────────
+    // Must be first so it short-circuits before other rules.
     match /{document=**} {
-      allow read, write: if request.auth != null && 
-        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
+      allow read, write: if isAdmin();
+    }
+
+    // ── Users ─────────────────────────────────────────────────────────────────
+    // Collection: users/{uid}
+    // Fields: uid, email, displayName, role, schoolId, status, grade, guild,
+    //         totalXP, streak, quizzesCompleted, battlesWon, battlesPlayed,
+    //         goalsCompleted, perfectScores, achievements, subjectProgress,
+    //         subject (teacher), qualification (teacher),
+    //         studentEmail (parent), childUid (parent), createdAt, lastLogin
+    match /users/{userId} {
+      // Each user can read and update their own profile.
+      allow read, write: if isOwner(userId);
+
+      // Teachers and school admins can read profiles belonging to their school.
+      allow read: if (isTeacher() || isSchoolAdmin()) &&
+        get(/databases/$(database)/documents/users/$(userId)).data.schoolId == mySchool();
+
+      // Parents can read only their linked child's profile.
+      allow read: if isParent() &&
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.childUid == userId;
+
+      // School admins can update status (approve/reject) of users in their school.
+      allow update: if isSchoolAdmin() &&
+        get(/databases/$(database)/documents/users/$(userId)).data.schoolId == mySchool() &&
+        request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status', 'updatedAt']);
+    }
+
+    // ── Schools ───────────────────────────────────────────────────────────────
+    // Collection: schools/{schoolId}
+    // Fields: id, name, address, city, state, pincode, principal, phone,
+    //         email, website, totalStudents, adminEmail, adminName,
+    //         status (pending/verified/rejected), createdAt, verifiedAt
+    match /schools/{schoolId} {
+      // Any signed-in user can list/read schools (e.g. for signup dropdowns).
+      allow read: if isSignedIn();
+
+      // Only the platform admin can create new school documents or change status.
+      allow create, delete: if isAdmin();
+
+      // School admin can update their own school's non-status fields.
+      allow update: if isSchoolAdmin() && sameSchool(schoolId) &&
+        !request.resource.data.diff(resource.data).affectedKeys().hasAny(['status', 'verifiedAt']);
+    }
+
+    // ── Guild Events ──────────────────────────────────────────────────────────
+    // Collection: guild_events/{eventId}
+    // Fields: guildName, type, score, userId, ts
+    match /guild_events/{eventId} {
+      allow read: if isSignedIn();
+      // Any authenticated user can post a guild event (battles, wars).
+      allow create: if isSignedIn();
+      // Only admin can modify or delete past events.
+      allow update, delete: if isAdmin();
+    }
+
+    // ── Questions / Quiz Bank ─────────────────────────────────────────────────
+    // Collection: questions/{questionId}
+    // Fields: subject, grade, question, options, answer, difficulty, createdBy
+    match /questions/{questionId} {
+      allow read: if isSignedIn();
+      // Admin and teachers can manage the question bank.
+      allow write: if isAdmin() || isTeacher();
+    }
+
+    // ── Leaderboard ───────────────────────────────────────────────────────────
+    // Collection: leaderboard/{entryId}
+    // Fields: uid, displayName, totalXP, guild, rank
+    match /leaderboard/{entryId} {
+      allow read: if isSignedIn();
+      // Users update their own entry; admin can update any entry.
+      allow write: if isSignedIn() && resource.data.uid == request.auth.uid;
+    }
+
+    // ── Announcements ─────────────────────────────────────────────────────────
+    // Collection: announcements/{announcementId}
+    // Fields: title, body, targetRole, createdAt, createdBy
+    match /announcements/{announcementId} {
+      allow read: if isSignedIn();
+      // Only platform admin can create/edit/delete announcements.
+      allow write: if isAdmin();
+    }
+
+    // ── Events (XP multiplier events) ────────────────────────────────────────
+    // Collection: events/{eventId}
+    // Fields: name, multiplier, startAt, endAt, createdBy
+    match /events/{eventId} {
+      allow read: if isSignedIn();
+      allow write: if isAdmin();
+    }
+
+    // ── Notifications ─────────────────────────────────────────────────────────
+    // Collection: notifications/{notifId}
+    // Fields: userId, schoolId, title, body, read, createdAt
+    match /notifications/{notifId} {
+      // Users can read their own notifications; school admins can read school-wide ones.
+      allow read: if isSignedIn() && (
+        resource.data.userId == request.auth.uid ||
+        (isSchoolAdmin() && resource.data.schoolId == mySchool())
+      );
+      // Admin and school admins can create notifications.
+      allow create: if isAdmin() || isSchoolAdmin();
+      // Users can mark their own notification as read.
+      allow update: if isSignedIn() && resource.data.userId == request.auth.uid &&
+        request.resource.data.diff(resource.data).affectedKeys().hasOnly(['read']);
+      // Only admin can delete notifications.
+      allow delete: if isAdmin();
+    }
+
+    // ── Audit Log ─────────────────────────────────────────────────────────────
+    // Collection: audit_log/{logId}
+    // Fields: action, performedBy, targetId, details, ts
+    match /audit_log/{logId} {
+      allow read: if isAdmin();
+      // Append-only: admin can create but nobody can edit or delete.
+      allow create: if isAdmin();
+      allow update, delete: if false;
     }
   }
 }
 ```
+
+---
+
+## Realtime Database Rules
+
+> lvlBase uses **Firestore** as its primary database. If you also enable the Firebase **Realtime Database** (e.g. for presence/online-status), apply the rules below.
+
+Go to **Firebase Console → Realtime Database → Rules** and paste:
+
+```json
+{
+  "rules": {
+    // Default deny — every path must be explicitly opened.
+    ".read": false,
+    ".write": false,
+
+    "users": {
+      "$uid": {
+        // Users can read/write their own node.
+        // Platform admin can read/write any user node.
+        ".read": "auth != null && (auth.uid == $uid || root.child('users').child(auth.uid).child('role').val() == 'admin')",
+        ".write": "auth != null && (auth.uid == $uid || root.child('users').child(auth.uid).child('role').val() == 'admin')"
+      }
+    },
+
+    "schools": {
+      // Any signed-in user can list schools (for signup dropdowns).
+      ".read": "auth != null",
+      "$schoolId": {
+        // Admin can write any school; school admin can write only their own school.
+        ".write": "auth != null && (root.child('users').child(auth.uid).child('role').val() == 'admin' || (root.child('users').child(auth.uid).child('role').val() == 'school_admin' && root.child('users').child(auth.uid).child('schoolId').val() == $schoolId))"
+      }
+    },
+
+    "guild_events": {
+      // Any signed-in user can read and post guild events.
+      ".read": "auth != null",
+      ".write": "auth != null"
+    },
+
+    "leaderboard": {
+      // Public read; any signed-in user can post/update their entry.
+      ".read": "auth != null",
+      ".write": "auth != null"
+    },
+
+    "questions": {
+      // Signed-in users can read; only admin and teachers can write.
+      ".read": "auth != null",
+      ".write": "auth != null && (root.child('users').child(auth.uid).child('role').val() == 'admin' || root.child('users').child(auth.uid).child('role').val() == 'teacher')"
+    },
+
+    "announcements": {
+      // Everyone can read; only platform admin can write.
+      ".read": "auth != null",
+      ".write": "auth != null && root.child('users').child(auth.uid).child('role').val() == 'admin'"
+    },
+
+    "events": {
+      // Everyone can read multiplier events; only admin can write.
+      ".read": "auth != null",
+      ".write": "auth != null && root.child('users').child(auth.uid).child('role').val() == 'admin'"
+    },
+
+    "notifications": {
+      "$uid": {
+        // Users can read their own notifications.
+        ".read": "auth != null && auth.uid == $uid",
+        // Users can mark notifications read; admin and school admins can create them.
+        ".write": "auth != null && (auth.uid == $uid || root.child('users').child(auth.uid).child('role').val() == 'admin' || root.child('users').child(auth.uid).child('role').val() == 'school_admin')"
+      }
+    },
+
+    "audit_log": {
+      // Only platform admin can read or append to the audit log.
+      ".read": "auth != null && root.child('users').child(auth.uid).child('role').val() == 'admin'",
+      ".write": "auth != null && root.child('users').child(auth.uid).child('role').val() == 'admin'"
+    }
+  }
+}
+```
+
+### Firestore Collections at a Glance
+
+| Collection | Who reads | Who writes |
+|---|---|---|
+| `users/{uid}` | Owner · Teacher/School admin (same school) · Parent (own child) · Admin | Owner · School admin (status field) · Admin |
+| `schools/{schoolId}` | All signed-in | School admin (own, non-status fields) · Admin |
+| `guild_events` | All signed-in | All signed-in (create) · Admin (edit/delete) |
+| `questions` | All signed-in | Teacher · Admin |
+| `leaderboard` | All signed-in | Entry owner · Admin |
+| `announcements` | All signed-in | Admin only |
+| `events` | All signed-in | Admin only |
+| `notifications` | Owner · School admin (school-wide) | Admin · School admin (create) · Owner (mark read) |
+| `audit_log` | Admin only | Admin only (append-only) |
 
 ---
 
