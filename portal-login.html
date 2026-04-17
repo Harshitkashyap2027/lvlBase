@@ -286,6 +286,7 @@
 
   <script>
     const ROLE_CONFIG = {
+      student:     { label: 'Student',      redirect: 'dashboard.html',         btnColor: 'linear-gradient(135deg,#6C63FF,#8B85FF)' },
       parent:      { label: 'Parent',       redirect: 'parent-dashboard.html',  btnColor: 'linear-gradient(135deg,#00D1B2,#00B89C)' },
       teacher:     { label: 'Teacher',      redirect: 'teacher-dashboard.html', btnColor: 'linear-gradient(135deg,#FFD700,#FFA500)' },
       school_admin:{ label: 'School Admin', redirect: 'school-dashboard.html',  btnColor: 'linear-gradient(135deg,#FF6B6B,#FF4444)' },
@@ -298,16 +299,9 @@
       // Deselect all
       document.querySelectorAll('.role-card').forEach(c => c.classList.remove('selected'));
 
-      if (role === 'student') {
-        currentRole = null;
-        closeAuthForm();
-        window.location.href = 'login.html';
-        return;
-      }
-
       currentRole = role;
       // Mark selected
-      const map = { parent: 'role-parent', teacher: 'role-teacher', school_admin: 'role-school', super_admin: 'role-super' };
+      const map = { student: 'role-student', parent: 'role-parent', teacher: 'role-teacher', school_admin: 'role-school', super_admin: 'role-super' };
       const cards = document.querySelectorAll('.role-card');
       cards.forEach(c => { if (c.classList.contains(map[role])) c.classList.add('selected'); });
 
@@ -335,6 +329,30 @@
       if (!currentRole) return;
       const name  = document.getElementById('auth-name').value.trim()     || 'Demo User';
       const email = document.getElementById('auth-email').value.trim()    || 'demo@lvlbase.com';
+
+      // Student login — check existing account or create new profile
+      if (currentRole === 'student') {
+        const users = JSON.parse(localStorage.getItem('lvlbase_all_users') || '[]');
+        let user = users.find(u => u.email && u.email.toLowerCase() === email.toLowerCase());
+        if (!user) {
+          user = {
+            uid: 'student_' + Date.now(),
+            displayName: name,
+            email: email.toLowerCase(),
+            role: 'student',
+            status: 'approved',
+            totalXP: 0,
+            createdAt: new Date().toISOString()
+          };
+          users.push(user);
+          localStorage.setItem('lvlbase_all_users', JSON.stringify(users));
+        }
+        localStorage.setItem('lvlbase_current_user', JSON.stringify(user));
+        localStorage.setItem('lvlbase_user_profile', JSON.stringify(user));
+        showToast('✅ Welcome, ' + (user.displayName || name) + '!', 'success');
+        setTimeout(() => { window.location.href = ROLE_CONFIG[currentRole].redirect; }, 800);
+        return;
+      }
 
       // Find school for school_admin
       let schoolId = null;
