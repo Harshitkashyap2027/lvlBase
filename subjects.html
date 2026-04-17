@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Subjects – lvlBase ⚡</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/main.css">
+  <style>
+    .subject-hero-card { border-radius: var(--radius-xl); padding: 2rem; cursor: pointer; transition: var(--transition); position: relative; overflow: hidden; color: white; }
+    .subject-hero-card:hover { transform: translateY(-8px); box-shadow: 0 20px 60px rgba(0,0,0,0.3); }
+    .subject-hero-icon { font-size: 4rem; margin-bottom: 1rem; }
+    .subject-hero-name { font-size: 1.6rem; font-weight: 900; margin-bottom: 0.5rem; }
+    .subject-hero-desc { opacity: 0.85; font-size: 0.95rem; margin-bottom: 1.5rem; }
+    .subject-hero-stats { display: flex; gap: 1.5rem; }
+    .subject-hero-stat { text-align: center; }
+    .subject-hero-stat-value { font-size: 1.3rem; font-weight: 800; }
+    .subject-hero-stat-label { font-size: 0.7rem; opacity: 0.8; }
+    .chapter-chips { display: flex; flex-wrap: wrap; gap: 0.4rem; margin-top: 1rem; }
+    .chapter-chip { background: rgba(255,255,255,0.15); padding: 0.3rem 0.6rem; border-radius: 20px; font-size: 0.75rem; }
+  </style>
+</head>
+<body>
+  <nav class="navbar">
+    <a href="index.html" class="navbar-brand">lvlBase ⚡</a>
+    <div class="navbar-nav">
+      <a href="dashboard.html" class="nav-link">Dashboard</a>
+      <a href="subjects.html" class="nav-link active">Study</a>
+      <a href="quiz.html" class="nav-link">Quiz</a>
+      <a href="battles.html" class="nav-link">Battle</a>
+    </div>
+    <div class="navbar-actions">
+      <span id="nav-xp" style="color:var(--accent);font-weight:700;font-size:0.9rem"></span>
+      <a href="dashboard.html" class="btn btn-ghost btn-sm">← Back</a>
+    </div>
+    <div class="hamburger" id="hamburger"><span></span><span></span><span></span></div>
+  </nav>
+
+  <div class="page-wrapper">
+    <div class="container" style="padding-top:3rem;padding-bottom:3rem">
+      <div class="page-header">
+        <h1 class="page-title">📚 Choose Your Subject</h1>
+        <p class="page-subtitle">Master every topic, one chapter at a time</p>
+      </div>
+
+      <!-- Overall Progress -->
+      <div class="grid grid-3 mb-4">
+        <div class="stat-card" style="background:var(--card-bg);border:1px solid var(--border-color);border-radius:var(--radius-lg)">
+          <div class="stat-value" id="total-chapters" style="color:var(--primary)">0</div>
+          <div class="stat-label">Chapters Completed</div>
+        </div>
+        <div class="stat-card" style="background:var(--card-bg);border:1px solid var(--border-color);border-radius:var(--radius-lg)">
+          <div class="stat-value" id="total-progress" style="color:var(--success)">0%</div>
+          <div class="stat-label">Overall Progress</div>
+        </div>
+        <div class="stat-card" style="background:var(--card-bg);border:1px solid var(--border-color);border-radius:var(--radius-lg)">
+          <div class="stat-value" id="total-xp-study" style="color:var(--accent)">0</div>
+          <div class="stat-label">Study XP Earned</div>
+        </div>
+      </div>
+
+      <!-- Subject Cards -->
+      <div class="grid grid-3 mb-4" id="subjects-grid"></div>
+
+      <!-- Tips -->
+      <div class="card" style="background:linear-gradient(135deg,rgba(108,99,255,0.1),rgba(0,209,178,0.1));border:1px solid rgba(108,99,255,0.2)">
+        <h3 style="font-size:1rem;font-weight:700;margin-bottom:1rem">💡 Study Tips</h3>
+        <div class="grid grid-3">
+          <div><strong style="color:var(--primary)">🎯 Active Learning</strong><p style="font-size:0.85rem;color:var(--text-muted);margin-top:0.3rem">Don't just read – answer questions, take notes, and test yourself</p></div>
+          <div><strong style="color:var(--success)">⏰ Consistency</strong><p style="font-size:0.85rem;color:var(--text-muted);margin-top:0.3rem">30 minutes daily beats 3 hours once a week</p></div>
+          <div><strong style="color:var(--accent)">🔗 Connect Topics</strong><p style="font-size:0.85rem;color:var(--text-muted);margin-top:0.3rem">Link new concepts to things you already know</p></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="toast-container" class="toast-container"></div>
+
+  <script>
+    const SUBJECTS = {
+      math: { name: 'Mathematics', emoji: '📐', gradient: 'linear-gradient(135deg, #6C63FF, #4A00E0)', desc: 'Algebra, Geometry, Trigonometry & more', totalChapters: 12, chapters: ['Number Systems','Polynomials','Linear Equations','Quadratic Equations','Arithmetic Progressions','Triangles','Coordinate Geometry','Trigonometry','Circles','Constructions','Areas & Volumes','Statistics'] },
+      science: { name: 'Science', emoji: '🔬', gradient: 'linear-gradient(135deg, #00D1B2, #009B86)', desc: 'Physics, Chemistry, Biology & Environment', totalChapters: 15, chapters: ['Chemical Reactions','Acids & Bases','Metals & Non-Metals','Carbon Compounds','Periodic Classification','Life Processes','Control & Coordination','Reproduction','Heredity & Evolution','Light & Optics','Electricity','Magnetic Effects','Sources of Energy','Environment','Natural Resources'] },
+      english: { name: 'English', emoji: '📚', gradient: 'linear-gradient(135deg, #FF6B6B, #CC0000)', desc: 'Grammar, Literature & Writing Skills', totalChapters: 10, chapters: ['Parts of Speech','Tenses','Active & Passive Voice','Direct & Indirect Speech','Reading Comprehension','Writing Skills','Literature – Prose','Literature – Poetry','Vocabulary','Editing & Proofreading'] }
+    };
+
+    const profile = JSON.parse(localStorage.getItem('lvlbase_user_profile') || '{}');
+    if (profile.totalXP) document.getElementById('nav-xp').textContent = `⚡ ${profile.totalXP} XP`;
+    const progress = profile.subjectProgress || { math: 0, science: 0, english: 0 };
+
+    let totalChapters = 0, totalProg = 0;
+    const grid = document.getElementById('subjects-grid');
+    grid.innerHTML = Object.entries(SUBJECTS).map(([key, sub]) => {
+      const pct = Math.round(progress[key] || 0);
+      const done = Math.floor(pct / 100 * sub.totalChapters);
+      totalChapters += done;
+      totalProg += pct;
+      const xpEarned = done * 75;
+      return `
+        <div class="subject-hero-card" style="background:${sub.gradient}" onclick="window.location.href='learn.html?subject=${key}'">
+          <div class="subject-hero-icon">${sub.emoji}</div>
+          <div class="subject-hero-name">${sub.name}</div>
+          <div class="subject-hero-desc">${sub.desc}</div>
+          <div style="background:rgba(255,255,255,0.15);border-radius:20px;height:8px;margin-bottom:0.75rem;overflow:hidden">
+            <div style="height:100%;background:rgba(255,255,255,0.8);border-radius:20px;width:${pct}%;transition:width 0.8s ease"></div>
+          </div>
+          <div class="subject-hero-stats">
+            <div class="subject-hero-stat">
+              <div class="subject-hero-stat-value">${pct}%</div>
+              <div class="subject-hero-stat-label">Progress</div>
+            </div>
+            <div class="subject-hero-stat">
+              <div class="subject-hero-stat-value">${done}/${sub.totalChapters}</div>
+              <div class="subject-hero-stat-label">Chapters</div>
+            </div>
+            <div class="subject-hero-stat">
+              <div class="subject-hero-stat-value">+${xpEarned}</div>
+              <div class="subject-hero-stat-label">XP Earned</div>
+            </div>
+          </div>
+          <div class="chapter-chips">
+            ${sub.chapters.slice(0,4).map(c => `<span class="chapter-chip">${c}</span>`).join('')}
+            ${sub.chapters.length > 4 ? `<span class="chapter-chip">+${sub.chapters.length-4} more</span>` : ''}
+          </div>
+        </div>`;
+    }).join('');
+
+    document.getElementById('total-chapters').textContent = totalChapters;
+    document.getElementById('total-progress').textContent = Math.round(totalProg / 3) + '%';
+    document.getElementById('total-xp-study').textContent = totalChapters * 75;
+
+    document.getElementById('hamburger').addEventListener('click', () => {
+      document.getElementById('mobile-menu')?.classList.toggle('open');
+    });
+  </script>
+</body>
+</html>

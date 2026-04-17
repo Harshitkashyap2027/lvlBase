@@ -1,0 +1,451 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Quiz – lvlBase ⚡</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/main.css">
+  <link rel="stylesheet" href="css/quiz.css">
+</head>
+<body>
+  <nav class="navbar">
+    <a href="index.html" class="navbar-brand">lvlBase ⚡</a>
+    <div class="navbar-nav">
+      <a href="dashboard.html" class="nav-link">Dashboard</a>
+      <a href="subjects.html" class="nav-link">Study</a>
+      <a href="quiz.html" class="nav-link active">Quiz</a>
+      <a href="battles.html" class="nav-link">Battle</a>
+    </div>
+    <div class="navbar-actions">
+      <span id="nav-xp" style="color:var(--accent);font-weight:700;font-size:0.9rem"></span>
+      <a href="dashboard.html" class="btn btn-ghost btn-sm">← Back</a>
+    </div>
+    <div class="hamburger" id="hamburger"><span></span><span></span><span></span></div>
+  </nav>
+
+  <div class="page-wrapper">
+    <div class="quiz-wrapper">
+
+      <!-- SELECTION SCREEN -->
+      <div id="screen-select">
+        <div class="page-header">
+          <h1 class="page-title">🎯 Quiz Mode</h1>
+          <p class="page-subtitle">Test your knowledge and earn XP</p>
+        </div>
+
+        <!-- Subject Selection -->
+        <div class="card mb-3">
+          <h3 style="font-size:1rem;font-weight:700;margin-bottom:1rem">📚 Choose Subject</h3>
+          <div class="grid grid-4" id="subject-select-grid">
+            <div class="quiz-type-card selected" onclick="selectSubject(this,'math')" data-subject="math">
+              <div class="quiz-type-icon">📐</div>
+              <div class="quiz-type-title">Mathematics</div>
+              <div class="quiz-type-desc">Algebra, Geometry, Numbers</div>
+            </div>
+            <div class="quiz-type-card" onclick="selectSubject(this,'science')" data-subject="science">
+              <div class="quiz-type-icon">🔬</div>
+              <div class="quiz-type-title">Science</div>
+              <div class="quiz-type-desc">Physics, Chemistry, Biology</div>
+            </div>
+            <div class="quiz-type-card" onclick="selectSubject(this,'english')" data-subject="english">
+              <div class="quiz-type-icon">📚</div>
+              <div class="quiz-type-title">English</div>
+              <div class="quiz-type-desc">Grammar, Literature</div>
+            </div>
+            <div class="quiz-type-card" onclick="selectSubject(this,'mixed')" data-subject="mixed">
+              <div class="quiz-type-icon">🎲</div>
+              <div class="quiz-type-title">Mixed</div>
+              <div class="quiz-type-desc">All subjects</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Mode Selection -->
+        <div class="card mb-3">
+          <h3 style="font-size:1rem;font-weight:700;margin-bottom:1rem">⚡ Quiz Mode</h3>
+          <div class="quiz-selection-grid">
+            <div class="quiz-type-card selected" onclick="selectMode(this,'practice')" data-mode="practice">
+              <div class="quiz-type-icon">📖</div>
+              <div class="quiz-type-title">Practice</div>
+              <div class="quiz-type-desc">No timer, learn at your pace. Get explanations for every answer.</div>
+            </div>
+            <div class="quiz-type-card" onclick="selectMode(this,'exam')" data-mode="exam">
+              <div class="quiz-type-icon">📝</div>
+              <div class="quiz-type-title">Exam Mode</div>
+              <div class="quiz-type-desc">30 seconds per question. Simulate real exam conditions.</div>
+            </div>
+            <div class="quiz-type-card" onclick="selectMode(this,'speed')" data-mode="speed">
+              <div class="quiz-type-icon">⚡</div>
+              <div class="quiz-type-title">Speed Round</div>
+              <div class="quiz-type-desc">15 seconds per question. Test your reaction speed!</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Question Count -->
+        <div class="card mb-4">
+          <h3 style="font-size:1rem;font-weight:700;margin-bottom:1rem">📊 Number of Questions</h3>
+          <div style="display:flex;gap:0.75rem;flex-wrap:wrap">
+            <button class="btn btn-ghost btn-sm q-count-btn selected" onclick="selectCount(this,5)">5 Questions</button>
+            <button class="btn btn-ghost btn-sm q-count-btn" onclick="selectCount(this,10)">10 Questions</button>
+            <button class="btn btn-ghost btn-sm q-count-btn" onclick="selectCount(this,15)">15 Questions</button>
+          </div>
+        </div>
+
+        <div style="text-align:center">
+          <button class="btn btn-primary btn-xl" onclick="startQuiz()">⚡ Start Quiz!</button>
+        </div>
+      </div>
+
+      <!-- QUIZ SCREEN -->
+      <div id="screen-quiz" style="display:none">
+        <div class="quiz-container">
+          <div class="quiz-header">
+            <div>
+              <div class="quiz-progress-info" id="q-progress">Question 1 of 10</div>
+              <div style="font-size:0.8rem;color:var(--text-muted)" id="q-subject-label">Mathematics</div>
+            </div>
+            <div class="quiz-timer" id="quiz-timer" style="display:none">⏱ <span id="timer-val">30</span>s</div>
+            <div style="text-align:right">
+              <div style="font-size:0.9rem;font-weight:700;color:var(--success)" id="q-score">Score: 0</div>
+              <div style="font-size:0.75rem;color:var(--text-muted)">XP: +<span id="q-xp">0</span></div>
+            </div>
+          </div>
+
+          <div class="quiz-progress-bar">
+            <div class="quiz-progress-fill" id="quiz-progress-fill" style="width:0%"></div>
+          </div>
+
+          <div class="question-card" id="question-card">
+            <div class="question-subject-tag" id="q-tag">📐 Mathematics</div>
+            <div class="question-number" id="q-number">Question 1</div>
+            <div class="question-text" id="q-text">Loading question...</div>
+            <div class="options-grid" id="options-grid"></div>
+            <div class="explanation-box" id="explanation-box">
+              <div class="exp-title">💡 Explanation</div>
+              <div id="explanation-text"></div>
+            </div>
+          </div>
+
+          <div class="quiz-actions">
+            <button class="btn btn-ghost" onclick="skipQuestion()" id="skip-btn">Skip →</button>
+            <button class="btn btn-primary" onclick="nextQuestion()" id="next-btn" style="display:none">Next Question →</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- RESULTS SCREEN -->
+      <div id="screen-results" style="display:none">
+        <div class="quiz-container results-container">
+          <h2 style="font-size:1.5rem;font-weight:800;margin-bottom:1.5rem" id="results-title">Quiz Complete! 🎉</h2>
+
+          <div class="results-circle" id="results-circle">
+            <span id="results-pct">0%</span>
+          </div>
+
+          <div class="xp-earned-badge" id="xp-badge">+0 XP Earned!</div>
+
+          <div class="results-stats">
+            <div class="result-stat">
+              <div class="result-stat-value" id="res-correct" style="color:var(--success)">0</div>
+              <div class="result-stat-label">Correct</div>
+            </div>
+            <div class="result-stat">
+              <div class="result-stat-value" id="res-wrong" style="color:var(--danger)">0</div>
+              <div class="result-stat-label">Wrong</div>
+            </div>
+            <div class="result-stat">
+              <div class="result-stat-value" id="res-time" style="color:var(--primary)">0s</div>
+              <div class="result-stat-label">Time Taken</div>
+            </div>
+          </div>
+
+          <div style="display:flex;gap:1rem;justify-content:center;flex-wrap:wrap;margin-bottom:2rem">
+            <button class="btn btn-primary" onclick="restartQuiz()">🔄 Play Again</button>
+            <a href="dashboard.html" class="btn btn-ghost">📊 Dashboard</a>
+            <a href="battles.html" class="btn btn-secondary">⚔️ Battle Now</a>
+          </div>
+
+          <!-- Review Section -->
+          <div id="review-section">
+            <h3 style="font-size:1.1rem;font-weight:700;margin-bottom:1rem">📋 Review Answers</h3>
+            <div id="review-list"></div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <div id="toast-container" class="toast-container"></div>
+
+  <script>
+    const QUESTION_BANK = {
+      math: [
+        { q: 'What is the value of x in 2x + 6 = 14?', opts: ['4','5','6','7'], ans: 0, exp: '2x = 8, so x = 4.' },
+        { q: 'Which is a prime number?', opts: ['15','21','17','25'], ans: 2, exp: '17 is only divisible by 1 and itself.' },
+        { q: 'Area of circle with radius 7? (π≈22/7)', opts: ['154 cm²','144 cm²','132 cm²','164 cm²'], ans: 0, exp: 'πr² = (22/7)×49 = 154 cm²' },
+        { q: 'Simplify: a² - b²', opts: ['(a+b)²','(a-b)(a+b)','(a-b)²','a²+b²'], ans: 1, exp: 'Difference of squares: (a-b)(a+b).' },
+        { q: 'What is 15% of 200?', opts: ['25','30','35','40'], ans: 1, exp: '15/100 × 200 = 30.' },
+        { q: 'Slope through (2,3) and (4,7)?', opts: ['1','2','3','4'], ans: 1, exp: '(7-3)/(4-2) = 4/2 = 2.' },
+        { q: 'LCM of 12 and 18?', opts: ['24','36','48','54'], ans: 1, exp: 'LCM(12,18) = 36.' },
+        { q: 'Train travels 240 km in 3 hours. Speed?', opts: ['60 km/h','70 km/h','80 km/h','90 km/h'], ans: 2, exp: '240/3 = 80 km/h.' },
+        { q: '√144 = ?', opts: ['10','11','12','13'], ans: 2, exp: '12×12 = 144.' },
+        { q: 'Solve: 3x - 7 = 2x + 5', opts: ['x=10','x=12','x=8','x=14'], ans: 1, exp: '3x-2x = 5+7, x = 12.' },
+        { q: 'Perimeter of rectangle 8cm × 5cm?', opts: ['26 cm','24 cm','28 cm','30 cm'], ans: 0, exp: '2(8+5) = 26 cm.' },
+        { q: '6! = ?', opts: ['360','480','600','720'], ans: 3, exp: '6! = 6×120 = 720.' },
+        { q: 'HCF of 24 and 36?', opts: ['6','8','12','18'], ans: 2, exp: 'HCF(24,36) = 12.' },
+        { q: 'Sum of angles in a triangle?', opts: ['90°','180°','270°','360°'], ans: 1, exp: 'Always 180°.' },
+        { q: '∛27 = ?', opts: ['2','3','4','5'], ans: 1, exp: '3³ = 27.' }
+      ],
+      science: [
+        { q: '"Powerhouse of the cell"?', opts: ['Nucleus','Ribosome','Mitochondria','Vacuole'], ans: 2, exp: 'Mitochondria produce ATP energy.' },
+        { q: 'Chemical formula of water?', opts: ['H₂O₂','HO','H₂O','H₃O'], ans: 2, exp: '2 hydrogen + 1 oxygen.' },
+        { q: 'Most abundant gas in atmosphere?', opts: ['Oxygen','CO₂','Nitrogen','Argon'], ans: 2, exp: 'Nitrogen ≈ 78%.' },
+        { q: "Newton's First Law?", opts: ['F=ma','Law of Inertia','Action-Reaction','Gravitation'], ans: 1, exp: 'Objects stay at rest unless acted upon.' },
+        { q: 'Plants make food via?', opts: ['Respiration','Transpiration','Photosynthesis','Digestion'], ans: 2, exp: 'Photosynthesis converts light to energy.' },
+        { q: 'Atomic number of Carbon?', opts: ['4','6','8','12'], ans: 1, exp: 'Carbon has 6 protons.' },
+        { q: '"Red Planet"?', opts: ['Venus','Jupiter','Mars','Saturn'], ans: 2, exp: 'Mars has iron oxide on surface.' },
+        { q: 'Lens for myopia?', opts: ['Convex','Concave','Bifocal','Cylindrical'], ans: 1, exp: 'Concave lenses correct myopia.' },
+        { q: 'Speed of light in vacuum?', opts: ['3×10⁶ m/s','3×10⁸ m/s','3×10¹⁰ m/s','3×10⁴ m/s'], ans: 1, exp: '~3×10⁸ m/s.' },
+        { q: 'DNA stands for?', opts: ['Deoxyribose Nucleic Acid','Deoxyribonucleic Acid','Diribonucleic Acid','Dual Nucleic Acid'], ans: 1, exp: 'Deoxyribonucleic Acid.' },
+        { q: 'Acid in stomach?', opts: ['Sulphuric','Nitric','Hydrochloric','Citric'], ans: 2, exp: 'HCl for digestion.' },
+        { q: 'Unit of electric current?', opts: ['Volt','Watt','Ohm','Ampere'], ans: 3, exp: 'Amperes (A).' },
+        { q: 'Universal blood donor type?', opts: ['A','B','AB','O'], ans: 3, exp: 'O- is universal donor.' },
+        { q: 'Ozone layer protects from?', opts: ['Infrared','UV rays','X-rays','Radio waves'], ans: 1, exp: 'Absorbs UV radiation.' },
+        { q: 'SI unit of force?', opts: ['Joule','Watt','Newton','Pascal'], ans: 2, exp: 'Newton (N), F=ma.' }
+      ],
+      english: [
+        { q: '"She ___ to school every day."', opts: ['go','goes','going','gone'], ans: 1, exp: 'Third-person singular → goes.' },
+        { q: 'Synonym of "eloquent"?', opts: ['Quiet','Articulate','Confused','Abrupt'], ans: 1, exp: 'Eloquent = Articulate.' },
+        { q: 'Passive voice?', opts: ['The dog chased the cat.','The cat was chased by the dog.','I ate the cake.','She writes books.'], ans: 1, exp: 'Subject receives action in passive voice.' },
+        { q: 'Antonym of "benevolent"?', opts: ['Kind','Generous','Malevolent','Charitable'], ans: 2, exp: 'Malevolent = wishing evil.' },
+        { q: '"The stars danced in the sky" – figure of speech?', opts: ['Simile','Metaphor','Personification','Hyperbole'], ans: 2, exp: 'Human quality given to stars = personification.' },
+        { q: 'Correct spelling?', opts: ['Accomodation','Accommodation','Acommodation','Acomodation'], ans: 1, exp: 'Double c, double m: Accommodation.' },
+        { q: '"Kill two birds with one stone" means?', opts: ['Harm animals','Accomplish two goals with one action','Be wasteful','Be unlucky'], ans: 1, exp: 'Two goals, one effort.' },
+        { q: '"The book is mine" – "mine" is?', opts: ['Personal pronoun','Possessive pronoun','Reflexive pronoun','Demonstrative pronoun'], ans: 1, exp: '"Mine" shows possession.' },
+        { q: 'Correct sentence?', opts: ['Me and him went.','Him and I went.','He and I went to the store.','I and he went.'], ans: 2, exp: 'Subject pronouns: "He and I".' },
+        { q: '"Life is a roller coaster" – device?', opts: ['Simile','Metaphor','Alliteration','Onomatopoeia'], ans: 1, exp: 'Direct comparison = metaphor.' },
+        { q: 'Plural of "analysis"?', opts: ['Analysises','Analysi','Analyses','Analysis'], ans: 2, exp: '-is → -es for Greek words.' },
+        { q: 'Adverb in "She speaks very softly"?', opts: ['She','speaks','very','Both very and softly'], ans: 3, exp: 'Both very and softly are adverbs.' },
+        { q: 'Correct?', opts: ["There going.","They're going to the park.","Their going.","Theyre going."], ans: 1, exp: '"They\'re" = they are.' },
+        { q: 'Interrogative sentence ends with?', opts: ['.','!','?',';'], ans: 2, exp: 'Questions end with ?' },
+        { q: '"Pedagogy" relates to?', opts: ['Cooking','Medicine','Teaching','Plants'], ans: 2, exp: 'Pedagogy = method of teaching.' }
+      ]
+    };
+
+    let quizState = { questions: [], current: 0, score: 0, answers: [], timer: null, timeLeft: 30, subject: 'math', mode: 'practice', count: 5, startTime: null, xpEarned: 0 };
+
+    const profile = JSON.parse(localStorage.getItem('lvlbase_user_profile') || '{}');
+    if (profile.totalXP) document.getElementById('nav-xp').textContent = `⚡ ${profile.totalXP} XP`;
+
+    function selectSubject(el, sub) {
+      document.querySelectorAll('[data-subject]').forEach(e => e.classList.remove('selected'));
+      el.classList.add('selected');
+      quizState.subject = sub;
+    }
+    function selectMode(el, mode) {
+      document.querySelectorAll('[data-mode]').forEach(e => e.classList.remove('selected'));
+      el.classList.add('selected');
+      quizState.mode = mode;
+    }
+    function selectCount(el, count) {
+      document.querySelectorAll('.q-count-btn').forEach(e => e.classList.remove('selected'));
+      el.classList.add('selected');
+      quizState.count = count;
+    }
+
+    function getQuestions(subject, count) {
+      const bank = subject === 'mixed'
+        ? [...QUESTION_BANK.math, ...QUESTION_BANK.science, ...QUESTION_BANK.english]
+        : (QUESTION_BANK[subject] || QUESTION_BANK.math);
+      return [...bank].sort(() => Math.random()-0.5).slice(0, Math.min(count, bank.length));
+    }
+
+    function startQuiz() {
+      quizState.questions = getQuestions(quizState.subject, quizState.count);
+      quizState.current = 0; quizState.score = 0; quizState.answers = []; quizState.xpEarned = 0;
+      quizState.startTime = Date.now();
+      document.getElementById('screen-select').style.display = 'none';
+      document.getElementById('screen-quiz').style.display = 'block';
+      showQuestion();
+    }
+
+    function showQuestion() {
+      const q = quizState.questions[quizState.current];
+      if (!q) { showResults(); return; }
+
+      const total = quizState.questions.length;
+      const subjectLabels = { math: '📐 Mathematics', science: '🔬 Science', english: '📚 English', mixed: '🎲 Mixed' };
+      document.getElementById('q-progress').textContent = `Question ${quizState.current+1} of ${total}`;
+      document.getElementById('q-subject-label').textContent = subjectLabels[quizState.subject] || quizState.subject;
+      document.getElementById('q-tag').textContent = subjectLabels[quizState.subject] || '📚 Quiz';
+      document.getElementById('q-number').textContent = `Question ${quizState.current+1}`;
+      document.getElementById('q-text').textContent = q.q;
+      document.getElementById('quiz-progress-fill').style.width = (quizState.current/total*100)+'%';
+      document.getElementById('q-score').textContent = `Score: ${quizState.score}/${quizState.current}`;
+
+      const labels = ['A','B','C','D'];
+      document.getElementById('options-grid').innerHTML = q.opts.map((opt, i) =>
+        `<button class="option-btn" onclick="selectAnswer(${i})" id="opt-${i}">
+          <span class="option-label">${labels[i]}</span>
+          <span>${opt}</span>
+        </button>`).join('');
+
+      document.getElementById('explanation-box').classList.remove('show');
+      document.getElementById('next-btn').style.display = 'none';
+      document.getElementById('skip-btn').style.display = 'flex';
+
+      if (quizState.mode !== 'practice') {
+        quizState.timeLeft = quizState.mode === 'speed' ? 15 : 30;
+        startTimer();
+      }
+    }
+
+    function startTimer() {
+      clearInterval(quizState.timer);
+      const timerEl = document.getElementById('quiz-timer');
+      timerEl.style.display = 'flex';
+      timerEl.className = 'quiz-timer';
+      updateTimerDisplay();
+      quizState.timer = setInterval(() => {
+        quizState.timeLeft--;
+        updateTimerDisplay();
+        if (quizState.timeLeft <= 0) { clearInterval(quizState.timer); autoSkip(); }
+      }, 1000);
+    }
+
+    function updateTimerDisplay() {
+      const el = document.getElementById('timer-val');
+      const container = document.getElementById('quiz-timer');
+      el.textContent = quizState.timeLeft;
+      container.className = 'quiz-timer' + (quizState.timeLeft <= 5 ? ' danger' : quizState.timeLeft <= 10 ? ' warning' : '');
+    }
+
+    function autoSkip() {
+      quizState.answers.push({ selected: -1, correct: quizState.questions[quizState.current].ans, isCorrect: false });
+      showFeedback(-1);
+    }
+
+    function selectAnswer(idx) {
+      clearInterval(quizState.timer);
+      document.querySelectorAll('.option-btn').forEach(b => b.disabled = true);
+      const q = quizState.questions[quizState.current];
+      const isCorrect = idx === q.ans;
+      if (isCorrect) { quizState.score++; quizState.xpEarned += 10; }
+      quizState.answers.push({ selected: idx, correct: q.ans, isCorrect });
+      showFeedback(idx);
+    }
+
+    function showFeedback(selected) {
+      const q = quizState.questions[quizState.current];
+      document.querySelectorAll('.option-btn').forEach((btn, i) => {
+        if (i === q.ans) btn.classList.add('correct');
+        else if (i === selected && selected !== -1) btn.classList.add('wrong');
+      });
+      if (quizState.mode === 'practice') {
+        document.getElementById('explanation-text').textContent = q.exp;
+        document.getElementById('explanation-box').classList.add('show');
+      }
+      document.getElementById('skip-btn').style.display = 'none';
+      document.getElementById('next-btn').style.display = 'flex';
+      document.getElementById('q-score').textContent = `Score: ${quizState.score}/${quizState.current+1}`;
+      document.getElementById('q-xp').textContent = quizState.xpEarned;
+    }
+
+    function nextQuestion() {
+      quizState.current++;
+      if (quizState.current >= quizState.questions.length) showResults();
+      else showQuestion();
+    }
+
+    function skipQuestion() {
+      quizState.answers.push({ selected: -1, correct: quizState.questions[quizState.current].ans, isCorrect: false });
+      quizState.current++;
+      if (quizState.current >= quizState.questions.length) showResults();
+      else showQuestion();
+    }
+
+    function showResults() {
+      clearInterval(quizState.timer);
+      const total = quizState.questions.length;
+      const correct = quizState.score;
+      const pct = Math.round((correct/total)*100);
+      const timeSpent = Math.round((Date.now()-quizState.startTime)/1000);
+      const bonusXP = quizState.xpEarned + 25 + (correct === total ? 50 : 0);
+
+      document.getElementById('screen-quiz').style.display = 'none';
+      document.getElementById('screen-results').style.display = 'block';
+
+      const circle = document.getElementById('results-circle');
+      circle.style.setProperty('--score', pct);
+      document.getElementById('results-pct').textContent = pct + '%';
+      document.getElementById('xp-badge').textContent = `+${bonusXP} XP Earned!`;
+      document.getElementById('res-correct').textContent = correct;
+      document.getElementById('res-wrong').textContent = total - correct;
+      document.getElementById('res-time').textContent = timeSpent + 's';
+
+      const title = document.getElementById('results-title');
+      title.textContent = pct === 100 ? '🌟 PERFECT SCORE! Legendary!' : pct >= 80 ? '🎉 Excellent Work!' : pct >= 60 ? '👍 Good Job!' : '📚 Keep Practicing!';
+
+      // Save to profile
+      const p = JSON.parse(localStorage.getItem('lvlbase_user_profile') || '{}');
+      p.totalXP = (p.totalXP || 0) + bonusXP;
+      p.quizzesCompleted = (p.quizzesCompleted || 0) + 1;
+      if (correct === total) p.perfectScores = (p.perfectScores || 0) + 1;
+      if (!p.achievements) p.achievements = [];
+      if (p.quizzesCompleted >= 1 && !p.achievements.includes('first_quiz')) p.achievements.push('first_quiz');
+      if (p.totalXP >= 1000 && !p.achievements.includes('xp_1000')) p.achievements.push('xp_1000');
+      if (p.quizzesCompleted >= 10 && !p.achievements.includes('quiz_10')) p.achievements.push('quiz_10');
+      if (correct === total && !p.achievements.includes('perfect_score')) p.achievements.push('perfect_score');
+      if (p.totalXP >= 500 && !p.achievements.includes('rank_up_d')) p.achievements.push('rank_up_d');
+      if (!p.subjectProgress) p.subjectProgress = { math: 0, science: 0, english: 0 };
+      if (quizState.subject !== 'mixed') p.subjectProgress[quizState.subject] = Math.min(100, (p.subjectProgress[quizState.subject] || 0) + (pct/100*5));
+      localStorage.setItem('lvlbase_user_profile', JSON.stringify(p));
+      document.getElementById('nav-xp').textContent = `⚡ ${p.totalXP} XP`;
+
+      const history = JSON.parse(localStorage.getItem('lvlbase_quiz_history') || '[]');
+      history.unshift({ subject: quizState.subject, mode: quizState.mode, score: pct, correct, total, xpEarned: bonusXP, date: new Date().toISOString() });
+      localStorage.setItem('lvlbase_quiz_history', JSON.stringify(history.slice(0,50)));
+
+      // Review
+      const reviewList = document.getElementById('review-list');
+      reviewList.innerHTML = quizState.answers.map((a, i) => {
+        const q = quizState.questions[i];
+        return `<div class="review-item ${a.isCorrect?'correct-review':'wrong-review'}">
+          <div style="font-size:0.85rem;font-weight:600;margin-bottom:0.5rem">${i+1}. ${q.q}</div>
+          <div style="font-size:0.8rem;color:${a.isCorrect?'var(--success)':'var(--danger)'}">
+            ${a.isCorrect ? '✅ Correct' : `❌ Your answer: ${a.selected >= 0 ? q.opts[a.selected] : 'Skipped'} | Correct: ${q.opts[q.ans]}`}
+          </div>
+          ${!a.isCorrect ? `<div style="font-size:0.8rem;color:var(--text-muted);margin-top:0.3rem">💡 ${q.exp}</div>` : ''}
+        </div>`;
+      }).join('');
+
+      showToast(pct >= 80 ? '🌟 Great quiz!' : '📚 Keep practicing!', pct >= 80 ? 'success' : 'info');
+    }
+
+    function restartQuiz() {
+      document.getElementById('screen-results').style.display = 'none';
+      document.getElementById('screen-select').style.display = 'block';
+    }
+
+    function showToast(msg, type = 'info') {
+      const container = document.getElementById('toast-container');
+      const toast = document.createElement('div');
+      toast.className = `toast ${type}`;
+      toast.innerHTML = `<span>${{success:'✅',error:'❌',info:'ℹ️'}[type]||'ℹ️'}</span><span>${msg}</span>`;
+      container.appendChild(toast);
+      setTimeout(() => { toast.classList.add('toast-hide'); setTimeout(() => toast.remove(), 300); }, 3000);
+    }
+
+    document.getElementById('hamburger').addEventListener('click', () => {
+      document.getElementById('mobile-menu')?.classList.toggle('open');
+    });
+
+    // Check URL params
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('mode') === 'daily') { quizState.mode = 'exam'; document.querySelector('[data-mode="exam"]')?.click(); }
+  </script>
+</body>
+</html>

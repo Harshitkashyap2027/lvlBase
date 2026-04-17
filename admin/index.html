@@ -1,0 +1,463 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin Panel – lvlBase ⚡</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../css/main.css">
+  <link rel="stylesheet" href="../css/admin.css">
+</head>
+<body>
+
+  <!-- LOGIN SCREEN -->
+  <div id="login-screen" class="admin-login-wrapper">
+    <div class="admin-login-card">
+      <div class="admin-login-logo">lvlBase ⚡</div>
+      <div class="admin-login-subtitle">Admin Control Panel</div>
+      <div id="login-error" style="color:var(--danger);font-size:0.85rem;text-align:center;margin-bottom:1rem;display:none"></div>
+      <div class="form-group">
+        <label class="form-label">Admin Email</label>
+        <input type="email" id="admin-email" class="form-control" placeholder="admin@lvlbase.com" value="admin@lvlbase.com">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Password</label>
+        <input type="password" id="admin-password" class="form-control" placeholder="••••••••" value="admin123">
+      </div>
+      <button class="btn btn-primary btn-full" onclick="doLogin()">🔐 Login to Admin</button>
+      <p style="text-align:center;font-size:0.75rem;color:var(--text-muted);margin-top:1rem">Demo: admin@lvlbase.com / admin123</p>
+      <div style="text-align:center;margin-top:0.75rem">
+        <a href="../index.html" style="font-size:0.8rem;color:var(--text-muted)">← Back to Site</a>
+      </div>
+    </div>
+  </div>
+
+  <!-- ADMIN DASHBOARD -->
+  <div id="admin-screen" class="admin-wrapper" style="display:none">
+    <!-- Sidebar -->
+    <aside class="admin-sidebar">
+      <div class="admin-sidebar-header">
+        <div class="admin-logo">lvlBase ⚡</div>
+        <div class="admin-logo-sub">Admin Control Panel</div>
+      </div>
+      <nav class="admin-nav">
+        <div class="admin-nav-section">
+          <div class="admin-nav-label">Overview</div>
+          <a class="admin-nav-link active" onclick="showSection('overview', this)"><span class="nav-icon">📊</span>Dashboard</a>
+          <a class="admin-nav-link" onclick="showSection('analytics', this)"><span class="nav-icon">📈</span>Analytics</a>
+        </div>
+        <div class="admin-nav-section">
+          <div class="admin-nav-label">Management</div>
+          <a class="admin-nav-link" onclick="showSection('users', this)"><span class="nav-icon">👥</span>Users<span class="admin-nav-badge">1.2K</span></a>
+          <a class="admin-nav-link" onclick="showSection('quizzes', this)"><span class="nav-icon">🎯</span>Quizzes</a>
+          <a class="admin-nav-link" onclick="showSection('events', this)"><span class="nav-icon">🎉</span>Events</a>
+        </div>
+        <div class="admin-nav-section">
+          <div class="admin-nav-label">System</div>
+          <a class="admin-nav-link" onclick="showSection('settings', this)"><span class="nav-icon">⚙️</span>Settings</a>
+          <a class="admin-nav-link" onclick="doLogout()"><span class="nav-icon">🚪</span>Logout</a>
+        </div>
+      </nav>
+    </aside>
+
+    <!-- Main -->
+    <main class="admin-main">
+      <div class="admin-topbar">
+        <div class="admin-topbar-title" id="topbar-title">📊 Dashboard Overview</div>
+        <div class="admin-topbar-actions">
+          <span style="font-size:0.85rem;color:var(--text-muted)">Welcome, Admin</span>
+          <a href="../index.html" class="btn btn-ghost btn-sm">View Site →</a>
+        </div>
+      </div>
+
+      <div class="admin-content">
+
+        <!-- OVERVIEW SECTION -->
+        <div id="section-overview">
+          <!-- Stats Grid -->
+          <div class="admin-stats-grid mb-3">
+            <div class="admin-stat-card">
+              <div class="flex-between mb-1"><div><div class="admin-stat-label">Total Users</div><div class="admin-stat-value" id="admin-total-users" style="color:var(--primary)">0</div></div><div class="admin-stat-icon">👥</div></div>
+              <div class="admin-stat-change change-up">↑ 12% this week</div>
+            </div>
+            <div class="admin-stat-card">
+              <div class="flex-between mb-1"><div><div class="admin-stat-label">Active Today</div><div class="admin-stat-value" id="admin-active-today" style="color:var(--success)">0</div></div><div class="admin-stat-icon">🟢</div></div>
+              <div class="admin-stat-change change-up">↑ 8% vs yesterday</div>
+            </div>
+            <div class="admin-stat-card">
+              <div class="flex-between mb-1"><div><div class="admin-stat-label">Total Quizzes</div><div class="admin-stat-value" id="admin-total-quizzes" style="color:var(--accent)">0</div></div><div class="admin-stat-icon">🎯</div></div>
+              <div class="admin-stat-change change-up">↑ 340 today</div>
+            </div>
+            <div class="admin-stat-card">
+              <div class="flex-between mb-1"><div><div class="admin-stat-label">Avg Score</div><div class="admin-stat-value" id="admin-avg-score" style="color:var(--secondary)">0%</div></div><div class="admin-stat-icon">📈</div></div>
+              <div class="admin-stat-change">Stable</div>
+            </div>
+          </div>
+
+          <div class="grid grid-2 mb-3">
+            <!-- Chart: Weekly Activity -->
+            <div class="admin-card">
+              <div class="admin-card-header"><div class="admin-card-title">📊 Weekly Activity</div></div>
+              <div class="admin-card-body">
+                <div class="chart-bar-container" id="weekly-chart"></div>
+                <div class="chart-labels" id="weekly-labels"></div>
+              </div>
+            </div>
+
+            <!-- System Health -->
+            <div class="admin-card">
+              <div class="admin-card-header"><div class="admin-card-title">💚 System Health</div></div>
+              <div class="admin-card-body">
+                <div class="health-item"><div class="health-label"><span class="status-dot status-online"></span>Platform Status</div><div class="health-value" style="color:var(--success)">Operational</div></div>
+                <div class="health-item"><div class="health-label"><span class="status-dot status-online"></span>Database</div><div class="health-value" style="color:var(--success)">Connected</div></div>
+                <div class="health-item"><div class="health-label"><span class="status-dot status-online"></span>AI Tutor (Sage)</div><div class="health-value" style="color:var(--success)">Online</div></div>
+                <div class="health-item"><div class="health-label"><span class="status-dot status-warning"></span>Email Service</div><div class="health-value" style="color:var(--warning)">Not Configured</div></div>
+                <div class="health-item"><div class="health-label"><span class="status-dot status-online"></span>Quiz Engine</div><div class="health-value" style="color:var(--success)">Running</div></div>
+                <div class="health-item"><div class="health-label"><span class="status-dot status-online"></span>Battle Arena</div><div class="health-value" style="color:var(--success)">Active</div></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- XP Multiplier -->
+          <div class="grid grid-2 mb-3">
+            <div class="admin-card xp-multiplier-card">
+              <div class="admin-card-header"><div class="admin-card-title">⚡ Global XP Multiplier</div><span class="multiplier-active">✅ Active</span></div>
+              <div class="admin-card-body">
+                <div class="multiplier-value" id="multiplier-val">1.0×</div>
+                <p style="font-size:0.85rem;color:var(--text-muted);margin:0.5rem 0">Current XP multiplier applied to all students</p>
+                <div style="display:flex;gap:0.5rem;flex-wrap:wrap;margin-top:1rem">
+                  <button class="btn btn-sm btn-ghost" onclick="setMultiplier(1)">1×</button>
+                  <button class="btn btn-sm btn-primary" onclick="setMultiplier(1.5)">1.5×</button>
+                  <button class="btn btn-sm btn-secondary" onclick="setMultiplier(2)">2× 🔥</button>
+                  <button class="btn btn-sm btn-success" onclick="setMultiplier(3)">3× 🚀</button>
+                </div>
+              </div>
+            </div>
+
+            <!-- Recent Actions -->
+            <div class="admin-card">
+              <div class="admin-card-header"><div class="admin-card-title">📋 Recent Admin Actions</div></div>
+              <div class="admin-card-body">
+                <div class="timeline" id="admin-timeline"></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Top Users Table -->
+          <div class="admin-table-container">
+            <div class="admin-table-header">
+              <div class="admin-table-title">👑 Top Students</div>
+              <input type="text" class="form-control" style="max-width:200px" placeholder="Search..." oninput="filterTable(this.value)">
+            </div>
+            <table class="admin-table" id="top-users-table">
+              <thead><tr><th>Student</th><th>Email</th><th>XP</th><th>Rank</th><th>Quizzes</th><th>Status</th><th>Actions</th></tr></thead>
+              <tbody id="top-users-body"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- ANALYTICS SECTION -->
+        <div id="section-analytics" style="display:none">
+          <div class="admin-stats-grid mb-3">
+            <div class="admin-stat-card"><div class="admin-stat-label">Total XP Awarded</div><div class="admin-stat-value" id="analytics-xp" style="color:var(--accent)">2.45M</div></div>
+            <div class="admin-stat-card"><div class="admin-stat-label">Total Battles</div><div class="admin-stat-value" id="analytics-battles" style="color:var(--secondary)">3,892</div></div>
+            <div class="admin-stat-card"><div class="admin-stat-label">Goals Completed</div><div class="admin-stat-value" id="analytics-goals" style="color:var(--success)">5,621</div></div>
+            <div class="admin-stat-card"><div class="admin-stat-label">Retention Rate</div><div class="admin-stat-value" id="analytics-retention" style="color:var(--primary)">78%</div></div>
+          </div>
+          <div class="grid grid-2 mb-3">
+            <div class="admin-card">
+              <div class="admin-card-header"><div class="admin-card-title">📚 Subject Popularity</div></div>
+              <div class="admin-card-body">
+                <div style="display:flex;flex-direction:column;gap:1rem">
+                  <div><div style="display:flex;justify-content:space-between;font-size:0.85rem;margin-bottom:0.3rem"><span>📐 Mathematics</span><span style="color:var(--primary)">45%</span></div><div class="progress-bar-bg"><div class="progress-bar progress-primary" style="width:45%"></div></div></div>
+                  <div><div style="display:flex;justify-content:space-between;font-size:0.85rem;margin-bottom:0.3rem"><span>🔬 Science</span><span style="color:var(--success)">35%</span></div><div class="progress-bar-bg"><div class="progress-bar progress-success" style="width:35%"></div></div></div>
+                  <div><div style="display:flex;justify-content:space-between;font-size:0.85rem;margin-bottom:0.3rem"><span>📚 English</span><span style="color:var(--secondary)">20%</span></div><div class="progress-bar-bg"><div class="progress-bar progress-danger" style="width:20%"></div></div></div>
+                </div>
+              </div>
+            </div>
+            <div class="admin-card">
+              <div class="admin-card-header"><div class="admin-card-title">🏰 Guild Distribution</div></div>
+              <div class="admin-card-body">
+                <div style="display:flex;flex-direction:column;gap:0.75rem">
+                  <div style="display:flex;justify-content:space-between;align-items:center"><span>🌙 Shadow Guild</span><span style="font-weight:700;color:#7C3AED">234 members</span></div>
+                  <div style="display:flex;justify-content:space-between;align-items:center"><span>🔥 Inferno Legion</span><span style="font-weight:700;color:#DC2626">198 members</span></div>
+                  <div style="display:flex;justify-content:space-between;align-items:center"><span>💧 Azure Order</span><span style="font-weight:700;color:#2563EB">215 members</span></div>
+                  <div style="display:flex;justify-content:space-between;align-items:center"><span>⚡ Titan Brotherhood</span><span style="font-weight:700;color:#16A34A">178 members</span></div>
+                  <div style="display:flex;justify-content:space-between;align-items:center"><span>✨ Zenith Circle</span><span style="font-weight:700;color:#D97706">156 members</span></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- USERS SECTION -->
+        <div id="section-users" style="display:none">
+          <div class="flex-between mb-3">
+            <h2 style="font-size:1.1rem;font-weight:700">👥 User Management</h2>
+            <div style="display:flex;gap:0.75rem">
+              <input type="text" class="form-control" style="max-width:220px" placeholder="🔍 Search users...">
+              <select class="form-control" style="width:auto">
+                <option>All Ranks</option>
+                <option>SS-Rank</option>
+                <option>S-Rank</option>
+                <option>A-Rank</option>
+                <option>B-Rank</option>
+              </select>
+            </div>
+          </div>
+          <div class="admin-table-container">
+            <table class="admin-table">
+              <thead><tr><th>#</th><th>Student</th><th>Guild</th><th>XP</th><th>Rank</th><th>Streak</th><th>Quizzes</th><th>Joined</th><th>Status</th><th>Actions</th></tr></thead>
+              <tbody id="users-table-body"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- EVENTS SECTION -->
+        <div id="section-events" style="display:none">
+          <div class="grid grid-2 mb-3">
+            <div class="admin-card">
+              <div class="admin-card-header"><div class="admin-card-title">🎉 Create Event</div></div>
+              <div class="admin-card-body">
+                <div class="form-group"><label class="form-label">Event Title</label><input type="text" id="evt-title" class="form-control" placeholder="e.g., Weekend XP Boost!"></div>
+                <div class="form-group"><label class="form-label">Description</label><input type="text" id="evt-desc" class="form-control" placeholder="All students get 2x XP this weekend!"></div>
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem">
+                  <div class="form-group"><label class="form-label">XP Bonus</label><select id="evt-bonus" class="form-control"><option value="1.5">1.5×</option><option value="2">2× 🔥</option><option value="3">3× 🚀</option></select></div>
+                  <div class="form-group"><label class="form-label">Duration</label><select id="evt-duration" class="form-control"><option>1 Day</option><option>3 Days</option><option>1 Week</option><option>1 Month</option></select></div>
+                </div>
+                <button class="btn btn-primary btn-full" onclick="createEvent()">🎉 Launch Event</button>
+              </div>
+            </div>
+            <div class="admin-card">
+              <div class="admin-card-header"><div class="admin-card-title">📋 Active Events</div></div>
+              <div class="admin-card-body" id="active-events-list">
+                <div style="color:var(--text-muted);font-size:0.85rem">No active events. Create one!</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- SETTINGS SECTION -->
+        <div id="section-settings" style="display:none">
+          <div class="grid grid-2">
+            <div class="admin-card">
+              <div class="admin-card-header"><div class="admin-card-title">⚙️ Platform Settings</div></div>
+              <div class="admin-card-body">
+                <div style="display:flex;flex-direction:column;gap:1rem">
+                  <div style="display:flex;justify-content:space-between;align-items:center"><div><div style="font-weight:600;font-size:0.9rem">Maintenance Mode</div><div style="font-size:0.8rem;color:var(--text-muted)">Disable user access temporarily</div></div><button class="toggle" id="maint-toggle" onclick="this.classList.toggle('on')"></button></div>
+                  <div style="display:flex;justify-content:space-between;align-items:center"><div><div style="font-weight:600;font-size:0.9rem">New Registrations</div><div style="font-size:0.8rem;color:var(--text-muted)">Allow new students to sign up</div></div><button class="toggle on" id="signup-toggle" onclick="this.classList.toggle('on')"></button></div>
+                  <div style="display:flex;justify-content:space-between;align-items:center"><div><div style="font-weight:600;font-size:0.9rem">Battle Arena</div><div style="font-size:0.8rem;color:var(--text-muted)">Enable/disable battle system</div></div><button class="toggle on" id="battle-toggle" onclick="this.classList.toggle('on')"></button></div>
+                  <div style="display:flex;justify-content:space-between;align-items:center"><div><div style="font-weight:600;font-size:0.9rem">AI Tutor (Sage)</div><div style="font-size:0.8rem;color:var(--text-muted)">Enable Sage AI assistant</div></div><button class="toggle on" id="ai-toggle" onclick="this.classList.toggle('on')"></button></div>
+                </div>
+              </div>
+            </div>
+            <div class="admin-card">
+              <div class="admin-card-header"><div class="admin-card-title">🔧 Quick Actions</div></div>
+              <div class="admin-card-body">
+                <div style="display:flex;flex-direction:column;gap:0.75rem">
+                  <button class="btn btn-primary btn-full" onclick="showToast('📊 Analytics report exported!','success')">📊 Export Analytics Report</button>
+                  <button class="btn btn-success btn-full" onclick="showToast('✅ Daily XP bonus sent to all users!','success')">⚡ Send Bonus XP to All</button>
+                  <button class="btn btn-ghost btn-full" onclick="showToast('📧 Announcements sent!','info')">📢 Send Announcement</button>
+                  <button class="btn btn-danger btn-full" onclick="if(confirm('Clear all demo data?')){localStorage.clear();showToast('Data cleared','info');}">🗑 Clear Demo Data</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </main>
+  </div>
+
+  <div id="toast-container" class="toast-container"></div>
+
+  <script>
+    // Admin auth (demo)
+    const CREDS = { email: 'admin@lvlbase.com', password: 'admin123' };
+
+    function checkSession() {
+      const s = localStorage.getItem('lvlbase_admin_session');
+      if (!s) return false;
+      try { const d = JSON.parse(s); return d.loggedIn && Date.now()-d.loginTime < 3600000; } catch { return false; }
+    }
+
+    function doLogin() {
+      const email = document.getElementById('admin-email').value;
+      const pw = document.getElementById('admin-password').value;
+      if (email === CREDS.email && pw === CREDS.password) {
+        localStorage.setItem('lvlbase_admin_session', JSON.stringify({ loggedIn:true, loginTime:Date.now() }));
+        document.getElementById('login-screen').style.display = 'none';
+        document.getElementById('admin-screen').style.display = 'flex';
+        initAdmin();
+      } else {
+        const err = document.getElementById('login-error');
+        err.textContent = '❌ Invalid credentials. Try admin@lvlbase.com / admin123';
+        err.style.display = 'block';
+      }
+    }
+
+    function doLogout() {
+      localStorage.removeItem('lvlbase_admin_session');
+      document.getElementById('admin-screen').style.display = 'none';
+      document.getElementById('login-screen').style.display = 'flex';
+    }
+
+    function initAdmin() {
+      const quizH = JSON.parse(localStorage.getItem('lvlbase_quiz_history') || '[]');
+      const battleH = JSON.parse(localStorage.getItem('lvlbase_battle_history') || '[]');
+      const profile = JSON.parse(localStorage.getItem('lvlbase_user_profile') || '{}');
+
+      document.getElementById('admin-total-users').textContent = '1,247';
+      document.getElementById('admin-active-today').textContent = '89';
+      document.getElementById('admin-total-quizzes').textContent = (quizH.length + 12450).toLocaleString();
+      document.getElementById('admin-avg-score').textContent = quizH.length > 0 ? Math.round(quizH.reduce((s,h)=>s+h.score,0)/quizH.length)+'%' : '72%';
+
+      // Chart
+      const days = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
+      const vals = [45, 67, 52, 78, 91, 112, 89];
+      const maxV = Math.max(...vals);
+      const chart = document.getElementById('weekly-chart');
+      const labels = document.getElementById('weekly-labels');
+      chart.innerHTML = vals.map((v,i) => `<div class="chart-bar" style="height:${Math.round(v/maxV*100)}%" data-value="${v}"></div>`).join('');
+      labels.innerHTML = days.map(d => `<div class="chart-label">${d}</div>`).join('');
+
+      // Timeline
+      const timeline = document.getElementById('admin-timeline');
+      const actions = [
+        { action:'XP Multiplier set to 1.5×', meta:'2 hours ago', color:'var(--primary)' },
+        { action:'New event created: Weekend Challenge', meta:'Yesterday', color:'var(--success)' },
+        { action:'User report exported', meta:'2 days ago', color:'var(--accent)' }
+      ];
+      timeline.innerHTML = actions.map(a => `<div class="timeline-item"><div class="timeline-dot" style="background:${a.color}"></div><div class="timeline-content"><div class="timeline-action">${a.action}</div><div class="timeline-meta">${a.meta}</div></div></div>`).join('');
+
+      // Top users
+      const topUsers = [
+        { name:'Arjun Sharma', email:'arjun@student.com', xp:28500, rank:'SS-Rank', quizzes:245, status:'active', streak:45 },
+        { name:'Priya Patel', email:'priya@student.com', xp:24200, rank:'S-Rank', quizzes:198, status:'active', streak:32 },
+        { name:'Rohan Mehta', email:'rohan@student.com', xp:21800, rank:'S-Rank', quizzes:175, status:'active', streak:28 }
+      ];
+      if (profile.displayName) topUsers.push({ name:profile.displayName, email:profile.email||'demo@user.com', xp:profile.totalXP||0, rank:getRankLabel(profile.totalXP||0), quizzes:profile.quizzesCompleted||0, status:'active', streak:profile.streak||0 });
+
+      const tbody = document.getElementById('top-users-body');
+      tbody.innerHTML = topUsers.sort((a,b)=>b.xp-a.xp).map((u,i)=>`
+        <tr>
+          <td style="font-weight:700;color:var(--accent)">${i<3?['🥇','🥈','🥉'][i]:'#'+(i+1)}</td>
+          <td><div style="font-weight:600;font-size:0.875rem">${u.name}</div><div style="font-size:0.75rem;color:var(--text-muted)">🔥 ${u.streak} day streak</div></td>
+          <td style="font-size:0.8rem;color:var(--text-muted)">${u.email}</td>
+          <td style="font-weight:700;color:var(--primary)">⚡ ${u.xp.toLocaleString()}</td>
+          <td><span class="badge badge-primary" style="font-size:0.75rem">${u.rank}</span></td>
+          <td>${u.quizzes}</td>
+          <td><span class="status-dot status-online"></span>${u.status}</td>
+          <td><div class="action-btn-group">
+            <button class="admin-action-btn action-view" onclick="showToast('Viewing ${u.name}','info')">View</button>
+            <button class="admin-action-btn action-boost" onclick="showToast('+500 XP sent to ${u.name}!','success')">Boost</button>
+            <button class="admin-action-btn action-ban" onclick="showToast('${u.name} banned','error')">Ban</button>
+          </div></td>
+        </tr>`).join('');
+
+      // Users table
+      renderUsersTable([...topUsers, { name:'Anika Singh', email:'anika@student.com', xp:19500, rank:'S-Rank', quizzes:145, status:'active', streak:21 }, { name:'Dev Kapoor', email:'dev@student.com', xp:17300, rank:'A-Rank', quizzes:132, status:'idle', streak:18 }]);
+
+      // Active events
+      const events = JSON.parse(localStorage.getItem('lvlbase_events') || '[]');
+      renderEvents(events);
+    }
+
+    function renderUsersTable(users) {
+      const guilds = { shadow:'🌙', azure:'💧', inferno:'🔥', titan:'⚡', zenith:'✨' };
+      document.getElementById('users-table-body').innerHTML = users.map((u,i)=>`
+        <tr>
+          <td>${i+1}</td>
+          <td><div style="font-weight:600;font-size:0.875rem">${u.name}</div></td>
+          <td>${guilds[u.guild]||'–'}</td>
+          <td style="font-weight:700;color:var(--primary)">⚡${(u.xp||0).toLocaleString()}</td>
+          <td><span style="font-size:0.75rem;font-weight:600">${u.rank||'E-Rank'}</span></td>
+          <td>🔥${u.streak||0}</td>
+          <td>${u.quizzes||0}</td>
+          <td style="font-size:0.75rem;color:var(--text-muted)">2024-01-15</td>
+          <td><span class="status-dot ${u.status==='active'?'status-online':'status-offline'}"></span>${u.status||'active'}</td>
+          <td><div class="action-btn-group">
+            <button class="admin-action-btn action-edit" onclick="showToast('Editing ${u.name}','info')">Edit</button>
+            <button class="admin-action-btn action-ban" onclick="showToast('${u.name} banned','error')">Ban</button>
+          </div></td>
+        </tr>`).join('');
+    }
+
+    function renderEvents(events) {
+      const list = document.getElementById('active-events-list');
+      if (!events.length) { list.innerHTML = '<div style="color:var(--text-muted);font-size:0.85rem">No active events. Create one!</div>'; return; }
+      list.innerHTML = events.map(e => `<div style="background:rgba(108,99,255,0.05);border:1px solid var(--border-color);border-radius:var(--radius);padding:0.75rem;margin-bottom:0.5rem"><div style="display:flex;justify-content:space-between;align-items:center"><div style="font-weight:600;font-size:0.875rem">${e.title}</div><span class="badge badge-success">${e.xpBonus}× XP</span></div><div style="font-size:0.75rem;color:var(--text-muted);margin-top:0.3rem">${e.description}</div></div>`).join('');
+    }
+
+    function getRankLabel(xp) {
+      if(xp>=30000)return'SS-Rank';if(xp>=15000)return'S-Rank';if(xp>=7000)return'A-Rank';
+      if(xp>=3500)return'B-Rank';if(xp>=1500)return'C-Rank';if(xp>=500)return'D-Rank';return'E-Rank';
+    }
+
+    function showSection(id, linkEl) {
+      document.querySelectorAll('[id^="section-"]').forEach(s => s.style.display = 'none');
+      document.getElementById('section-' + id).style.display = 'block';
+      document.querySelectorAll('.admin-nav-link').forEach(l => l.classList.remove('active'));
+      if (linkEl) linkEl.classList.add('active');
+      const titles = { overview:'📊 Dashboard Overview', analytics:'📈 Analytics', users:'👥 User Management', quizzes:'🎯 Quiz Management', events:'🎉 Events', settings:'⚙️ Settings' };
+      document.getElementById('topbar-title').textContent = titles[id] || id;
+    }
+
+    function filterTable(query) {
+      const rows = document.querySelectorAll('#top-users-body tr');
+      rows.forEach(row => { row.style.display = row.textContent.toLowerCase().includes(query.toLowerCase()) ? '' : 'none'; });
+    }
+
+    function setMultiplier(val) {
+      document.getElementById('multiplier-val').textContent = val + '×';
+      addTimelineAction(`XP Multiplier set to ${val}×`);
+      showToast(`⚡ Global XP multiplier set to ${val}×!`, 'success');
+    }
+
+    function addTimelineAction(action) {
+      const tl = document.getElementById('admin-timeline');
+      const item = document.createElement('div'); item.className = 'timeline-item';
+      item.innerHTML = `<div class="timeline-dot"></div><div class="timeline-content"><div class="timeline-action">${action}</div><div class="timeline-meta">Just now</div></div>`;
+      tl.insertBefore(item, tl.firstChild);
+    }
+
+    function createEvent() {
+      const title = document.getElementById('evt-title').value;
+      const desc = document.getElementById('evt-desc').value;
+      const bonus = document.getElementById('evt-bonus').value;
+      if (!title) { showToast('Enter event title', 'error'); return; }
+      const events = JSON.parse(localStorage.getItem('lvlbase_events') || '[]');
+      events.push({ id:'evt_'+Date.now(), title, description:desc, xpBonus:bonus, active:true, createdAt:new Date().toISOString() });
+      localStorage.setItem('lvlbase_events', JSON.stringify(events));
+      renderEvents(events);
+      document.getElementById('evt-title').value = '';
+      document.getElementById('evt-desc').value = '';
+      showToast(`🎉 Event "${title}" launched!`, 'success');
+      addTimelineAction(`New event: "${title}" (${bonus}× XP)`);
+    }
+
+    function showToast(msg, type) {
+      const container = document.getElementById('toast-container');
+      const toast = document.createElement('div'); toast.className = `toast ${type}`;
+      toast.innerHTML = `<span>${{success:'✅',error:'❌',info:'ℹ️',warning:'⚠️'}[type]||'ℹ️'}</span><span>${msg}</span>`;
+      container.appendChild(toast);
+      setTimeout(()=>{ toast.classList.add('toast-hide'); setTimeout(()=>toast.remove(),300); }, 3000);
+    }
+
+    // Enter key on login
+    document.addEventListener('keydown', e => { if (e.key === 'Enter' && document.getElementById('login-screen').style.display !== 'none') doLogin(); });
+
+    // Init
+    if (checkSession()) {
+      document.getElementById('login-screen').style.display = 'none';
+      document.getElementById('admin-screen').style.display = 'flex';
+      initAdmin();
+    }
+
+    // Toggle style
+    const style = document.createElement('style');
+    style.textContent = `.toggle { width: 44px; height: 24px; background: rgba(255,255,255,0.1); border-radius: 12px; cursor: pointer; transition: var(--transition); position: relative; flex-shrink: 0; border: none; } .toggle.on { background: var(--primary); } .toggle::after { content: ''; position: absolute; width: 18px; height: 18px; background: white; border-radius: 50%; top: 3px; left: 3px; transition: var(--transition); } .toggle.on::after { left: 23px; }`;
+    document.head.appendChild(style);
+  </script>
+</body>
+</html>

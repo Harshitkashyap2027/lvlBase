@@ -1,0 +1,408 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Battles – lvlBase ⚡</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/main.css">
+  <link rel="stylesheet" href="css/battle.css">
+</head>
+<body>
+  <nav class="navbar">
+    <a href="index.html" class="navbar-brand">lvlBase ⚡</a>
+    <div class="navbar-nav">
+      <a href="dashboard.html" class="nav-link">Dashboard</a>
+      <a href="quiz.html" class="nav-link">Quiz</a>
+      <a href="battles.html" class="nav-link active">Battles</a>
+      <a href="leaderboard.html" class="nav-link">Ranks</a>
+    </div>
+    <div class="navbar-actions">
+      <span id="nav-xp" style="color:var(--accent);font-weight:700;font-size:0.9rem"></span>
+      <a href="dashboard.html" class="btn btn-ghost btn-sm">← Back</a>
+    </div>
+    <div class="hamburger" id="hamburger"><span></span><span></span><span></span></div>
+  </nav>
+
+  <div class="page-wrapper">
+    <div style="max-width:900px;margin:0 auto;padding:2rem 1.5rem">
+
+      <!-- SELECTION SCREEN -->
+      <div id="screen-select">
+        <div class="page-header">
+          <h1 class="page-title">⚔️ Battle Arena</h1>
+          <p class="page-subtitle">Challenge opponents and prove your knowledge!</p>
+        </div>
+
+        <!-- Battle Stats -->
+        <div class="grid grid-3 mb-4">
+          <div class="stat-card">
+            <div class="stat-value" id="stat-battles-played" style="color:var(--primary)">0</div>
+            <div class="stat-label">Battles Played</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-value" id="stat-battles-won" style="color:var(--success)">0</div>
+            <div class="stat-label">Battles Won</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-value" id="stat-win-rate" style="color:var(--accent)">0%</div>
+            <div class="stat-label">Win Rate</div>
+          </div>
+        </div>
+
+        <!-- Opponent Selection -->
+        <div class="card mb-3">
+          <h3 style="font-size:1.1rem;font-weight:700;margin-bottom:1.5rem">🤖 Choose Your Opponent</h3>
+          <div id="opponent-grid" style="display:grid;grid-template-columns:repeat(3,1fr);gap:1rem"></div>
+        </div>
+
+        <!-- Subject Selection -->
+        <div class="card mb-4">
+          <h3 style="font-size:1rem;font-weight:700;margin-bottom:1rem">📚 Battle Subject</h3>
+          <div style="display:flex;gap:0.75rem;flex-wrap:wrap">
+            <button class="btn btn-ghost btn-sm battle-sub-btn selected" onclick="selectBattleSub(this,'mixed')">🎲 Mixed</button>
+            <button class="btn btn-ghost btn-sm battle-sub-btn" onclick="selectBattleSub(this,'math')">📐 Math</button>
+            <button class="btn btn-ghost btn-sm battle-sub-btn" onclick="selectBattleSub(this,'science')">🔬 Science</button>
+            <button class="btn btn-ghost btn-sm battle-sub-btn" onclick="selectBattleSub(this,'english')">📚 English</button>
+          </div>
+        </div>
+
+        <div style="text-align:center">
+          <button class="btn btn-secondary btn-xl" onclick="startBattle()">⚔️ Enter Battle!</button>
+        </div>
+      </div>
+
+      <!-- BATTLE SCREEN -->
+      <div id="screen-battle" style="display:none">
+        <div class="battle-arena">
+          <div class="battle-arena-header">
+            <div class="battle-round" id="battle-round">Round 1</div>
+            <div class="battle-title-text">⚔️ BATTLE!</div>
+          </div>
+
+          <!-- Health Bars -->
+          <div class="battle-players" id="battle-players">
+            <div class="player-card" id="player-card">
+              <div class="player-avatar-battle" id="player-avatar">🧑</div>
+              <div class="player-name-battle" id="player-name">You</div>
+              <div class="player-level" id="player-level">E-Rank</div>
+              <div class="health-bar-container">
+                <div class="health-bar player-hp" id="player-hp-bar" style="width:100%"></div>
+              </div>
+              <div class="health-text" id="player-hp-text">100/100 HP</div>
+            </div>
+            <div class="vs-circle">VS</div>
+            <div class="player-card enemy" id="enemy-card">
+              <div class="player-avatar-battle" id="enemy-avatar">🤖</div>
+              <div class="player-name-battle" id="enemy-name">Shadow Bot</div>
+              <div class="player-level" id="enemy-level">E-Rank</div>
+              <div class="health-bar-container">
+                <div class="health-bar enemy-hp" id="enemy-hp-bar" style="width:100%"></div>
+              </div>
+              <div class="health-text" id="enemy-hp-text">80/80 HP</div>
+            </div>
+          </div>
+
+          <!-- Question -->
+          <div class="battle-question-card" id="battle-question-card">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem">
+              <span class="badge badge-primary" id="battle-q-num">Q1</span>
+              <span id="battle-timer" style="font-weight:700;color:var(--warning)"></span>
+              <span style="color:var(--success);font-weight:700">Score: <span id="battle-score">0</span></span>
+            </div>
+            <div class="battle-question-text" id="battle-q-text">Loading...</div>
+            <div class="battle-options" id="battle-options"></div>
+            <div id="battle-feedback" style="margin-top:1rem;text-align:center;font-weight:600;display:none"></div>
+          </div>
+
+          <button class="btn btn-ghost btn-full mt-2" onclick="surrender()">🏳 Surrender</button>
+        </div>
+      </div>
+
+      <!-- RESULT SCREEN -->
+      <div id="screen-result" style="display:none">
+        <div class="battle-result" id="battle-result-container">
+          <div class="battle-result-icon" id="result-icon">🏆</div>
+          <div class="battle-result-title" id="result-title">VICTORY!</div>
+          <div id="result-subtitle" style="color:var(--text-muted);margin-bottom:1.5rem"></div>
+          <div class="xp-earned-badge" id="result-xp">+0 XP</div>
+          <div class="battle-stats">
+            <div class="battle-stat">
+              <div class="battle-stat-value" id="res-correct" style="color:var(--success)">0</div>
+              <div class="battle-stat-label">Correct Answers</div>
+            </div>
+            <div class="battle-stat">
+              <div class="battle-stat-value" id="res-rounds" style="color:var(--primary)">0</div>
+              <div class="battle-stat-label">Rounds Fought</div>
+            </div>
+            <div class="battle-stat">
+              <div class="battle-stat-value" id="res-enemy" style="color:var(--danger)">0</div>
+              <div class="battle-stat-label">Enemy HP Left</div>
+            </div>
+          </div>
+          <div style="display:flex;gap:1rem;justify-content:center;flex-wrap:wrap;margin-top:1.5rem">
+            <button class="btn btn-secondary" onclick="restartBattle()">⚔️ Battle Again</button>
+            <a href="dashboard.html" class="btn btn-ghost">📊 Dashboard</a>
+            <a href="quiz.html" class="btn btn-primary">🎯 Quiz Mode</a>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <div id="toast-container" class="toast-container"></div>
+
+  <script>
+    const OPPONENTS = [
+      { name: 'Shadow Bot',   level: 'E-Rank', avatar: '🤖', hp: 80,  difficulty: 0.3, xpReward: 30, desc: 'Easy starter' },
+      { name: 'Quiz Golem',   level: 'D-Rank', avatar: '🗿', hp: 100, difficulty: 0.45, xpReward: 45, desc: 'Getting tougher' },
+      { name: 'Logic Wyrm',   level: 'C-Rank', avatar: '🐉', hp: 120, difficulty: 0.6, xpReward: 60, desc: 'Intermediate' },
+      { name: 'Mind Titan',   level: 'B-Rank', avatar: '🦁', hp: 150, difficulty: 0.7, xpReward: 80, desc: 'Advanced warrior' },
+      { name: 'Sage Phantom', level: 'A-Rank', avatar: '👻', hp: 180, difficulty: 0.8, xpReward: 110, desc: 'Elite challenger' },
+      { name: 'Scholar God',  level: 'S-Rank', avatar: '⚡', hp: 200, difficulty: 0.9, xpReward: 150, desc: 'Ultimate boss' }
+    ];
+
+    const QUESTIONS = {
+      math: [
+        { q:'2x + 6 = 14, x = ?', opts:['4','5','6','7'], ans:0 },
+        { q:'√144 = ?', opts:['10','11','12','13'], ans:2 },
+        { q:'LCM of 12 and 18?', opts:['24','36','48','54'], ans:1 },
+        { q:'15% of 200 = ?', opts:['25','30','35','40'], ans:1 },
+        { q:'3x - 7 = 2x + 5, x = ?', opts:['10','12','8','14'], ans:1 },
+        { q:'Area of circle r=7 (π=22/7)?', opts:['154','144','132','164'], ans:0 },
+        { q:'HCF of 24 and 36?', opts:['6','8','12','18'], ans:2 },
+        { q:'2³ × 2⁴ = ?', opts:['2⁶','2⁷','2⁸','4⁷'], ans:1 },
+        { q:'Sum of angles in triangle?', opts:['90°','180°','270°','360°'], ans:1 },
+        { q:'6! = ?', opts:['360','480','600','720'], ans:3 }
+      ],
+      science: [
+        { q:'Powerhouse of cell?', opts:['Nucleus','Ribosome','Mitochondria','Vacuole'], ans:2 },
+        { q:'Formula of water?', opts:['H₂O₂','HO','H₂O','H₃O'], ans:2 },
+        { q:'Most abundant gas in atmosphere?', opts:['Oxygen','CO₂','Nitrogen','Argon'], ans:2 },
+        { q:'Red Planet?', opts:['Venus','Jupiter','Mars','Saturn'], ans:2 },
+        { q:'Atomic number of Carbon?', opts:['4','6','8','12'], ans:1 },
+        { q:'Speed of light?', opts:['3×10⁶','3×10⁸','3×10¹⁰','3×10⁴'], ans:1 },
+        { q:'Universal blood donor?', opts:['A','B','AB','O'], ans:3 },
+        { q:'Unit of current?', opts:['Volt','Watt','Ohm','Ampere'], ans:3 },
+        { q:'Plants make food via?', opts:['Respiration','Transpiration','Photosynthesis','Digestion'], ans:2 },
+        { q:"Newton's First Law?", opts:['F=ma','Inertia','Action-Reaction','Gravitation'], ans:1 }
+      ],
+      english: [
+        { q:'"She ___ to school daily."', opts:['go','goes','going','gone'], ans:1 },
+        { q:'Synonym of "eloquent"?', opts:['Quiet','Articulate','Confused','Abrupt'], ans:1 },
+        { q:'Antonym of "benevolent"?', opts:['Kind','Generous','Malevolent','Charitable'], ans:2 },
+        { q:'Plural of "analysis"?', opts:['Analysises','Analysi','Analyses','Analysis'], ans:2 },
+        { q:'Correct sentence?', opts:['Me and him went.','Him and I went.','He and I went.','I and he went.'], ans:2 },
+        { q:'"Life is a roller coaster" = ?', opts:['Simile','Metaphor','Alliteration','Onomatopoeia'], ans:1 },
+        { q:'Interrogative ends with?', opts:['.','!','?',';'], ans:2 },
+        { q:'"Pedagogy" = ?', opts:['Cooking','Medicine','Teaching','Plants'], ans:2 },
+        { q:"They're = ?", opts:["They are","Their","There","Theirs"], ans:0 },
+        { q:'"Stars danced" = ?', opts:['Simile','Metaphor','Personification','Hyperbole'], ans:2 }
+      ]
+    };
+
+    let battleState = { playerHP: 100, enemyHP: 80, playerMaxHP: 100, enemyMaxHP: 80, questions: [], currentQ: 0, score: 0, opponent: null, subject: 'mixed', streak: 0, xpEarned: 0, timer: null };
+
+    const profile = JSON.parse(localStorage.getItem('lvlbase_user_profile') || '{}');
+    const navXp = document.getElementById('nav-xp');
+    if (navXp && profile.totalXP) navXp.textContent = `⚡ ${profile.totalXP} XP`;
+
+    // Fill battle stats
+    document.getElementById('stat-battles-played').textContent = profile.battlesPlayed || 0;
+    document.getElementById('stat-battles-won').textContent = profile.battlesWon || 0;
+    document.getElementById('stat-win-rate').textContent = (profile.battlesPlayed > 0 ? Math.round(profile.battlesWon/profile.battlesPlayed*100) : 0) + '%';
+
+    // Render opponents
+    const og = document.getElementById('opponent-grid');
+    let selectedOpponent = 0;
+    og.innerHTML = OPPONENTS.map((op, i) => `
+      <div class="battle-type-card ${i===0?'selected':''}" onclick="selectOpponent(this,${i})" id="opp-${i}" style="padding:1.25rem;text-align:center">
+        <div style="font-size:2.5rem;margin-bottom:0.5rem">${op.avatar}</div>
+        <div style="font-weight:700;font-size:0.95rem">${op.name}</div>
+        <div style="font-size:0.75rem;color:var(--text-muted);margin:0.25rem 0">${op.level} • ${op.hp} HP</div>
+        <div style="font-size:0.75rem;color:var(--success)">+${op.xpReward} XP</div>
+        <div style="font-size:0.7rem;color:var(--text-muted);margin-top:0.25rem">${op.desc}</div>
+      </div>`).join('');
+
+    function selectOpponent(el, idx) {
+      document.querySelectorAll('[id^="opp-"]').forEach(e => e.classList.remove('selected'));
+      el.classList.add('selected');
+      selectedOpponent = idx;
+    }
+
+    function selectBattleSub(el, sub) {
+      document.querySelectorAll('.battle-sub-btn').forEach(b => b.classList.remove('selected'));
+      el.classList.add('selected');
+      battleState.subject = sub;
+    }
+
+    function getQuestions(subject) {
+      const bank = subject === 'mixed'
+        ? [...QUESTIONS.math, ...QUESTIONS.science, ...QUESTIONS.english]
+        : (QUESTIONS[subject] || QUESTIONS.math);
+      return [...bank].sort(() => Math.random()-0.5).slice(0, 10);
+    }
+
+    function startBattle() {
+      const opp = OPPONENTS[selectedOpponent];
+      battleState = { playerHP: 100, enemyHP: opp.hp, playerMaxHP: 100, enemyMaxHP: opp.hp, questions: getQuestions(battleState.subject), currentQ: 0, score: 0, opponent: opp, subject: battleState.subject, streak: 0, xpEarned: 0, timer: null };
+
+      document.getElementById('screen-select').style.display = 'none';
+      document.getElementById('screen-battle').style.display = 'block';
+
+      document.getElementById('player-name').textContent = profile.displayName?.split(' ')[0] || 'You';
+      document.getElementById('player-avatar').textContent = '🧑';
+      document.getElementById('player-level').textContent = 'E-Rank';
+      document.getElementById('enemy-avatar').textContent = opp.avatar;
+      document.getElementById('enemy-name').textContent = opp.name;
+      document.getElementById('enemy-level').textContent = opp.level;
+
+      updateHPBars();
+      showBattleQuestion();
+    }
+
+    function updateHPBars() {
+      const pPct = Math.max(0, battleState.playerHP / battleState.playerMaxHP * 100);
+      const ePct = Math.max(0, battleState.enemyHP / battleState.enemyMaxHP * 100);
+      document.getElementById('player-hp-bar').style.width = pPct + '%';
+      document.getElementById('enemy-hp-bar').style.width = ePct + '%';
+      document.getElementById('player-hp-text').textContent = `${Math.max(0, battleState.playerHP)}/${battleState.playerMaxHP} HP`;
+      document.getElementById('enemy-hp-text').textContent = `${Math.max(0, battleState.enemyHP)}/${battleState.enemyMaxHP} HP`;
+    }
+
+    function showBattleQuestion() {
+      const q = battleState.questions[battleState.currentQ];
+      if (!q) { endBattle(); return; }
+
+      document.getElementById('battle-q-num').textContent = `Q${battleState.currentQ+1}/${battleState.questions.length}`;
+      document.getElementById('battle-q-text').textContent = q.q;
+      document.getElementById('battle-score').textContent = battleState.score;
+      document.getElementById('battle-feedback').style.display = 'none';
+      document.getElementById('battle-round').textContent = `Round ${battleState.currentQ + 1}`;
+
+      const opts = document.getElementById('battle-options');
+      opts.innerHTML = q.opts.map((opt, i) =>
+        `<button class="battle-option" onclick="battleAnswer(${i})">${opt}</button>`).join('');
+
+      // Timer
+      let timeLeft = 20;
+      clearInterval(battleState.timer);
+      const timerEl = document.getElementById('battle-timer');
+      timerEl.textContent = `⏱ ${timeLeft}s`;
+      battleState.timer = setInterval(() => {
+        timeLeft--;
+        timerEl.textContent = `⏱ ${timeLeft}s`;
+        timerEl.style.color = timeLeft <= 5 ? 'var(--danger)' : 'var(--warning)';
+        if (timeLeft <= 0) { clearInterval(battleState.timer); battleAnswer(-1); }
+      }, 1000);
+    }
+
+    function battleAnswer(idx) {
+      clearInterval(battleState.timer);
+      document.querySelectorAll('.battle-option').forEach(b => b.disabled = true);
+      const q = battleState.questions[battleState.currentQ];
+      const isCorrect = idx === q.ans;
+
+      document.querySelectorAll('.battle-option').forEach((b, i) => {
+        if (i === q.ans) b.classList.add('correct');
+        else if (i === idx) b.classList.add('wrong');
+      });
+
+      const feedback = document.getElementById('battle-feedback');
+      if (isCorrect) {
+        const damage = Math.round((15 + Math.random()*10) * (1 + battleState.streak * 0.1));
+        battleState.enemyHP -= damage;
+        battleState.score++;
+        battleState.streak++;
+        battleState.xpEarned += 10;
+        feedback.innerHTML = `<span style="color:var(--success)">✅ Correct! Enemy takes ${damage} damage!</span>`;
+        feedback.style.display = 'block';
+      } else {
+        const enemyDmg = Math.round((10 + Math.random()*15) * (0.5 + battleState.opponent.difficulty));
+        battleState.playerHP -= enemyDmg;
+        battleState.streak = 0;
+        feedback.innerHTML = `<span style="color:var(--danger)">❌ Wrong! You take ${enemyDmg} damage!</span>`;
+        feedback.style.display = 'block';
+      }
+
+      updateHPBars();
+      battleState.currentQ++;
+
+      if (battleState.playerHP <= 0 || battleState.enemyHP <= 0 || battleState.currentQ >= battleState.questions.length) {
+        setTimeout(endBattle, 1000);
+      } else {
+        setTimeout(showBattleQuestion, 1200);
+      }
+    }
+
+    function endBattle() {
+      clearInterval(battleState.timer);
+      const playerWon = battleState.playerHP > battleState.enemyHP;
+      const isDraw = Math.abs(battleState.playerHP - battleState.enemyHP) <= 5;
+      const outcome = isDraw ? 'draw' : playerWon ? 'win' : 'lose';
+      const xpBonus = outcome === 'win' ? (75 + battleState.opponent.xpReward) : outcome === 'draw' ? 30 : 15;
+      const totalXP = battleState.xpEarned + xpBonus;
+
+      document.getElementById('screen-battle').style.display = 'none';
+      document.getElementById('screen-result').style.display = 'block';
+
+      const resultDiv = document.getElementById('battle-result-container');
+      resultDiv.className = `battle-result ${outcome}`;
+      document.getElementById('result-icon').textContent = outcome === 'win' ? '🏆' : outcome === 'draw' ? '⚖️' : '💔';
+      document.getElementById('result-title').textContent = outcome === 'win' ? 'VICTORY!' : outcome === 'draw' ? 'DRAW!' : 'DEFEATED!';
+      document.getElementById('result-subtitle').textContent = outcome === 'win' ? `You defeated ${battleState.opponent.name}!` : outcome === 'draw' ? 'An evenly matched battle!' : `${battleState.opponent.name} was stronger this time!`;
+      document.getElementById('result-xp').textContent = `+${totalXP} XP Earned!`;
+      document.getElementById('res-correct').textContent = battleState.score;
+      document.getElementById('res-rounds').textContent = battleState.currentQ;
+      document.getElementById('res-enemy').textContent = Math.max(0, battleState.enemyHP);
+
+      // Save
+      const p = JSON.parse(localStorage.getItem('lvlbase_user_profile') || '{}');
+      p.totalXP = (p.totalXP || 0) + totalXP;
+      p.battlesPlayed = (p.battlesPlayed || 0) + 1;
+      if (outcome === 'win') p.battlesWon = (p.battlesWon || 0) + 1;
+      if (!p.achievements) p.achievements = [];
+      if (outcome === 'win' && !p.achievements.includes('battle_win')) p.achievements.push('battle_win');
+      if ((p.battlesWon || 0) >= 10 && !p.achievements.includes('battle_10')) p.achievements.push('battle_10');
+      localStorage.setItem('lvlbase_user_profile', JSON.stringify(p));
+      if (navXp) navXp.textContent = `⚡ ${p.totalXP} XP`;
+
+      const history = JSON.parse(localStorage.getItem('lvlbase_battle_history') || '[]');
+      history.unshift({ opponent: battleState.opponent.name, outcome, xpEarned: totalXP, date: new Date().toISOString() });
+      localStorage.setItem('lvlbase_battle_history', JSON.stringify(history.slice(0,30)));
+
+      showToast(outcome === 'win' ? '⚔️ Victory! Well done!' : '📚 Train harder and try again!', outcome === 'win' ? 'success' : 'info');
+    }
+
+    function surrender() {
+      if (confirm('Are you sure you want to surrender? You will lose the battle.')) {
+        battleState.playerHP = 0;
+        endBattle();
+      }
+    }
+
+    function restartBattle() {
+      document.getElementById('screen-result').style.display = 'none';
+      document.getElementById('screen-select').style.display = 'block';
+      const p = JSON.parse(localStorage.getItem('lvlbase_user_profile') || '{}');
+      document.getElementById('stat-battles-played').textContent = p.battlesPlayed || 0;
+      document.getElementById('stat-battles-won').textContent = p.battlesWon || 0;
+      document.getElementById('stat-win-rate').textContent = (p.battlesPlayed > 0 ? Math.round(p.battlesWon/p.battlesPlayed*100) : 0) + '%';
+    }
+
+    function showToast(msg, type) {
+      const container = document.getElementById('toast-container');
+      const toast = document.createElement('div');
+      toast.className = `toast ${type}`;
+      toast.innerHTML = `<span>${{success:'✅',info:'ℹ️'}[type]||'ℹ️'}</span><span>${msg}</span>`;
+      container.appendChild(toast);
+      setTimeout(() => { toast.classList.add('toast-hide'); setTimeout(() => toast.remove(), 300); }, 3500);
+    }
+
+    document.getElementById('hamburger').addEventListener('click', () => {
+      document.getElementById('mobile-menu')?.classList.toggle('open');
+    });
+  </script>
+</body>
+</html>
