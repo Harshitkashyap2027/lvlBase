@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Parent Dashboard – lvlBase ⚡</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/main.css">
+</head>
+<body>
+  <nav class="navbar">
+    <a href="index.html" class="navbar-brand">lvlBase ⚡</a>
+    <div class="navbar-nav">
+      <a href="dashboard.html" class="nav-link">Student Dashboard</a>
+      <a href="parent-dashboard.html" class="nav-link active">Parent View</a>
+    </div>
+    <div class="navbar-actions">
+      <a href="dashboard.html" class="btn btn-ghost btn-sm">← Back</a>
+    </div>
+    <div class="hamburger" id="hamburger"><span></span><span></span><span></span></div>
+  </nav>
+
+  <div class="page-wrapper">
+    <div class="container" style="padding-top:3rem;padding-bottom:3rem">
+      <div class="page-header">
+        <h1 class="page-title">👨‍👩‍👧 Parent Dashboard</h1>
+        <p class="page-subtitle">Monitor your child's learning journey</p>
+      </div>
+
+      <!-- Child Profile -->
+      <div class="card mb-4" style="background:linear-gradient(135deg,rgba(108,99,255,0.1),var(--card-bg));border:1px solid var(--primary)">
+        <div style="display:flex;align-items:center;gap:1.5rem;flex-wrap:wrap">
+          <div class="avatar avatar-xl" id="child-avatar">??</div>
+          <div style="flex:1">
+            <h2 style="font-size:1.4rem;font-weight:800" id="child-name">Loading...</h2>
+            <div style="display:flex;align-items:center;gap:1rem;flex-wrap:wrap;margin-top:0.5rem">
+              <span id="child-rank"></span>
+              <span id="child-guild" style="font-size:0.85rem;color:var(--text-muted)"></span>
+              <span id="child-streak" style="font-size:0.85rem;color:var(--accent)"></span>
+            </div>
+            <div style="margin-top:0.75rem;max-width:300px">
+              <div style="display:flex;justify-content:space-between;font-size:0.8rem;margin-bottom:0.3rem">
+                <span>XP Progress</span>
+                <span id="child-xp-pct" style="color:var(--primary)">0%</span>
+              </div>
+              <div class="xp-bar-container"><div class="xp-bar" id="child-xp-bar" style="width:0%"></div></div>
+            </div>
+          </div>
+          <div style="display:flex;gap:1.5rem;flex-wrap:wrap;text-align:center">
+            <div><div style="font-size:1.8rem;font-weight:800;color:var(--primary)" id="p-totalXP">0</div><div style="font-size:0.75rem;color:var(--text-muted)">Total XP</div></div>
+            <div><div style="font-size:1.8rem;font-weight:800;color:var(--success)" id="p-quizzes">0</div><div style="font-size:0.75rem;color:var(--text-muted)">Quizzes Done</div></div>
+            <div><div style="font-size:1.8rem;font-weight:800;color:var(--accent)" id="p-streak">0</div><div style="font-size:0.75rem;color:var(--text-muted)">Day Streak</div></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Subject Progress -->
+      <div class="grid grid-3 mb-4">
+        <div class="card">
+          <h3 style="font-size:1rem;font-weight:700;margin-bottom:1rem;color:var(--primary)">📐 Mathematics</h3>
+          <div style="font-size:2rem;font-weight:800;margin-bottom:0.5rem" id="math-pct">0%</div>
+          <div class="progress-bar-bg"><div class="progress-bar" id="math-bar" style="background:#6C63FF;width:0%"></div></div>
+          <div style="font-size:0.8rem;color:var(--text-muted);margin-top:0.5rem" id="math-chapters">0 of 12 chapters</div>
+        </div>
+        <div class="card">
+          <h3 style="font-size:1rem;font-weight:700;margin-bottom:1rem;color:var(--success)">🔬 Science</h3>
+          <div style="font-size:2rem;font-weight:800;margin-bottom:0.5rem" id="sci-pct">0%</div>
+          <div class="progress-bar-bg"><div class="progress-bar" id="sci-bar" style="background:#00D1B2;width:0%"></div></div>
+          <div style="font-size:0.8rem;color:var(--text-muted);margin-top:0.5rem" id="sci-chapters">0 of 15 chapters</div>
+        </div>
+        <div class="card">
+          <h3 style="font-size:1rem;font-weight:700;margin-bottom:1rem;color:var(--secondary)">📚 English</h3>
+          <div style="font-size:2rem;font-weight:800;margin-bottom:0.5rem" id="eng-pct">0%</div>
+          <div class="progress-bar-bg"><div class="progress-bar" id="eng-bar" style="background:#FF6B6B;width:0%"></div></div>
+          <div style="font-size:0.8rem;color:var(--text-muted);margin-top:0.5rem" id="eng-chapters">0 of 10 chapters</div>
+        </div>
+      </div>
+
+      <!-- Activity & Achievements -->
+      <div class="grid grid-2 mb-4">
+        <!-- Recent Activity -->
+        <div class="card">
+          <h3 style="font-size:1rem;font-weight:700;margin-bottom:1rem">📋 Recent Activity</h3>
+          <div id="parent-activity"></div>
+        </div>
+        <!-- Achievements -->
+        <div class="card">
+          <h3 style="font-size:1rem;font-weight:700;margin-bottom:1rem">🏅 Achievements Unlocked</h3>
+          <div id="parent-achievements" style="display:flex;flex-wrap:wrap;gap:0.75rem"></div>
+          <div id="no-achievements" style="color:var(--text-muted);font-size:0.85rem;display:none">No achievements yet. Encourage them to complete quizzes!</div>
+        </div>
+      </div>
+
+      <!-- Tips for Parents -->
+      <div class="card" style="background:linear-gradient(135deg,rgba(0,209,178,0.08),rgba(108,99,255,0.08));border:1px solid rgba(0,209,178,0.2)">
+        <h3 style="font-size:1rem;font-weight:700;margin-bottom:1rem">💡 How to Support Your Child</h3>
+        <div class="grid grid-3">
+          <div>
+            <div style="font-size:1.5rem;margin-bottom:0.5rem">🎯</div>
+            <div style="font-weight:600;margin-bottom:0.3rem">Encourage Streaks</div>
+            <p style="font-size:0.85rem;color:var(--text-muted)">Celebrate daily login streaks. Consistent study beats cramming!</p>
+          </div>
+          <div>
+            <div style="font-size:1.5rem;margin-bottom:0.5rem">🏆</div>
+            <div style="font-weight:600;margin-bottom:0.3rem">Celebrate Milestones</div>
+            <p style="font-size:0.85rem;color:var(--text-muted)">When they rank up or earn achievements, acknowledge their hard work!</p>
+          </div>
+          <div>
+            <div style="font-size:1.5rem;margin-bottom:0.5rem">📅</div>
+            <div style="font-weight:600;margin-bottom:0.3rem">Set Study Goals Together</div>
+            <p style="font-size:0.85rem;color:var(--text-muted)">Visit the Goals page together and set weekly learning targets.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="toast-container" class="toast-container"></div>
+
+  <script>
+    const RANKS = [
+      { id: 'E', label: 'E-Rank', minXP: 0 }, { id: 'D', label: 'D-Rank', minXP: 500 },
+      { id: 'C', label: 'C-Rank', minXP: 1500 }, { id: 'B', label: 'B-Rank', minXP: 3500 },
+      { id: 'A', label: 'A-Rank', minXP: 7000 }, { id: 'S', label: 'S-Rank', minXP: 15000 },
+      { id: 'SS', label: 'SS-Rank', minXP: 30000 }
+    ];
+    const GUILDS = { shadow:{name:'Shadow Guild',emoji:'🌙'}, azure:{name:'Azure Order',emoji:'💧'}, inferno:{name:'Inferno Legion',emoji:'🔥'}, titan:{name:'Titan Brotherhood',emoji:'⚡'}, zenith:{name:'Zenith Circle',emoji:'✨'} };
+    const ACHIEVEMENTS = [
+      { id:'first_quiz',emoji:'🎯',name:'First Quiz' }, { id:'streak_3',emoji:'🔥',name:'3-Day Streak' },
+      { id:'streak_7',emoji:'🌟',name:'Week Warrior' }, { id:'perfect_score',emoji:'💯',name:'Perfectionist' },
+      { id:'rank_up_d',emoji:'📈',name:'Rising Star' }, { id:'quiz_10',emoji:'📚',name:'Bookworm' },
+      { id:'battle_win',emoji:'⚔️',name:'Warrior' }, { id:'goal_complete',emoji:'🎯',name:'Goal Setter' },
+      { id:'xp_1000',emoji:'💫',name:'XP Hunter' }
+    ];
+
+    const profile = JSON.parse(localStorage.getItem('lvlbase_user_profile') || 'null');
+    if (!profile) {
+      document.getElementById('child-name').textContent = 'No student data found';
+    } else {
+      const rank = RANKS.slice().reverse().find(r => profile.totalXP >= r.minXP) || RANKS[0];
+      const nextRank = RANKS.find(r => r.minXP > profile.totalXP);
+      const progress = nextRank ? Math.round(((profile.totalXP - rank.minXP) / (nextRank.minXP - rank.minXP)) * 100) : 100;
+      const sp = profile.subjectProgress || { math: 0, science: 0, english: 0 };
+      const guild = GUILDS[profile.guild];
+
+      document.getElementById('child-avatar').textContent = (profile.displayName||'P').substring(0,2).toUpperCase();
+      document.getElementById('child-name').textContent = profile.displayName || 'Student';
+      document.getElementById('child-rank').innerHTML = `<span class="rank-badge rank-${rank.id.toLowerCase()}">${rank.label}</span>`;
+      document.getElementById('child-guild').textContent = guild ? `${guild.emoji} ${guild.name}` : 'No Guild';
+      document.getElementById('child-streak').textContent = `🔥 ${profile.streak || 0} Day Streak`;
+      document.getElementById('child-xp-bar').style.width = progress + '%';
+      document.getElementById('child-xp-pct').textContent = progress + '%';
+      document.getElementById('p-totalXP').textContent = profile.totalXP || 0;
+      document.getElementById('p-quizzes').textContent = profile.quizzesCompleted || 0;
+      document.getElementById('p-streak').textContent = profile.streak || 0;
+
+      // Subject progress
+      ['math','sci','eng'].forEach((id, i) => {
+        const keys = ['math','science','english'];
+        const totals = [12, 15, 10];
+        const pct = Math.round(sp[keys[i]] || 0);
+        document.getElementById(`${id}-pct`).textContent = pct + '%';
+        document.getElementById(`${id}-bar`).style.width = pct + '%';
+        document.getElementById(`${id}-chapters`).textContent = `${Math.floor(pct/100*totals[i])} of ${totals[i]} chapters`;
+      });
+
+      // Activity
+      const actEl = document.getElementById('parent-activity');
+      const quizH = JSON.parse(localStorage.getItem('lvlbase_quiz_history') || '[]');
+      const battleH = JSON.parse(localStorage.getItem('lvlbase_battle_history') || '[]');
+      const activities = [
+        ...quizH.slice(0,3).map(h => `<div class="activity-item"><div class="activity-icon" style="background:rgba(0,209,178,0.15)">🎯</div><div style="flex:1"><div style="font-size:0.85rem">Quiz: ${h.subject} – <strong style="color:${h.score>=80?'var(--success)':'var(--warning)'}">Score ${h.score}%</strong></div><div style="font-size:0.75rem;color:var(--text-muted)">${new Date(h.date).toLocaleDateString()}</div></div><span class="badge badge-success">+${h.xpEarned} XP</span></div>`),
+        ...battleH.slice(0,2).map(b => `<div class="activity-item"><div class="activity-icon" style="background:rgba(255,107,107,0.15)">⚔️</div><div style="flex:1"><div style="font-size:0.85rem">Battle: <strong style="color:${b.outcome==='win'?'var(--success)':'var(--danger)'}">${b.outcome.toUpperCase()}</strong> vs ${b.opponent}</div><div style="font-size:0.75rem;color:var(--text-muted)">${new Date(b.date).toLocaleDateString()}</div></div><span class="badge badge-success">+${b.xpEarned} XP</span></div>`)
+      ];
+      actEl.innerHTML = activities.length ? activities.join('') : '<div style="color:var(--text-muted);font-size:0.85rem">No activity recorded yet. Encourage them to start a quiz!</div>';
+
+      // Achievements
+      const unlocked = profile.achievements || [];
+      const achEl = document.getElementById('parent-achievements');
+      const displayed = ACHIEVEMENTS.filter(a => unlocked.includes(a.id));
+      if (displayed.length) {
+        achEl.innerHTML = displayed.map(a => `<div title="${a.name}" style="text-align:center;cursor:default"><div style="font-size:2rem">${a.emoji}</div><div style="font-size:0.7rem;color:var(--text-muted)">${a.name}</div></div>`).join('');
+      } else {
+        document.getElementById('no-achievements').style.display = 'block';
+        achEl.style.display = 'none';
+      }
+    }
+
+    document.getElementById('hamburger').addEventListener('click', () => {
+      document.getElementById('mobile-menu')?.classList.toggle('open');
+    });
+  </script>
+</body>
+</html>
