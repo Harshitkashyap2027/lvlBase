@@ -437,34 +437,15 @@
   }
 
   function doLogin() {
-    var email = document.getElementById('admin-email').value.trim();
-    var pw = document.getElementById('admin-password').value;
-    var c = getCreds();
-    if (email === c.email && pw === c.password) {
-      localStorage.setItem('lvlbase_admin_session', JSON.stringify({ loggedIn:true, loginTime:Date.now() }));
-      var ap = { uid:'admin_super', email:c.email, displayName:'Super Admin', role:'admin', status:'approved', schoolId:null };
-      localStorage.setItem('lvlbase_current_user', JSON.stringify(ap));
-      localStorage.setItem('lvlbase_user_profile', JSON.stringify(ap));
-      document.getElementById('login-screen').style.display = 'none';
-      document.getElementById('admin-screen').style.display = 'flex';
-      auditLog('Admin login', email);
-      initAdmin();
-    } else {
-      var el = document.getElementById('login-error');
-      el.textContent = 'Invalid credentials';
-      el.style.display = 'block';
-    }
+    // Redirect to dedicated admin login page
+    window.location.href = 'login.html';
   }
 
   function doLogout() {
     localStorage.removeItem('lvlbase_admin_session');
     localStorage.removeItem('lvlbase_current_user');
     auditLog('Admin logout', '-');
-    document.getElementById('admin-screen').style.display = 'none';
-    document.getElementById('login-screen').style.display = 'flex';
-    document.getElementById('admin-email').value = '';
-    document.getElementById('admin-password').value = '';
-    document.getElementById('login-error').style.display = 'none';
+    window.location.href = 'login.html';
   }
 
   function esc(s) { if(s==null)return''; return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;'); }
@@ -834,7 +815,14 @@
   function applyMQ(m){var hb=document.getElementById('hamburger-btn');if(hb)hb.style.display=m.matches?'block':'none';}
   applyMQ(mq);if(mq.addEventListener)mq.addEventListener('change',applyMQ);
 
-  if(checkSession()){document.getElementById('login-screen').style.display='none';document.getElementById('admin-screen').style.display='flex';initAdmin();}
+  if(checkSession()){
+    document.getElementById('login-screen').style.display='none';
+    document.getElementById('admin-screen').style.display='flex';
+    initAdmin();
+  } else {
+    // Redirect to dedicated admin login page
+    window.location.href = 'login.html';
+  }
 </script>
 </body>
 </html>

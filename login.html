@@ -4,43 +4,212 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Login – lvlBase ⚡</title>
-  <link rel="manifest" href="manifest.json">
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="css/main.css">
   <style>
-    .login-wrapper { min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 2rem 1rem; background: radial-gradient(ellipse at 30% 50%, rgba(108,99,255,0.15) 0%, transparent 60%), radial-gradient(ellipse at 70% 20%, rgba(255,107,107,0.1) 0%, transparent 60%), var(--dark-bg); }
-    .login-card { background: var(--card-bg); border: 1px solid var(--border-color); border-radius: var(--radius-xl); padding: 2.5rem; width: 100%; max-width: 480px; }
-    .login-brand { text-align: center; font-size: 2rem; font-weight: 900; background: linear-gradient(135deg, var(--primary), var(--secondary)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; margin-bottom: 0.5rem; }
-    .step-indicators { display: flex; justify-content: center; gap: 0.5rem; margin-bottom: 2rem; }
-    .step-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--border-color); transition: var(--transition); }
-    .step-dot.active { background: var(--primary); width: 24px; border-radius: 4px; }
-    .step-dot.done { background: var(--success); }
-    .google-btn { width: 100%; padding: 0.85rem; background: rgba(255,255,255,0.08); border: 1px solid var(--border-color); border-radius: var(--radius); color: var(--text-light); font-size: 0.95rem; font-weight: 600; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 0.75rem; transition: var(--transition); font-family: var(--font); margin-bottom: 1rem; }
-    .google-btn:hover { background: rgba(255,255,255,0.12); border-color: var(--primary); }
-    .divider { display: flex; align-items: center; gap: 1rem; margin: 1rem 0; color: var(--text-muted); font-size: 0.85rem; }
+    .login-wrapper {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 2rem 1rem;
+      background:
+        radial-gradient(ellipse at 20% 50%, rgba(108,99,255,0.18) 0%, transparent 55%),
+        radial-gradient(ellipse at 80% 20%, rgba(255,107,107,0.12) 0%, transparent 55%),
+        radial-gradient(ellipse at 60% 90%, rgba(0,209,178,0.08) 0%, transparent 50%),
+        var(--dark-bg);
+    }
+    .login-card {
+      background: var(--card-bg);
+      border: 1px solid var(--border-color);
+      border-radius: 32px;
+      padding: 2.5rem 2rem;
+      width: 100%;
+      max-width: 500px;
+      box-shadow: 0 32px 80px rgba(0,0,0,0.35), 0 0 0 1px rgba(255,255,255,0.03) inset;
+    }
+    .login-brand {
+      text-align: center;
+      font-size: 2.2rem;
+      font-weight: 900;
+      background: linear-gradient(135deg, var(--primary), var(--secondary));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      margin-bottom: 0.3rem;
+      letter-spacing: -0.03em;
+    }
+
+    /* ── Role Selector ── */
+    .role-select-label {
+      font-size: 0.78rem;
+      font-weight: 700;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      margin-bottom: 0.65rem;
+    }
+    .role-bento-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0.65rem;
+      margin-bottom: 1.5rem;
+    }
+    .role-bento-item {
+      position: relative;
+      border: 2px solid var(--border-color);
+      border-radius: 20px;
+      padding: 1rem 0.75rem;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.25s cubic-bezier(0.34,1.4,0.64,1);
+      background: rgba(255,255,255,0.02);
+      overflow: hidden;
+      user-select: none;
+    }
+    .role-bento-item::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      opacity: 0;
+      transition: opacity 0.25s ease;
+      border-radius: inherit;
+    }
+    .role-bento-item:hover { transform: translateY(-3px); }
+    .role-bento-item:active { transform: scale(0.97); }
+    .role-bento-item.selected { transform: translateY(-3px); }
+
+    /* Per-role colors */
+    .rbi-student::before  { background: linear-gradient(135deg, rgba(108,99,255,0.18), rgba(108,99,255,0.05)); }
+    .rbi-teacher::before  { background: linear-gradient(135deg, rgba(255,215,0,0.18), rgba(255,215,0,0.05)); }
+    .rbi-parent::before   { background: linear-gradient(135deg, rgba(0,209,178,0.18), rgba(0,209,178,0.05)); }
+    .rbi-school::before   { background: linear-gradient(135deg, rgba(255,107,107,0.18), rgba(255,107,107,0.05)); }
+    .role-bento-item.selected::before { opacity: 1; }
+
+    .rbi-student.selected  { border-color: var(--primary);   box-shadow: 0 0 24px rgba(108,99,255,0.35); }
+    .rbi-teacher.selected  { border-color: var(--accent);    box-shadow: 0 0 24px rgba(255,215,0,0.35); }
+    .rbi-parent.selected   { border-color: var(--success);   box-shadow: 0 0 24px rgba(0,209,178,0.35); }
+    .rbi-school.selected   { border-color: var(--secondary); box-shadow: 0 0 24px rgba(255,107,107,0.35); }
+
+    .rbi-icon { font-size: 1.9rem; margin-bottom: 0.35rem; position: relative; z-index: 1; display: block; }
+    .rbi-label {
+      font-size: 0.82rem;
+      font-weight: 700;
+      position: relative;
+      z-index: 1;
+      color: var(--text-light);
+    }
+    .rbi-desc {
+      font-size: 0.68rem;
+      color: var(--text-muted);
+      margin-top: 0.2rem;
+      position: relative;
+      z-index: 1;
+      line-height: 1.4;
+    }
+    .rbi-check {
+      position: absolute;
+      top: 0.55rem;
+      right: 0.65rem;
+      width: 18px; height: 18px;
+      border-radius: 50%;
+      background: var(--primary);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 0.65rem;
+      opacity: 0;
+      transition: opacity 0.2s ease;
+      z-index: 2;
+    }
+    .rbi-teacher .rbi-check { background: var(--accent); color: #1a1a2e; }
+    .rbi-parent .rbi-check  { background: var(--success); }
+    .rbi-school .rbi-check  { background: var(--secondary); }
+    .role-bento-item.selected .rbi-check { opacity: 1; }
+
+    /* ── Google btn ── */
+    .google-btn {
+      width: 100%; padding: 0.85rem;
+      background: rgba(255,255,255,0.06);
+      border: 1px solid var(--border-color);
+      border-radius: 16px;
+      color: var(--text-light);
+      font-size: 0.92rem; font-weight: 600;
+      cursor: pointer;
+      display: flex; align-items: center; justify-content: center; gap: 0.75rem;
+      transition: var(--transition);
+      font-family: var(--font);
+      margin-bottom: 1rem;
+    }
+    .google-btn:hover { background: rgba(255,255,255,0.1); border-color: var(--primary); transform: translateY(-1px); }
+    .google-btn:active { transform: scale(0.98); }
+
+    .divider {
+      display: flex; align-items: center; gap: 1rem;
+      margin: 1rem 0;
+      color: var(--text-muted); font-size: 0.82rem;
+    }
     .divider::before, .divider::after { content: ''; flex: 1; height: 1px; background: var(--border-color); }
-    .guild-select-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; }
-    .guild-select-item { border-radius: var(--radius); padding: 1rem; cursor: pointer; border: 2px solid transparent; transition: var(--transition); color: white; text-align: center; }
-    .guild-select-item:hover { transform: translateY(-2px); }
-    .guild-select-item.selected { border-color: white; box-shadow: 0 0 20px rgba(255,255,255,0.2); }
-    .guild-select-item .gi-emoji { font-size: 1.8rem; }
-    .guild-select-item .gi-name { font-weight: 700; font-size: 0.9rem; margin-top: 0.3rem; }
-    .guild-select-item .gi-bonus { font-size: 0.7rem; opacity: 0.8; margin-top: 0.2rem; }
-    .grade-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 0.5rem; }
-    .grade-btn { padding: 0.6rem; background: rgba(255,255,255,0.05); border: 1px solid var(--border-color); border-radius: var(--radius); text-align: center; cursor: pointer; font-size: 0.85rem; font-weight: 600; transition: var(--transition); color: var(--text-light); }
-    .grade-btn:hover { border-color: var(--primary); }
-    .grade-btn.selected { background: rgba(108,99,255,0.2); border-color: var(--primary); color: var(--primary); }
-    .error-text { color: var(--danger); font-size: 0.8rem; margin-top: 0.3rem; display: none; }
-    .success-check { font-size: 3rem; text-align: center; margin-bottom: 1rem; animation: bounce 1s ease; }
+
+    /* ── Admin link pill ── */
+    .admin-portal-link {
+      display: flex; align-items: center; justify-content: center; gap: 0.6rem;
+      padding: 0.75rem 1rem;
+      background: linear-gradient(135deg, rgba(191,90,242,0.12), rgba(108,99,255,0.08));
+      border: 1px solid rgba(191,90,242,0.3);
+      border-radius: 16px;
+      margin-top: 1.25rem;
+      text-decoration: none;
+      transition: all 0.25s;
+    }
+    .admin-portal-link:hover { background: linear-gradient(135deg, rgba(191,90,242,0.2), rgba(108,99,255,0.15)); border-color: rgba(191,90,242,0.5); transform: translateY(-1px); }
+    .admin-portal-link .apl-icon { font-size: 1.1rem; }
+    .admin-portal-link .apl-text { font-size: 0.82rem; font-weight: 700; color: #BF5AF2; }
+    .admin-portal-link .apl-arrow { font-size: 0.78rem; color: rgba(191,90,242,0.7); margin-left: auto; }
+
+    @media (max-width: 480px) {
+      .login-card { padding: 2rem 1.25rem; border-radius: 28px; }
+      .login-brand { font-size: 1.9rem; }
+      .role-bento-grid { gap: 0.5rem; }
+      .role-bento-item { padding: 0.85rem 0.5rem; }
+      .rbi-icon { font-size: 1.6rem; }
+    }
   </style>
 </head>
 <body>
   <div class="login-wrapper">
     <div class="login-card animate-fadeIn">
       <div class="login-brand">lvlBase ⚡</div>
-      <p style="text-align:center;color:var(--text-muted);font-size:0.85rem;margin-bottom:1.5rem">Your epic learning journey awaits</p>
+      <p style="text-align:center;color:var(--text-muted);font-size:0.82rem;margin-bottom:1.75rem">Your epic learning journey awaits</p>
 
-      <!-- Login Form -->
+      <!-- ── Role Selector ── -->
+      <p class="role-select-label">👤 I am a…</p>
+      <div class="role-bento-grid">
+        <div class="role-bento-item rbi-student selected" id="rbi-student" onclick="selectRole('student')">
+          <span class="rbi-check">✓</span>
+          <span class="rbi-icon">🎓</span>
+          <div class="rbi-label">Student</div>
+          <div class="rbi-desc">Access quizzes, battles & learning</div>
+        </div>
+        <div class="role-bento-item rbi-teacher" id="rbi-teacher" onclick="selectRole('teacher')">
+          <span class="rbi-check">✓</span>
+          <span class="rbi-icon">👨‍🏫</span>
+          <div class="rbi-label">Teacher</div>
+          <div class="rbi-desc">Manage classes & student progress</div>
+        </div>
+        <div class="role-bento-item rbi-parent" id="rbi-parent" onclick="selectRole('parent')">
+          <span class="rbi-check">✓</span>
+          <span class="rbi-icon">👨‍👩‍👧</span>
+          <div class="rbi-label">Parent</div>
+          <div class="rbi-desc">Monitor your child's performance</div>
+        </div>
+        <div class="role-bento-item rbi-school" id="rbi-school" onclick="selectRole('school_admin')">
+          <span class="rbi-check">✓</span>
+          <span class="rbi-icon">🏫</span>
+          <div class="rbi-label">School Admin</div>
+          <div class="rbi-desc">Oversee the whole school</div>
+        </div>
+      </div>
+
+      <!-- ── Login Form ── -->
       <button class="google-btn" onclick="handleGoogleLogin()" id="google-login-btn">
         <svg width="18" height="18" viewBox="0 0 48 48"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.08 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.18 1.48-4.97 2.31-8.16 2.31-6.26 0-11.57-3.59-13.46-8.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/></svg>
         Continue with Google
@@ -55,8 +224,8 @@
         <input type="password" id="login-password" class="form-control" placeholder="••••••••" onkeydown="if(event.key==='Enter')handleLogin()">
         <div id="login-error" style="color:var(--danger);font-size:0.8rem;margin-top:0.3rem;display:none"></div>
       </div>
-      <button class="btn btn-primary btn-full" onclick="handleLogin()" id="login-btn">
-        <span id="login-text">⚡ Login</span>
+      <button class="btn btn-primary btn-full" onclick="handleLogin()" id="login-btn" style="border-radius:16px;padding:0.9rem;font-size:1rem">
+        <span id="login-text">⚡ Sign In</span>
         <span id="login-spinner" style="display:none" class="spinner spinner-sm"></span>
       </button>
 
@@ -64,20 +233,20 @@
         Don't have an account?
         <a href="signup.html" style="color:var(--primary);font-weight:600"> Sign Up here</a>
       </div>
-      <div style="text-align:center;margin-top:0.5rem;font-size:0.82rem;color:var(--text-muted)">
-        Are you a school?
+      <div style="text-align:center;margin-top:0.4rem;font-size:0.82rem;color:var(--text-muted)">
+        Registering a school?
         <a href="school-signup.html" style="color:var(--success);font-weight:600"> Register School →</a>
       </div>
 
-      <!-- Role hints -->
-      <div style="margin-top:1.5rem;background:rgba(255,255,255,0.03);border:1px solid var(--border-color);border-radius:16px;padding:1rem">
-        <p style="font-size:0.78rem;color:var(--text-muted);font-weight:600;margin-bottom:0.5rem">🔐 Login by role:</p>
-        <div style="font-size:0.75rem;color:var(--text-muted);line-height:1.9">
-          🎓 <strong style="color:var(--text-light)">Students / Teachers / Parents:</strong> Use your registered email<br>
-          🏫 <strong style="color:var(--text-light)">School Admin:</strong> Use your school admin email<br>
-          ⚙️ <strong style="color:var(--text-light)">Platform Admin:</strong> admin@lvlbase.com
+      <!-- ── Admin Portal Link ── -->
+      <a href="admin/login.html" class="admin-portal-link">
+        <span class="apl-icon">👑</span>
+        <div>
+          <div class="apl-text">Platform Admin Login</div>
+          <div style="font-size:0.7rem;color:rgba(191,90,242,0.6);margin-top:0.05rem">Restricted to platform administrators only</div>
         </div>
-      </div>
+        <span class="apl-arrow">→</span>
+      </a>
 
       <div style="text-align:center;margin-top:1.25rem">
         <a href="index.html" style="color:var(--text-muted);font-size:0.82rem">← Back to Home</a>
@@ -88,7 +257,27 @@
   <script type="module" src="js/firebase-bridge.js"></script>
   <script src="js/popup.js"></script>
   <script>
-    // Redirect if already logged in
+    // ── Selected role ──
+    let selectedRole = 'student';
+
+    function selectRole(role) {
+      selectedRole = role;
+      document.querySelectorAll('.role-bento-item').forEach(el => el.classList.remove('selected'));
+      const map = { student:'rbi-student', teacher:'rbi-teacher', parent:'rbi-parent', school_admin:'rbi-school' };
+      const el = document.getElementById(map[role]);
+      if (el) el.classList.add('selected');
+    }
+
+    // ── Role label helper ──
+    const ROLE_LABELS = {
+      student: 'Student 🎓',
+      teacher: 'Teacher 👨‍🏫',
+      parent: 'Parent 👨‍👩‍👧',
+      school_admin: 'School Admin 🏫',
+      admin: 'Platform Admin 👑'
+    };
+
+    // ── Redirect if already logged in ──
     (function() {
       const u = JSON.parse(localStorage.getItem('lvlbase_current_user') || 'null');
       if (u) {
@@ -102,6 +291,21 @@
       return map[role] || 'dashboard.html';
     }
 
+    // ── Role mismatch popup ──
+    async function showRoleMismatch(selectedRole, actualRole) {
+      const sLabel = ROLE_LABELS[selectedRole] || selectedRole;
+      const aLabel = ROLE_LABELS[actualRole]  || actualRole;
+      await lvlPopup.show({
+        type: 'error',
+        icon: '🚫',
+        title: 'Wrong Role Selected',
+        message: `You selected <strong style="color:#E8E8FF">${sLabel}</strong> but your account is registered as <strong style="color:#E8E8FF">${aLabel}</strong>.<br><br>Please choose the correct role before signing in.`,
+        buttons: [{ label: `Switch to ${aLabel}`, style: 'danger', action: 'close' }]
+      });
+      // Auto-select correct role
+      if (['student','teacher','parent','school_admin'].includes(actualRole)) selectRole(actualRole);
+    }
+
     async function handleGoogleLogin() {
       if (!window.fb || !window.fb.live) {
         lvlPopup.toast('Google sign-in requires Firebase. Please use email login.', 'warning');
@@ -112,26 +316,32 @@
       btn.textContent = 'Signing in…';
       try {
         const cred = await window.fb.signInWithGoogle();
-        if (!cred) { btn.disabled = false; btn.innerHTML = '<svg width="18" height="18" viewBox="0 0 48 48"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.08 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.18 1.48-4.97 2.31-8.16 2.31-6.26 0-11.57-3.59-13.46-8.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/></svg> Continue with Google'; return; }
+        if (!cred) {
+          btn.disabled = false;
+          btn.innerHTML = _googleBtnInner();
+          return;
+        }
         const uid = cred.user.uid;
         const email = cred.user.email;
         const displayName = cred.user.displayName || email.split('@')[0];
 
-        // Check for existing profile in Firestore
         let userData = await window.fb.getUser(uid);
-        if (!userData) {
-          // Try by email
-          userData = await window.fb.getUserByEmail(email);
-        }
+        if (!userData) userData = await window.fb.getUserByEmail(email);
+
         if (userData && userData.schoolId) {
-          // Existing complete profile — log in
+          // Role mismatch check
+          if (selectedRole !== userData.role) {
+            btn.disabled = false;
+            btn.innerHTML = _googleBtnInner();
+            await showRoleMismatch(selectedRole, userData.role);
+            return;
+          }
           userData.lastLogin = new Date().toISOString();
           localStorage.setItem('lvlbase_current_user', JSON.stringify(userData));
           localStorage.setItem('lvlbase_user_profile', JSON.stringify(userData));
           lvlPopup.toast('Welcome back, ' + displayName + '! 🎮', 'success');
           setTimeout(() => window.location.href = getDashboardUrl(userData.role), 700);
         } else {
-          // New user — save Google info to sessionStorage, redirect to complete profile
           sessionStorage.setItem('lvlbase_google_uid', uid);
           sessionStorage.setItem('lvlbase_google_email', email);
           sessionStorage.setItem('lvlbase_google_name', displayName);
@@ -140,14 +350,21 @@
       } catch (e) {
         lvlPopup.toast('Google sign-in failed: ' + (e.message || 'Unknown error'), 'error');
         btn.disabled = false;
-        btn.innerHTML = '<svg width="18" height="18" viewBox="0 0 48 48"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.08 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.18 1.48-4.97 2.31-8.16 2.31-6.26 0-11.57-3.59-13.46-8.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/></svg> Continue with Google';
+        btn.innerHTML = _googleBtnInner();
       }
+    }
+
+    function _googleBtnInner() {
+      return '<svg width="18" height="18" viewBox="0 0 48 48"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.08 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.18 1.48-4.97 2.31-8.16 2.31-6.26 0-11.57-3.59-13.46-8.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/></svg> Continue with Google';
     }
 
     async function handleLogin() {
       const email = document.getElementById('login-email').value.trim();
       const password = document.getElementById('login-password').value;
-      if (!email || !password) { lvlPopup.toast('Please fill in all fields', 'error'); return; }
+      if (!email || !password) {
+        lvlPopup.toast('Please enter your email and password', 'warning');
+        return;
+      }
 
       const btn = document.getElementById('login-btn');
       btn.disabled = true;
@@ -157,6 +374,35 @@
 
       try {
         const profile = await loginUser(email, password);
+
+        // ── Role mismatch check ──
+        const actualRole = profile.role; // e.g. 'student', 'teacher', 'parent', 'school_admin', 'admin'
+        if (actualRole === 'admin') {
+          // Admin trying to log in via general login
+          btn.disabled = false;
+          document.getElementById('login-text').style.display = 'inline';
+          document.getElementById('login-spinner').style.display = 'none';
+          await lvlPopup.show({
+            type: 'warning',
+            icon: '👑',
+            title: 'Use Admin Login',
+            message: 'Platform administrators must use the dedicated Admin Login portal.',
+            buttons: [
+              { label: '→ Go to Admin Login', style: 'primary', href: 'admin/login.html' },
+              { label: 'Cancel', style: 'ghost', action: 'close' }
+            ]
+          });
+          return;
+        }
+
+        if (selectedRole !== actualRole) {
+          btn.disabled = false;
+          document.getElementById('login-text').style.display = 'inline';
+          document.getElementById('login-spinner').style.display = 'none';
+          await showRoleMismatch(selectedRole, actualRole);
+          return;
+        }
+
         lvlPopup.toast('Welcome back, ' + profile.displayName + '! 🎮', 'success');
         setTimeout(() => window.location.href = getDashboardUrl(profile.role), 700);
       } catch(e) {
@@ -170,11 +416,9 @@
 
     async function loginUser(email, password) {
       const lower = email.toLowerCase().trim();
-      // Super admin
-      if (lower === 'admin@lvlbase.com' && password === 'admin123') {
+      // Super admin — redirect to admin login instead
+      if (lower === 'admin@lvlbase.com') {
         const p = { uid: 'admin_super', email: lower, displayName: 'Platform Admin', role: 'admin', status: 'approved', schoolId: null };
-        localStorage.setItem('lvlbase_current_user', JSON.stringify(p));
-        localStorage.setItem('lvlbase_user_profile', JSON.stringify(p));
         return p;
       }
 
@@ -184,12 +428,10 @@
           const cred = await window.fb.signIn(lower, password);
           const uid = cred.user.uid;
 
-          // Check if this is a school admin in Firestore
           const schoolData = await window.fb.getSchoolByAdminEmail(lower);
           if (schoolData) {
             const p = {
-              uid,
-              email: lower,
+              uid, email: lower,
               displayName: schoolData.adminName || schoolData.principal,
               role: 'school_admin',
               status: schoolData.status === 'verified' ? 'approved' : 'pending',
@@ -201,10 +443,8 @@
             return p;
           }
 
-          // Regular user — fetch profile from Firestore
           let userData = await window.fb.getUser(uid);
           if (!userData) {
-            // Try matching by email in local storage
             const users = JSON.parse(localStorage.getItem('lvlbase_all_users') || '[]');
             userData = users.find(u => u.email && u.email.toLowerCase() === lower) || null;
           }
@@ -215,28 +455,23 @@
             return userData;
           }
 
-          // Firebase Auth succeeded but no profile found — create minimal profile
           const p = { uid, email: lower, displayName: lower.split('@')[0], role: 'student', status: 'active' };
           localStorage.setItem('lvlbase_current_user', JSON.stringify(p));
           localStorage.setItem('lvlbase_user_profile', JSON.stringify(p));
           return p;
         } catch (fbErr) {
-          // Firebase auth failed — fall through to localStorage check
           if (fbErr.code && fbErr.code !== 'auth/user-not-found' && fbErr.code !== 'auth/wrong-password' && fbErr.code !== 'auth/invalid-credential') {
             throw new Error(fbErr.message || 'Login failed');
           }
         }
       }
 
-      // Fallback: localStorage-based login (school admin login requires Firebase Auth)
-      // School admin — only email match, since passwords are NOT stored in localStorage
+      // Fallback: localStorage
       const schools = JSON.parse(localStorage.getItem('lvlbase_schools') || '[]');
       const school = schools.find(s => s.adminEmail && s.adminEmail.toLowerCase() === lower);
       if (school) {
-        // Without Firebase Auth, we cannot verify the password — reject with a helpful message
         throw new Error('School admin login requires an internet connection to verify your identity. Please check your connection and try again.');
       }
-      // Regular users
       const users = JSON.parse(localStorage.getItem('lvlbase_all_users') || '[]');
       const user = users.find(u => u.email && u.email.toLowerCase() === lower);
       if (!user) throw new Error('No account found with this email. Please sign up first.');
