@@ -447,11 +447,12 @@
     auditLog('Admin logout', '-');
     // Sign out from Firebase if available
     try {
-      import('https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js').then(function(fbApp) {
-        import('https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js').then(function(fbAuth) {
-          var apps = fbApp.getApps ? fbApp.getApps() : [];
-          if (apps.length) { fbAuth.getAuth(apps[0]).signOut().catch(function(){}); }
-        }).catch(function(){});
+      Promise.all([
+        import('https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js'),
+        import('https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js')
+      ]).then(function(modules) {
+        var apps = modules[0].getApps ? modules[0].getApps() : [];
+        if (apps.length) { modules[1].getAuth(apps[0]).signOut().catch(function(){}); }
       }).catch(function(){});
     } catch(e) {}
     window.location.href = 'login.html';
