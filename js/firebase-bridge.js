@@ -117,6 +117,41 @@ window.fb = {
       const snap = await getDocs(q);
       return snap.docs.map(d => d.data());
     } catch (e) { console.warn('Firestore getSchools failed:', e.message); return null; }
+  },
+
+  /** Fetch all active schools (pending + verified) from Firestore and RTDB. Returns array or null. */
+  async getAllSchools() {
+    if (!FIREBASE_LIVE) return null;
+    const results = [];
+    const seenIds = {};
+    // Firestore
+    if (db) {
+      try {
+        const snap = await getDocs(collection(db, 'schools'));
+        snap.docs.forEach(d => {
+          const s = d.data();
+          if (s && s.id && s.status !== 'rejected') {
+            results.push(s);
+            seenIds[s.id] = true;
+          }
+        });
+      } catch (e) { console.warn('Firestore getAllSchools failed:', e.message); }
+    }
+    // RTDB (primary store — fills gaps when Firestore write failed)
+    if (rtdb) {
+      try {
+        const snap = await dbGet(dbRef(rtdb, 'schools'));
+        if (snap.exists()) {
+          Object.values(snap.val() || {}).forEach(s => {
+            if (s && s.id && s.status !== 'rejected' && !seenIds[s.id]) {
+              results.push(s);
+              seenIds[s.id] = true;
+            }
+          });
+        }
+      } catch (e) { console.warn('RTDB getAllSchools failed:', e.message); }
+    }
+    return results.length > 0 ? results : null;
   }
 };
 

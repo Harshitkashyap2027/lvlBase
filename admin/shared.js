@@ -8,6 +8,7 @@ var CREDS_KEY = 'lvlbase_admin_creds';
 var _FB_CONFIG = {
   apiKey: "AIzaSyAO6FNdpr87WPGjXEdfEs5bjB_4T2ZpzZg",
   authDomain: "lvlbase.firebaseapp.com",
+  databaseURL: "https://lvlbase-default-rtdb.asia-southeast1.firebasedatabase.app",
   projectId: "lvlbase",
   storageBucket: "lvlbase.firebasestorage.app",
   messagingSenderId: "493311771136",
@@ -113,19 +114,22 @@ function getCreds()      {
   try { return JSON.parse(localStorage.getItem(CREDS_KEY)) || def; } catch(e) { return def; }
 }
 
-// ── Load all data from Firestore ──────────────────────────
+// ── Load all data from Firestore + RTDB ──────────────────
 function loadFirebaseData(callback) {
   Promise.all([
     import('https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js'),
-    import('https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js')
+    import('https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js'),
+    import('https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js')
   ]).then(function(mods) {
     var appMod = mods[0];
     var fsMod  = mods[1];
+    var dbMod  = mods[2];
 
     // Reuse existing Firebase app if already initialized
     var apps = appMod.getApps ? appMod.getApps() : [];
     var app  = apps.length ? apps[0] : appMod.initializeApp(_FB_CONFIG);
     var db   = fsMod.getFirestore(app);
+    var rtdb = dbMod.getDatabase(app);
 
     _fbDb  = db;
     _fbMod = {
@@ -136,26 +140,61 @@ function loadFirebaseData(callback) {
       serverTimestamp:  fsMod.serverTimestamp
     };
 
+    // Read Firestore (users + schools) and RTDB (schools + users) in parallel
     Promise.all([
       fsMod.getDocs(fsMod.collection(db, 'users')),
-      fsMod.getDocs(fsMod.collection(db, 'schools'))
+      fsMod.getDocs(fsMod.collection(db, 'schools')),
+      dbMod.get(dbMod.ref(rtdb, 'schools')).catch(function() { return null; }),
+      dbMod.get(dbMod.ref(rtdb, 'users')).catch(function() { return null; })
     ]).then(function(snaps) {
       var users   = snaps[0].docs.map(function(d) { return d.data(); });
       var schools = snaps[1].docs.map(function(d) { return d.data(); });
 
-      // Merge: keep any schools that are only in localStorage (e.g. Firestore save
-      // failed silently during signup) so admins can still see and approve them.
+      // Merge RTDB schools — primary store for school signups
+      var rtdbSchoolsSnap = snaps[2];
+      if (rtdbSchoolsSnap && rtdbSchoolsSnap.exists()) {
+        var rtdbSchoolsObj = rtdbSchoolsSnap.val() || {};
+        var rtdbSchools = Object.values(rtdbSchoolsObj).filter(function(s) { return s && s.id; });
+        var fsSchoolIdSet = {};
+        schools.forEach(function(s) { fsSchoolIdSet[s.id] = true; });
+        rtdbSchools.forEach(function(s) {
+          if (!fsSchoolIdSet[s.id]) {
+            schools.push(s);
+            fsSchoolIdSet[s.id] = true;
+            // Back-fill Firestore so future reads don't need RTDB
+            _fbSyncSchool(s);
+          }
+        });
+      }
+
+      // Merge RTDB users
+      var rtdbUsersSnap = snaps[3];
+      if (rtdbUsersSnap && rtdbUsersSnap.exists()) {
+        var rtdbUsersObj = rtdbUsersSnap.val() || {};
+        var rtdbUsers = Object.values(rtdbUsersObj).filter(function(u) { return u && u.uid; });
+        var fsUserIdSet = {};
+        users.forEach(function(u) { fsUserIdSet[u.uid] = true; });
+        rtdbUsers.forEach(function(u) {
+          if (!fsUserIdSet[u.uid]) {
+            users.push(u);
+            fsUserIdSet[u.uid] = true;
+            _fbSyncUser(u);
+          }
+        });
+      }
+
+      // Merge: keep any schools that are only in localStorage (e.g. offline signup)
       var localSchools = JSON.parse(localStorage.getItem('lvlbase_schools') || '[]');
-      var fsSchoolIds  = {};
-      schools.forEach(function(s) { fsSchoolIds[s.id] = true; });
-      var localOnlySchools = localSchools.filter(function(s) { return !fsSchoolIds[s.id]; });
+      var allSchoolIds = {};
+      schools.forEach(function(s) { allSchoolIds[s.id] = true; });
+      var localOnlySchools = localSchools.filter(function(s) { return !allSchoolIds[s.id]; });
       var mergedSchools = schools.concat(localOnlySchools);
 
       // Same merge for users
       var localUsers  = JSON.parse(localStorage.getItem('lvlbase_all_users') || '[]');
-      var fsUserIds   = {};
-      users.forEach(function(u) { fsUserIds[u.uid] = true; });
-      var localOnlyUsers = localUsers.filter(function(u) { return !fsUserIds[u.uid]; });
+      var allUserIds  = {};
+      users.forEach(function(u) { allUserIds[u.uid] = true; });
+      var localOnlyUsers = localUsers.filter(function(u) { return !allUserIds[u.uid]; });
       var mergedUsers = users.concat(localOnlyUsers);
 
       _usersCache   = mergedUsers;
@@ -164,13 +203,13 @@ function loadFirebaseData(callback) {
       localStorage.setItem('lvlbase_all_users', JSON.stringify(mergedUsers));
       localStorage.setItem('lvlbase_schools',   JSON.stringify(mergedSchools));
 
-      // Sync any local-only schools to Firestore so future loads also include them
+      // Sync any local-only records to Firestore
       localOnlySchools.forEach(function(s) { _fbSyncSchool(s); });
       localOnlyUsers.forEach(function(u)   { _fbSyncUser(u);   });
 
       if (typeof callback === 'function') callback();
     }).catch(function(e) {
-      console.warn('Admin: Firestore fetch failed:', e.message);
+      console.warn('Admin: Firebase fetch failed:', e.message);
       if (typeof callback === 'function') callback();
     });
   }).catch(function(e) {

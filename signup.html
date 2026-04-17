@@ -240,10 +240,10 @@
     }
 
     async function getVerifiedSchools() {
-      // Try Firestore first (when Firebase is live)
+      // Try Firebase (Firestore + RTDB) first — returns pending + verified schools
       if (window.fb && window.fb.live) {
         try {
-          const firestoreSchools = await window.fb.getSchools();
+          const firestoreSchools = await window.fb.getAllSchools();
           if (firestoreSchools && firestoreSchools.length > 0) {
             // Cache into localStorage so offline use still works
             const localSchools = JSON.parse(localStorage.getItem('lvlbase_schools') || '[]');
@@ -257,25 +257,31 @@
           }
         } catch (e) { console.warn('Firestore school fetch failed:', e.message); }
       }
-      // Fallback: localStorage
+      // Fallback: localStorage — include pending + verified (exclude rejected)
       const schools = JSON.parse(localStorage.getItem('lvlbase_schools') || '[]');
-      return schools.filter(s => s.status === 'verified');
+      return schools.filter(s => s.status !== 'rejected');
     }
 
     function renderSchools(list) {
       const container = document.getElementById('schools-list');
       if (!list.length) {
-        container.innerHTML = '<div style="color:var(--text-muted);font-size:0.85rem;text-align:center;padding:1.5rem 0">No verified schools found yet.<br>Ask your school to register at <a href="school-signup.html" style="color:var(--primary)">school-signup.html</a></div>';
+        container.innerHTML = '<div style="color:var(--text-muted);font-size:0.85rem;text-align:center;padding:1.5rem 0">No schools found yet.<br>Ask your school to register at <a href="school-signup.html" style="color:var(--primary)">school-signup.html</a></div>';
         return;
       }
-      container.innerHTML = list.map(s => `
-        <div class="school-option" id="school-opt-${s.id}" onclick="selectSchool('${s.id}')">
-          <div>
-            <div class="school-name-tag">🏫 ${s.name}</div>
-            <div class="school-meta">${s.city}, ${s.state}</div>
+      container.innerHTML = list.map(s => {
+        const isPending = s.status === 'pending';
+        const statusBadge = isPending
+          ? '<span style="font-size:0.7rem;background:rgba(255,165,0,0.15);color:#FFA500;border:1px solid rgba(255,165,0,0.35);border-radius:6px;padding:0.1rem 0.4rem;margin-left:0.4rem">Pending verification</span>'
+          : '';
+        return `
+          <div class="school-option" id="school-opt-${s.id}" onclick="selectSchool('${s.id}')">
+            <div>
+              <div class="school-name-tag">🏫 ${s.name}${statusBadge}</div>
+              <div class="school-meta">${s.city}, ${s.state}</div>
+            </div>
           </div>
-        </div>
-      `).join('');
+        `;
+      }).join('');
     }
 
     function filterSchools(query) {
