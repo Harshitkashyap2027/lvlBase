@@ -573,10 +573,31 @@ table.sa-table tr:hover td { background: rgba(108,99,255,0.04); }
 .announce-body  { font-size: 0.78rem; color: var(--muted); margin-top: 0.2rem; }
 .announce-meta  { font-size: 0.7rem; color: rgba(136,146,164,0.6); margin-top: 0.4rem; }
 
+/* ── PAGE LOADER ── */
+.admin-loader-bar {
+  width: 120px; height: 4px;
+  background: rgba(108,99,255,0.2);
+  border-radius: 2px;
+  overflow: hidden;
+}
+.admin-loader-bar::after {
+  content: '';
+  display: block;
+  height: 100%;
+  background: linear-gradient(90deg, #6C63FF, #BF5AF2);
+  border-radius: 2px;
+  animation: adminLoad 1.4s ease-in-out infinite;
+}
+@keyframes adminLoad {
+  0%   { width: 0%;   transform: translateX(0); }
+  50%  { width: 60%;  }
+  100% { width: 0%;   transform: translateX(200px); }
+}
+
 /* ── RESPONSIVE ── */
 @media (max-width: 768px) {
   .sa-sidebar { transform: translateX(-100%); }
-  .sa-sidebar.open { transform: translateX(0); }
+  .sa-sidebar.open { transform: translateX(0); box-shadow: 8px 0 32px rgba(0,0,0,0.5); }
   .sa-main { margin-left: 0; }
   .sa-content { padding: 1rem; }
   .bc-stat-value { font-size: 2.2rem; }

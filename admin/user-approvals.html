@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>User Approvals – Admin – lvlBase ⚡</title>
+  <link rel="manifest" href="../manifest.json">
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../css/main.css">
+  <link rel="stylesheet" href="../css/admin-bento.css">
+  <script>
+    (function() {
+      var u = JSON.parse(localStorage.getItem('lvlbase_current_user') || 'null');
+      var d = JSON.parse(localStorage.getItem('lvlbase_admin_session') || 'null');
+      if (!(u && u.role === 'admin') && !(d && d.loggedIn && Date.now() - d.loginTime < 28800000)) {
+        window.location.replace('login.html');
+      }
+    })();
+  </script>
+</head>
+<body>
+  <div id="page-loader" style="position:fixed;inset:0;background:#0A0A14;display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:9999;gap:1rem;transition:opacity 0.3s ease">
+    <div style="font-size:2.5rem">⚡</div>
+    <div style="color:#6C63FF;font-weight:700;font-size:0.95rem;letter-spacing:0.05em">lvlBase Admin</div>
+    <div class="admin-loader-bar"></div>
+  </div>
+
+  <div id="sa-sidebar-root"></div>
+
+  <main class="sa-main" id="sa-main" style="opacity:0;transition:opacity 0.25s ease">
+    <div class="sa-topbar">
+      <div style="display:flex;align-items:center;gap:0.75rem">
+        <button id="hamburger-btn" onclick="document.getElementById('sa-sidebar').classList.toggle('open')" style="background:none;border:none;cursor:pointer;color:#F5F5FF;font-size:1.2rem;display:none">&#x2630;</button>
+        <div class="sa-topbar-title">User Approvals</div>
+      </div>
+      <div class="sa-topbar-actions">
+        <span id="admin-clock" style="font-size:0.78rem;color:#8892A4"></span>
+        <span style="font-size:0.82rem;color:#8892A4">Welcome, <strong style="color:#F5F5FF">Super Admin</strong></span>
+        <a href="../index.html" style="padding:0.4rem 0.9rem;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);border-radius:10px;color:#F5F5FF;font-size:0.8rem;text-decoration:none">View Site</a>
+      </div>
+    </div>
+    <div class="sa-content">
+      <div class="section-heading">User Approvals</div>
+      <p class="section-sub">Approve or reject pending student, teacher and parent accounts</p>
+      <div class="sa-table-wrap">
+        <div class="sa-table-head">
+          <div class="sa-table-head-title">Pending Users</div>
+          <div class="sa-table-head-actions">
+            <select class="sa-input sa-select" style="width:160px" onchange="renderUserApprovals()" id="ua-school-filter"><option value="">All Schools</option></select>
+            <select class="sa-input sa-select" style="width:130px" onchange="renderUserApprovals()" id="ua-role-filter"><option value="">All Roles</option><option value="student">Students</option><option value="teacher">Teachers</option><option value="parent">Parents</option></select>
+            <select class="sa-input sa-select" style="width:130px" onchange="renderUserApprovals()" id="ua-status-filter"><option value="pending">Pending</option><option value="">All</option><option value="approved">Approved</option><option value="rejected">Rejected</option></select>
+            <button class="ab ab-verify" onclick="approveAllPending()" style="padding:0.45rem 1rem">Approve All Pending</button>
+          </div>
+        </div>
+        <div class="ov-auto"><table class="sa-table"><thead><tr><th>Name</th><th>Email</th><th>Role</th><th>School</th><th>Status</th><th>Date</th><th>Actions</th></tr></thead><tbody id="ua-tbody"></tbody></table></div>
+      </div>
+  
+    </div>
+  </main>
+
+  <div id="toast-container" class="toast-container"></div>
+  <script src="../js/popup.js"></script>
+  <script src="shared.js"></script>
+  <script>
+
+    function initPage(){populateSchoolFilter();renderUserApprovals();}
+    function populateSchoolFilter(){var sel=document.getElementById('ua-school-filter');if(!sel)return;sel.innerHTML='<option value="">All Schools</option>'+getAllSchools().map(function(s){return '<option value="'+esc(s.id)+'">'+esc(s.name)+'</option>';}).join('');}
+    function renderUserApprovals(){
+      var sf=(document.getElementById('ua-school-filter')||{}).value||'',rf=(document.getElementById('ua-role-filter')||{}).value||'',stf=(document.getElementById('ua-status-filter')||{}).value||'pending';
+      var users=getAllUsers();
+      if(sf)users=users.filter(function(u){return u.schoolId===sf;});if(rf)users=users.filter(function(u){return u.role===rf;});if(stf)users=users.filter(function(u){return u.status===stf;});
+      var tbody=document.getElementById('ua-tbody');
+      if(!users.length){tbody.innerHTML='<tr><td colspan="7" style="text-align:center;color:#8892A4;padding:1.5rem">No users found.</td></tr>';return;}
+      tbody.innerHTML=users.map(function(u){return '<tr><td style="font-weight:700">'+esc(u.displayName)+'</td><td style="font-size:0.82rem;color:#8892A4">'+esc(u.email)+'</td><td><span class="badge badge-purple">'+esc(u.role)+'</span></td><td style="font-size:0.82rem">'+getSchoolName(u.schoolId)+'</td><td><span class="badge '+(u.status==='approved'?'badge-green':u.status==='rejected'?'badge-red':'badge-amber')+'">'+esc(u.status)+'</span></td><td style="font-size:0.78rem;color:#8892A4">'+new Date(u.createdAt||Date.now()).toLocaleDateString('en-IN')+'</td><td><div class="abg">'+(u.status==='pending'?'<button class="ab ab-verify" onclick="approveUser(''+esc(u.uid)+'')">Approve</button><button class="ab ab-reject" onclick="rejectUserApproval(''+esc(u.uid)+'')">Reject</button>':'')+'</div></td></tr>';}).join('');
+    }
+    function approveUser(uid){var u=getAllUsers(),i=u.findIndex(function(x){return x.uid===uid;});if(i!==-1){u[i].status='approved';saveUsers(u);}lvlPopup.toast('User approved!','success');auditLog('User approved',uid);renderUserApprovals();updateBadges();}
+    function rejectUserApproval(uid){var u=getAllUsers(),i=u.findIndex(function(x){return x.uid===uid;});if(i!==-1){u[i].status='rejected';saveUsers(u);}lvlPopup.toast('User rejected.','warning');auditLog('User rejected',uid);renderUserApprovals();updateBadges();}
+    function approveAllPending(){lvlPopup.confirm('Approve All','Approve all pending users?',{confirmLabel:'Approve All',confirmStyle:'success'}).then(function(c){if(!c)return;var u=getAllUsers(),n=0;u.forEach(function(x){if(x.status==='pending'){x.status='approved';n++;}});saveUsers(u);lvlPopup.toast(n+' users approved!','success');auditLog('Bulk approve',n+' users');renderUserApprovals();updateBadges();});}
+  
+    document.addEventListener('DOMContentLoaded', function() {
+      initAdminPage('user-approvals');
+      if (typeof initPage === 'function') initPage();
+    });
+  </script>
+</body>
+</html>

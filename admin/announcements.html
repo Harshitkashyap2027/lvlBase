@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Announcements – Admin – lvlBase ⚡</title>
+  <link rel="manifest" href="../manifest.json">
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../css/main.css">
+  <link rel="stylesheet" href="../css/admin-bento.css">
+  <script>
+    (function() {
+      var u = JSON.parse(localStorage.getItem('lvlbase_current_user') || 'null');
+      var d = JSON.parse(localStorage.getItem('lvlbase_admin_session') || 'null');
+      if (!(u && u.role === 'admin') && !(d && d.loggedIn && Date.now() - d.loginTime < 28800000)) {
+        window.location.replace('login.html');
+      }
+    })();
+  </script>
+</head>
+<body>
+  <div id="page-loader" style="position:fixed;inset:0;background:#0A0A14;display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:9999;gap:1rem;transition:opacity 0.3s ease">
+    <div style="font-size:2.5rem">⚡</div>
+    <div style="color:#6C63FF;font-weight:700;font-size:0.95rem;letter-spacing:0.05em">lvlBase Admin</div>
+    <div class="admin-loader-bar"></div>
+  </div>
+
+  <div id="sa-sidebar-root"></div>
+
+  <main class="sa-main" id="sa-main" style="opacity:0;transition:opacity 0.25s ease">
+    <div class="sa-topbar">
+      <div style="display:flex;align-items:center;gap:0.75rem">
+        <button id="hamburger-btn" onclick="document.getElementById('sa-sidebar').classList.toggle('open')" style="background:none;border:none;cursor:pointer;color:#F5F5FF;font-size:1.2rem;display:none">&#x2630;</button>
+        <div class="sa-topbar-title">Announcements</div>
+      </div>
+      <div class="sa-topbar-actions">
+        <span id="admin-clock" style="font-size:0.78rem;color:#8892A4"></span>
+        <span style="font-size:0.82rem;color:#8892A4">Welcome, <strong style="color:#F5F5FF">Super Admin</strong></span>
+        <a href="../index.html" style="padding:0.4rem 0.9rem;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);border-radius:10px;color:#F5F5FF;font-size:0.8rem;text-decoration:none">View Site</a>
+      </div>
+    </div>
+    <div class="sa-content">
+      <div class="section-heading">Announcements</div>
+      <p class="section-sub">Send platform-wide messages to all users or specific roles</p>
+      <div class="grid-2 mb-3">
+        <div class="bc">
+          <div style="font-weight:700;margin-bottom:1rem">Compose Announcement</div>
+          <div class="sa-group"><label class="sa-label">Title</label><input type="text" id="ann-title" class="sa-input" placeholder="Important update…"></div>
+          <div class="sa-group"><label class="sa-label">Message</label><textarea class="sa-input" id="ann-body" rows="4" placeholder="Enter your announcement…" style="resize:vertical"></textarea></div>
+          <div class="sa-group"><label class="sa-label">Target Audience</label><select id="ann-target" class="sa-input sa-select"><option value="all">All Users</option><option value="student">Students Only</option><option value="teacher">Teachers Only</option><option value="parent">Parents Only</option><option value="school_admin">School Admins Only</option></select></div>
+          <div class="sa-group"><label class="sa-label">Type</label><select id="ann-type" class="sa-input sa-select"><option value="info">Info</option><option value="success">Good News</option><option value="warning">Warning</option><option value="event">Event</option></select></div>
+          <button onclick="sendAnnouncement()" style="width:100%;padding:0.75rem;border:none;border-radius:12px;font-weight:700;cursor:pointer;background:linear-gradient(135deg,#6C63FF,#BF5AF2);color:white;font-family:inherit">📢 Send Announcement</button>
+        </div>
+        <div class="bc">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0.75rem">
+            <div style="font-weight:700">Sent Announcements</div>
+            <button class="ab ab-reject" onclick="clearAnnouncements()">Clear</button>
+          </div>
+          <div id="announcements-list" style="max-height:420px;overflow-y:auto"><div style="color:#8892A4;font-size:0.82rem">No announcements yet.</div></div>
+        </div>
+      </div>
+  
+    </div>
+  </main>
+
+  <div id="toast-container" class="toast-container"></div>
+  <script src="../js/popup.js"></script>
+  <script src="shared.js"></script>
+  <script>
+
+    function initPage(){renderAnnouncements();}
+    function sendAnnouncement(){var title=document.getElementById('ann-title').value.trim(),body=document.getElementById('ann-body').value.trim(),target=document.getElementById('ann-target').value,type=document.getElementById('ann-type').value;if(!title||!body){lvlPopup.toast('Fill in title and message','error');return;}var anns=JSON.parse(localStorage.getItem('lvlbase_announcements')||'[]');anns.push({id:'ann_'+Date.now(),title:title,body:body,target:target,type:type,sentAt:new Date().toISOString()});localStorage.setItem('lvlbase_announcements',JSON.stringify(anns));document.getElementById('ann-title').value='';document.getElementById('ann-body').value='';lvlPopup.toast('Announcement sent!','success');auditLog('Announcement sent','"'+title+'" to '+target);renderAnnouncements();}
+    function renderAnnouncements(){var anns=JSON.parse(localStorage.getItem('lvlbase_announcements')||'[]'),list=document.getElementById('announcements-list');var tc={info:'badge-purple',success:'badge-green',warning:'badge-amber',event:'badge-yellow'};if(!anns.length){list.innerHTML='<div style="color:#8892A4;font-size:0.82rem">No announcements yet.</div>';return;}list.innerHTML=anns.slice().reverse().map(function(a){return '<div style="background:rgba(108,99,255,0.05);border:1px solid rgba(108,99,255,0.12);border-radius:14px;padding:0.85rem;margin-bottom:0.5rem"><div style="display:flex;justify-content:space-between;margin-bottom:0.4rem"><span class="badge '+(tc[a.type]||'badge-purple')+'">'+esc(a.type)+'</span><span style="font-size:0.72rem;color:#8892A4">to: '+esc(a.target)+'</span></div><div style="font-weight:700;font-size:0.85rem">'+esc(a.title)+'</div><div style="font-size:0.78rem;color:#8892A4;margin-top:0.25rem">'+esc(a.body)+'</div><div style="font-size:0.7rem;color:rgba(136,146,164,0.6);margin-top:0.4rem">'+new Date(a.sentAt).toLocaleString('en-IN')+'</div></div>';}).join('');}
+    function clearAnnouncements(){lvlPopup.confirm('Clear','Delete all announcements?',{confirmLabel:'Clear',confirmStyle:'danger'}).then(function(c){if(!c)return;localStorage.removeItem('lvlbase_announcements');renderAnnouncements();});}
+  
+    document.addEventListener('DOMContentLoaded', function() {
+      initAdminPage('announcements');
+      if (typeof initPage === 'function') initPage();
+    });
+  </script>
+</body>
+</html>

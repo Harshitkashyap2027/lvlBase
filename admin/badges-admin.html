@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Badges – Admin – lvlBase ⚡</title>
+  <link rel="manifest" href="../manifest.json">
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../css/main.css">
+  <link rel="stylesheet" href="../css/admin-bento.css">
+  <script>
+    (function() {
+      var u = JSON.parse(localStorage.getItem('lvlbase_current_user') || 'null');
+      var d = JSON.parse(localStorage.getItem('lvlbase_admin_session') || 'null');
+      if (!(u && u.role === 'admin') && !(d && d.loggedIn && Date.now() - d.loginTime < 28800000)) {
+        window.location.replace('login.html');
+      }
+    })();
+  </script>
+</head>
+<body>
+  <div id="page-loader" style="position:fixed;inset:0;background:#0A0A14;display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:9999;gap:1rem;transition:opacity 0.3s ease">
+    <div style="font-size:2.5rem">⚡</div>
+    <div style="color:#6C63FF;font-weight:700;font-size:0.95rem;letter-spacing:0.05em">lvlBase Admin</div>
+    <div class="admin-loader-bar"></div>
+  </div>
+
+  <div id="sa-sidebar-root"></div>
+
+  <main class="sa-main" id="sa-main" style="opacity:0;transition:opacity 0.25s ease">
+    <div class="sa-topbar">
+      <div style="display:flex;align-items:center;gap:0.75rem">
+        <button id="hamburger-btn" onclick="document.getElementById('sa-sidebar').classList.toggle('open')" style="background:none;border:none;cursor:pointer;color:#F5F5FF;font-size:1.2rem;display:none">&#x2630;</button>
+        <div class="sa-topbar-title">Badges & Achievements</div>
+      </div>
+      <div class="sa-topbar-actions">
+        <span id="admin-clock" style="font-size:0.78rem;color:#8892A4"></span>
+        <span style="font-size:0.82rem;color:#8892A4">Welcome, <strong style="color:#F5F5FF">Super Admin</strong></span>
+        <a href="../index.html" style="padding:0.4rem 0.9rem;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);border-radius:10px;color:#F5F5FF;font-size:0.8rem;text-decoration:none">View Site</a>
+      </div>
+    </div>
+    <div class="sa-content">
+      <div class="section-heading">Badges &amp; Achievements</div>
+      <p class="section-sub">Create badge types, award custom badges and track student achievements</p>
+      <div class="grid-2 mb-3">
+        <div class="bc">
+          <div style="font-weight:700;margin-bottom:1rem">Create Badge Type</div>
+          <div class="sa-group"><label class="sa-label">Badge Name</label><input type="text" id="badge-name" class="sa-input" placeholder="e.g. Math Wizard"></div>
+          <div class="sa-group"><label class="sa-label">Icon (emoji)</label><input type="text" id="badge-icon" class="sa-input" placeholder="🏆"></div>
+          <div class="sa-group"><label class="sa-label">Description</label><input type="text" id="badge-desc" class="sa-input" placeholder="Awarded for excellence in Mathematics"></div>
+          <div class="sa-group"><label class="sa-label">Category</label><select id="badge-cat" class="sa-input sa-select"><option value="academic">Academic</option><option value="battle">Battle</option><option value="streak">Streak</option><option value="social">Social</option><option value="special">Special</option></select></div>
+          <div class="sa-group"><label class="sa-label">XP Reward</label><input type="number" id="badge-xp" class="sa-input" placeholder="100" min="0"></div>
+          <button onclick="createBadge()" style="width:100%;padding:0.75rem;border:none;border-radius:12px;font-weight:700;cursor:pointer;background:linear-gradient(135deg,#6C63FF,#BF5AF2);color:white;font-family:inherit">Create Badge</button>
+        </div>
+        <div class="bc">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0.75rem">
+            <div style="font-weight:700">Badge Library</div>
+            <span class="badge badge-purple" id="badge-count">0 badges</span>
+          </div>
+          <div id="badge-library" style="max-height:380px;overflow-y:auto"></div>
+        </div>
+      </div>
+      <div class="bc mb-3">
+        <div style="font-weight:700;margin-bottom:1rem">Award Badge to Student</div>
+        <div class="grid-2" style="align-items:end">
+          <div class="sa-group"><label class="sa-label">Select Student</label><select id="award-student" class="sa-input sa-select"><option value="">Choose student…</option></select></div>
+          <div class="sa-group"><label class="sa-label">Select Badge</label><select id="award-badge" class="sa-input sa-select"><option value="">Choose badge…</option></select></div>
+        </div>
+        <button onclick="awardBadge()" style="padding:0.65rem 1.5rem;border:none;border-radius:12px;font-weight:700;cursor:pointer;background:linear-gradient(135deg,#00D1B2,#6C63FF);color:white;font-family:inherit">🏅 Award Badge</button>
+      </div>
+      <div class="sa-table-wrap">
+        <div class="sa-table-head"><div class="sa-table-head-title">Recent Badge Awards</div></div>
+        <div class="ov-auto"><table class="sa-table"><thead><tr><th>Student</th><th>Badge</th><th>Category</th><th>XP Reward</th><th>Awarded At</th><th>By</th></tr></thead><tbody id="badge-awards-tbody"></tbody></table></div>
+      </div>
+  
+    </div>
+  </main>
+
+  <div id="toast-container" class="toast-container"></div>
+  <script src="../js/popup.js"></script>
+  <script src="shared.js"></script>
+  <script>
+
+    function initPage(){renderBadgeLibrary();populateBadgeAwardDropdowns();renderBadgeAwards();}
+    function getBadgeTypes(){return JSON.parse(localStorage.getItem('lvlbase_badge_types')||'[]');}
+    function saveBadgeTypes(b){localStorage.setItem('lvlbase_badge_types',JSON.stringify(b));}
+    function getBadgeAwards(){return JSON.parse(localStorage.getItem('lvlbase_badge_awards')||'[]');}
+    function saveBadgeAwards(a){localStorage.setItem('lvlbase_badge_awards',JSON.stringify(a));}
+    function createBadge(){var name=document.getElementById('badge-name').value.trim(),icon=document.getElementById('badge-icon').value.trim()||'🏅',desc=document.getElementById('badge-desc').value.trim(),cat=document.getElementById('badge-cat').value,xp=parseInt(document.getElementById('badge-xp').value)||0;if(!name){lvlPopup.toast('Enter a badge name','error');return;}var badges=getBadgeTypes();badges.push({id:'badge_'+Date.now(),name:name,icon:icon,description:desc,category:cat,xpReward:xp,createdAt:new Date().toISOString()});saveBadgeTypes(badges);document.getElementById('badge-name').value='';document.getElementById('badge-icon').value='';document.getElementById('badge-desc').value='';document.getElementById('badge-xp').value='';lvlPopup.toast('Badge "'+name+'" created!','success');auditLog('Badge created',name);renderBadgeLibrary();populateBadgeAwardDropdowns();}
+    function deleteBadgeType(id){var badges=getBadgeTypes().filter(function(b){return b.id!==id;});saveBadgeTypes(badges);lvlPopup.toast('Badge deleted','info');auditLog('Badge deleted',id);renderBadgeLibrary();populateBadgeAwardDropdowns();}
+    function renderBadgeLibrary(){var badges=getBadgeTypes();var catColors={academic:'badge-purple',battle:'badge-red',streak:'badge-yellow',social:'badge-green',special:'badge-amber'};document.getElementById('badge-count').textContent=badges.length+' badges';var lib=document.getElementById('badge-library');if(!badges.length){lib.innerHTML='<div style="color:#8892A4;font-size:0.82rem">No badge types yet. Create one above.</div>';return;}lib.innerHTML=badges.map(function(b){return '<div style="display:flex;align-items:center;gap:0.75rem;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.08);border-radius:12px;padding:0.7rem;margin-bottom:0.5rem"><div style="font-size:1.6rem">'+b.icon+'</div><div style="flex:1"><div style="font-weight:700;font-size:0.88rem">'+esc(b.name)+'</div><div style="font-size:0.75rem;color:#8892A4">'+esc(b.description)+'</div><div style="margin-top:0.2rem;display:flex;gap:0.4rem"><span class="badge '+(catColors[b.category]||'badge-purple')+'">'+esc(b.category)+'</span><span class="badge badge-yellow">+'+b.xpReward+' XP</span></div></div><button class="ab ab-reject" onclick="deleteBadgeType(''+esc(b.id)+'')">&#x1F5D1;</button></div>';}).join('');}
+    function populateBadgeAwardDropdowns(){var students=getAllUsers().filter(function(u){return u.role==='student';});var ss=document.getElementById('award-student');if(ss){ss.innerHTML='<option value="">Choose student…</option>'+students.map(function(u){return '<option value="'+esc(u.uid)+'">'+esc(u.displayName)+' ('+esc(u.email)+')</option>';}).join('');}var badges=getBadgeTypes();var bs=document.getElementById('award-badge');if(bs){bs.innerHTML='<option value="">Choose badge…</option>'+badges.map(function(b){return '<option value="'+esc(b.id)+'">'+b.icon+' '+esc(b.name)+'</option>';}).join('');}}
+    function awardBadge(){var uid=document.getElementById('award-student').value,bid=document.getElementById('award-badge').value;if(!uid||!bid){lvlPopup.toast('Select a student and a badge','error');return;}var users=getAllUsers(),ui=users.findIndex(function(x){return x.uid===uid;});var badge=getBadgeTypes().find(function(b){return b.id===bid;});if(ui===-1||!badge){lvlPopup.toast('Invalid selection','error');return;}if(badge.xpReward>0){users[ui].totalXP=(users[ui].totalXP||0)+badge.xpReward;saveUsers(users);}var awards=getBadgeAwards();awards.push({id:'aw_'+Date.now(),studentUid:uid,studentName:users[ui].displayName,badgeId:bid,badgeName:badge.name,badgeIcon:badge.icon,badgeCategory:badge.category,xpReward:badge.xpReward,awardedAt:new Date().toISOString(),awardedBy:'Super Admin'});saveBadgeAwards(awards);lvlPopup.toast(badge.icon+' "'+badge.name+'" awarded to '+users[ui].displayName+'!','success');auditLog('Badge awarded',badge.name+' to '+users[ui].displayName);document.getElementById('award-student').value='';document.getElementById('award-badge').value='';renderBadgeAwards();}
+    function renderBadgeAwards(){var awards=getBadgeAwards().slice().reverse();var tbody=document.getElementById('badge-awards-tbody');if(!tbody)return;if(!awards.length){tbody.innerHTML='<tr><td colspan="6" style="text-align:center;color:#8892A4;padding:1.5rem">No badges awarded yet.</td></tr>';return;}tbody.innerHTML=awards.map(function(a){return '<tr><td style="font-weight:700">'+esc(a.studentName)+'</td><td>'+a.badgeIcon+' '+esc(a.badgeName)+'</td><td><span class="badge badge-purple">'+esc(a.badgeCategory)+'</span></td><td style="color:#FFD60A;font-weight:700">+'+a.xpReward+' XP</td><td style="font-size:0.78rem;color:#8892A4">'+new Date(a.awardedAt).toLocaleString('en-IN')+'</td><td style="font-size:0.78rem;color:#8892A4">'+esc(a.awardedBy||'Admin')+'</td></tr>';}).join('');}
+  
+    document.addEventListener('DOMContentLoaded', function() {
+      initAdminPage('badges');
+      if (typeof initPage === 'function') initPage();
+    });
+  </script>
+</body>
+</html>

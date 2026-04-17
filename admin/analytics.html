@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Analytics – Admin – lvlBase ⚡</title>
+  <link rel="manifest" href="../manifest.json">
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../css/main.css">
+  <link rel="stylesheet" href="../css/admin-bento.css">
+  <script>
+    (function() {
+      var u = JSON.parse(localStorage.getItem('lvlbase_current_user') || 'null');
+      var d = JSON.parse(localStorage.getItem('lvlbase_admin_session') || 'null');
+      if (!(u && u.role === 'admin') && !(d && d.loggedIn && Date.now() - d.loginTime < 28800000)) {
+        window.location.replace('login.html');
+      }
+    })();
+  </script>
+</head>
+<body>
+  <div id="page-loader" style="position:fixed;inset:0;background:#0A0A14;display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:9999;gap:1rem;transition:opacity 0.3s ease">
+    <div style="font-size:2.5rem">⚡</div>
+    <div style="color:#6C63FF;font-weight:700;font-size:0.95rem;letter-spacing:0.05em">lvlBase Admin</div>
+    <div class="admin-loader-bar"></div>
+  </div>
+
+  <div id="sa-sidebar-root"></div>
+
+  <main class="sa-main" id="sa-main" style="opacity:0;transition:opacity 0.25s ease">
+    <div class="sa-topbar">
+      <div style="display:flex;align-items:center;gap:0.75rem">
+        <button id="hamburger-btn" onclick="document.getElementById('sa-sidebar').classList.toggle('open')" style="background:none;border:none;cursor:pointer;color:#F5F5FF;font-size:1.2rem;display:none">&#x2630;</button>
+        <div class="sa-topbar-title">Platform Analytics</div>
+      </div>
+      <div class="sa-topbar-actions">
+        <span id="admin-clock" style="font-size:0.78rem;color:#8892A4"></span>
+        <span style="font-size:0.82rem;color:#8892A4">Welcome, <strong style="color:#F5F5FF">Super Admin</strong></span>
+        <a href="../index.html" style="padding:0.4rem 0.9rem;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);border-radius:10px;color:#F5F5FF;font-size:0.8rem;text-decoration:none">View Site</a>
+      </div>
+    </div>
+    <div class="sa-content">
+      <div class="section-heading">Platform Analytics</div>
+      <p class="section-sub">Aggregated learning metrics across all schools</p>
+      <div class="bento-grid mb-3">
+        <div class="bc bc-yellow bento-1"><div class="bc-stat-label">Total XP Awarded</div><div class="bc-stat-value text-accent" id="a-xp">0</div></div>
+        <div class="bc bc-red bento-1"><div class="bc-stat-label">Total Battles</div><div class="bc-stat-value text-danger" id="a-battles">0</div></div>
+        <div class="bc bc-green bento-1"><div class="bc-stat-label">Goals Completed</div><div class="bc-stat-value text-success" id="a-goals">0</div></div>
+        <div class="bc bc-purple bento-1"><div class="bc-stat-label">Avg Quiz Score</div><div class="bc-stat-value text-purple" id="a-avg">0%</div></div>
+        <div class="bc bento-3"><div style="font-weight:700;margin-bottom:1.25rem">Subject Popularity</div><div id="subject-bars"></div></div>
+        <div class="bc bento-3"><div style="font-weight:700;margin-bottom:1.25rem">Guild Distribution</div><div id="guild-dist"></div></div>
+        <div class="bc bento-5">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0.75rem">
+            <div style="font-weight:700">School Performance</div>
+            <span class="badge badge-purple" style="font-size:0.7rem">Verified schools</span>
+          </div>
+          <div class="ov-auto"><table class="sa-table"><thead><tr><th>#</th><th>School</th><th>Students</th><th>Avg XP</th><th>Quizzes</th><th>Avg/Student</th><th>Top Student</th></tr></thead><tbody id="school-perf-body"></tbody></table></div>
+        </div>
+      </div>
+  
+    </div>
+  </main>
+
+  <div id="toast-container" class="toast-container"></div>
+  <script src="../js/popup.js"></script>
+  <script src="shared.js"></script>
+  <script>
+
+    function initPage() { renderAnalytics(); }
+    function renderAnalytics() {
+      var users=getAllUsers(),quizH=getQuizHistory(),students=users.filter(function(u){return u.role==='student';});
+      var totalXP=students.reduce(function(s,u){return s+(u.totalXP||0);},0);
+      document.getElementById('a-xp').textContent=totalXP.toLocaleString();
+      document.getElementById('a-battles').textContent=students.reduce(function(s,u){return s+(u.battlesPlayed||0);},0).toLocaleString();
+      document.getElementById('a-goals').textContent=students.reduce(function(s,u){return s+(u.goalsCompleted||0);},0).toLocaleString();
+      var avg=quizH.length?Math.round(quizH.reduce(function(s,h){return s+(h.score||0);},0)/quizH.length):0;
+      document.getElementById('a-avg').textContent=avg+'%';
+      var math=students.reduce(function(s,u){return s+((u.subjectProgress&&u.subjectProgress.math)||0);},0);
+      var sci=students.reduce(function(s,u){return s+((u.subjectProgress&&u.subjectProgress.science)||0);},0);
+      var eng=students.reduce(function(s,u){return s+((u.subjectProgress&&u.subjectProgress.english)||0);},0);
+      var tot=(math+sci+eng)||1;
+      document.getElementById('subject-bars').innerHTML=[['#6C63FF',Math.round(math/tot*100),'Mathematics'],['#00D1B2',Math.round(sci/tot*100),'Science'],['#FF9F0A',Math.round(eng/tot*100),'English']].map(function(x){return '<div style="margin-bottom:0.75rem"><div style="display:flex;justify-content:space-between;font-size:0.85rem;margin-bottom:0.3rem"><span>'+x[2]+'</span><span style="color:'+x[0]+';font-weight:700">'+x[1]+'%</span></div><div style="background:rgba(255,255,255,0.05);border-radius:8px;height:8px"><div style="background:'+x[0]+';width:'+x[1]+'%;height:8px;border-radius:8px"></div></div></div>';}).join('');
+      var guilds=['shadow','azure','inferno','titan','zenith'];
+      var gC={};guilds.forEach(function(g){gC[g]=students.filter(function(u){return u.guild===g;}).length;});
+      var maxG=Math.max.apply(null,Object.values(gC).concat([1]));
+      var gColors={shadow:'#BF5AF2',azure:'#6C63FF',inferno:'#FF4444',titan:'#00D1B2',zenith:'#FFD60A'};
+      document.getElementById('guild-dist').innerHTML=guilds.map(function(g){return '<div style="display:flex;align-items:center;gap:0.75rem;margin-bottom:0.7rem"><div style="flex:1"><div style="display:flex;justify-content:space-between;font-size:0.83rem;margin-bottom:0.25rem"><span style="text-transform:capitalize">'+g+'</span><span style="color:'+gColors[g]+';font-weight:700">'+gC[g]+'</span></div><div style="background:rgba(255,255,255,0.05);border-radius:8px;height:7px"><div style="background:'+gColors[g]+';width:'+Math.round(gC[g]/maxG*100)+'%;height:7px;border-radius:8px"></div></div></div></div>';}).join('');
+      var schools=getAllSchools().filter(function(s){return s.status==='verified';});
+      var sp=schools.map(function(s){var su=users.filter(function(u){return u.schoolId===s.id&&u.role==='student';});var aXP=su.length?Math.round(su.reduce(function(a,u){return a+(u.totalXP||0);},0)/su.length):0;var top=su.slice().sort(function(a,b){return(b.totalXP||0)-(a.totalXP||0);})[0];var q=su.reduce(function(a,u){return a+(u.quizzesCompleted||0);},0);return{name:s.name,students:su.length,avgXP:aXP,quizzes:q,top:top};}).sort(function(a,b){return b.avgXP-a.avgXP;});
+      var spBody=document.getElementById('school-perf-body');
+      if(!sp.length){spBody.innerHTML='<tr><td colspan="7" style="text-align:center;color:#8892A4;padding:1.5rem">No verified schools yet.</td></tr>';return;}
+      spBody.innerHTML=sp.map(function(s,i){return '<tr><td style="font-weight:700;color:#FFD60A">#'+(i+1)+'</td><td style="font-weight:700">'+esc(s.name)+'</td><td>'+s.students+'</td><td style="font-weight:700;color:#6C63FF">XP '+s.avgXP.toLocaleString()+'</td><td>'+s.quizzes+'</td><td style="color:#8892A4">'+(s.students?Math.round(s.quizzes/(s.students||1)):0)+'</td><td style="font-size:0.8rem;color:#8892A4">'+(s.top?esc(s.top.displayName)+' (XP '+(s.top.totalXP||0)+')':'-')+'</td></tr>';}).join('');
+    }
+  
+    document.addEventListener('DOMContentLoaded', function() {
+      initAdminPage('analytics');
+      if (typeof initPage === 'function') initPage();
+    });
+  </script>
+</body>
+</html>

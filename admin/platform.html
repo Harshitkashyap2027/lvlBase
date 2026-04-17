@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Platform Controls – Admin – lvlBase ⚡</title>
+  <link rel="manifest" href="../manifest.json">
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../css/main.css">
+  <link rel="stylesheet" href="../css/admin-bento.css">
+  <script>
+    (function() {
+      var u = JSON.parse(localStorage.getItem('lvlbase_current_user') || 'null');
+      var d = JSON.parse(localStorage.getItem('lvlbase_admin_session') || 'null');
+      if (!(u && u.role === 'admin') && !(d && d.loggedIn && Date.now() - d.loginTime < 28800000)) {
+        window.location.replace('login.html');
+      }
+    })();
+  </script>
+</head>
+<body>
+  <div id="page-loader" style="position:fixed;inset:0;background:#0A0A14;display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:9999;gap:1rem;transition:opacity 0.3s ease">
+    <div style="font-size:2.5rem">⚡</div>
+    <div style="color:#6C63FF;font-weight:700;font-size:0.95rem;letter-spacing:0.05em">lvlBase Admin</div>
+    <div class="admin-loader-bar"></div>
+  </div>
+
+  <div id="sa-sidebar-root"></div>
+
+  <main class="sa-main" id="sa-main" style="opacity:0;transition:opacity 0.25s ease">
+    <div class="sa-topbar">
+      <div style="display:flex;align-items:center;gap:0.75rem">
+        <button id="hamburger-btn" onclick="document.getElementById('sa-sidebar').classList.toggle('open')" style="background:none;border:none;cursor:pointer;color:#F5F5FF;font-size:1.2rem;display:none">&#x2630;</button>
+        <div class="sa-topbar-title">Platform Controls</div>
+      </div>
+      <div class="sa-topbar-actions">
+        <span id="admin-clock" style="font-size:0.78rem;color:#8892A4"></span>
+        <span style="font-size:0.82rem;color:#8892A4">Welcome, <strong style="color:#F5F5FF">Super Admin</strong></span>
+        <a href="../index.html" style="padding:0.4rem 0.9rem;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);border-radius:10px;color:#F5F5FF;font-size:0.8rem;text-decoration:none">View Site</a>
+      </div>
+    </div>
+    <div class="sa-content">
+      <div class="section-heading">Platform Controls</div>
+      <p class="section-sub">Global settings, feature flags and quick actions</p>
+      <div class="grid-2 mb-3">
+        <div class="bc">
+          <div style="font-weight:700;margin-bottom:1rem">Feature Flags</div>
+          <div class="setting-row"><div class="setting-info"><div class="setting-title">Maintenance Mode</div><div class="setting-desc">Block all user access temporarily</div></div><button class="toggle" id="flag-maintenance" onclick="toggleFlag('maintenance',this)"></button></div>
+          <div class="setting-row"><div class="setting-info"><div class="setting-title">New Registrations</div><div class="setting-desc">Allow new student sign-ups</div></div><button class="toggle on" id="flag-signup" onclick="toggleFlag('signup',this)"></button></div>
+          <div class="setting-row"><div class="setting-info"><div class="setting-title">Battle Arena</div><div class="setting-desc">Enable live battle system</div></div><button class="toggle on" id="flag-battles" onclick="toggleFlag('battles',this)"></button></div>
+          <div class="setting-row"><div class="setting-info"><div class="setting-title">AI Tutor (Sage)</div><div class="setting-desc">Enable AI assistant for students</div></div><button class="toggle on" id="flag-ai" onclick="toggleFlag('ai',this)"></button></div>
+          <div class="setting-row"><div class="setting-info"><div class="setting-title">Guild Wars</div><div class="setting-desc">Enable guild vs guild battles</div></div><button class="toggle on" id="flag-guild" onclick="toggleFlag('guild',this)"></button></div>
+          <div class="setting-row"><div class="setting-info"><div class="setting-title">Leaderboard</div><div class="setting-desc">Show public leaderboard</div></div><button class="toggle on" id="flag-leaderboard" onclick="toggleFlag('leaderboard',this)"></button></div>
+        </div>
+        <div class="bc">
+          <div style="font-weight:700;margin-bottom:1rem">Quick Actions</div>
+          <div style="display:flex;flex-direction:column;gap:0.75rem">
+            <button onclick="exportData()" style="width:100%;padding:0.75rem;border:none;border-radius:12px;font-weight:700;cursor:pointer;background:rgba(108,99,255,0.2);color:#6C63FF;font-family:inherit">&#x1F4E4; Export All Data (JSON)</button>
+            <button onclick="sendBonusXP()" style="width:100%;padding:0.75rem;border:none;border-radius:12px;font-weight:700;cursor:pointer;background:rgba(0,209,178,0.15);color:#00D1B2;font-family:inherit">&#x1F381; Send 100 Bonus XP to All Students</button>
+            <button onclick="forceLeaderboardRefresh()" style="width:100%;padding:0.75rem;border:none;border-radius:12px;font-weight:700;cursor:pointer;background:rgba(255,255,255,0.06);color:#F5F5FF;border:1px solid rgba(255,255,255,0.1);font-family:inherit">&#x1F504; Refresh Global Leaderboard</button>
+            <button onclick="clearDemoData()" style="width:100%;padding:0.75rem;border:none;border-radius:12px;font-weight:700;cursor:pointer;background:rgba(255,68,68,0.15);color:#FF4444;font-family:inherit">&#x1F5D1; Clear All Local Data</button>
+          </div>
+        </div>
+      </div>
+      <div class="bc mb-3">
+        <div style="font-weight:700;margin-bottom:1rem">Admin Credentials</div>
+        <div class="grid-2">
+          <div class="sa-group"><label class="sa-label">Current Password</label><input type="password" id="curr-pw" class="sa-input" placeholder="Current password"></div>
+          <div class="sa-group"><label class="sa-label">New Password (min 8 chars)</label><input type="password" id="new-pw" class="sa-input" placeholder="New password"></div>
+        </div>
+        <button class="ab ab-view" onclick="changeAdminPassword()" style="margin-top:0.5rem;padding:0.5rem 1.2rem;border-radius:10px;font-size:0.85rem">Update Password</button>
+      </div>
+      <div class="bc bc-purple">
+        <div style="font-weight:700;margin-bottom:0.75rem">Firebase Configuration</div>
+        <div style="background:rgba(0,0,0,0.3);border-radius:12px;padding:1rem;font-size:0.78rem;font-family:monospace;color:#00D1B2;white-space:pre-wrap;max-height:200px;overflow-y:auto" id="firebase-cfg-display"></div>
+      </div>
+  
+    </div>
+  </main>
+
+  <div id="toast-container" class="toast-container"></div>
+  <script src="../js/popup.js"></script>
+  <script src="shared.js"></script>
+  <script>
+
+    function initPage(){renderFeatureFlags();showFirebaseConfig();}
+    function renderFeatureFlags(){var flags=JSON.parse(localStorage.getItem('lvlbase_feature_flags')||'{}')||{};var defs={maintenance:false,signup:true,battles:true,ai:true,guild:true,leaderboard:true};Object.keys(defs).forEach(function(k){var el=document.getElementById('flag-'+k);if(!el)return;(flags[k]!==undefined?flags[k]:defs[k])?el.classList.add('on'):el.classList.remove('on');});}
+    function toggleFlag(key,btn){var flags=JSON.parse(localStorage.getItem('lvlbase_feature_flags')||'{}')||{};flags[key]=!btn.classList.contains('on');localStorage.setItem('lvlbase_feature_flags',JSON.stringify(flags));btn.classList.toggle('on');lvlPopup.toast(key+' '+(flags[key]?'enabled':'disabled'),flags[key]?'success':'warning');auditLog('Feature: '+key,flags[key]?'enabled':'disabled');}
+    function exportData(){var data={exportedAt:new Date().toISOString(),users:getAllUsers(),schools:getAllSchools(),events:JSON.parse(localStorage.getItem('lvlbase_events')||'[]'),announcements:JSON.parse(localStorage.getItem('lvlbase_announcements')||'[]'),auditLog:JSON.parse(localStorage.getItem('lvlbase_audit_log')||'[]')};var blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'}),a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='lvlbase-export-'+new Date().toISOString().slice(0,10)+'.json';a.click();lvlPopup.toast('Data exported!','success');auditLog('Data exported','Full JSON export');}
+    function sendBonusXP(){lvlPopup.confirm('Send Bonus XP','Send 100 XP to all active students?',{confirmLabel:'Send',confirmStyle:'success'}).then(function(c){if(!c)return;var u=getAllUsers(),n=0;u.forEach(function(x){if(x.role==='student'&&x.status==='approved'){x.totalXP=(x.totalXP||0)+100;n++;}});saveUsers(u);lvlPopup.toast('100 XP sent to '+n+' students!','success');auditLog('Bonus XP sent','+100 to '+n+' students');});}
+    function forceLeaderboardRefresh(){localStorage.removeItem('lvlbase_leaderboard_cache');lvlPopup.toast('Leaderboard refreshed!','success');auditLog('Leaderboard refresh','Manual');}
+    function clearDemoData(){lvlPopup.confirm('Clear All Data','Delete ALL local data? Cannot be undone.',{confirmLabel:'Delete Everything',confirmStyle:'danger',type:'error'}).then(function(c){if(!c)return;var sess=localStorage.getItem('lvlbase_admin_session'),creds=localStorage.getItem(CREDS_KEY);localStorage.clear();if(sess)localStorage.setItem('lvlbase_admin_session',sess);if(creds)localStorage.setItem(CREDS_KEY,creds);lvlPopup.toast('All data cleared.','info');});}
+    function changeAdminPassword(){var curr=document.getElementById('curr-pw').value,next=document.getElementById('new-pw').value,c=getCreds();if(curr!==c.password){lvlPopup.toast('Current password incorrect','error');return;}if(next.length<8){lvlPopup.toast('New password must be 8+ characters','error');return;}c.password=next;localStorage.setItem(CREDS_KEY,JSON.stringify(c));document.getElementById('curr-pw').value='';document.getElementById('new-pw').value='';lvlPopup.toast('Password updated!','success');auditLog('Admin password changed','-');}
+    function showFirebaseConfig(){var el=document.getElementById('firebase-cfg-display');if(!el)return;el.textContent='projectId: "lvlbase"\nauthDomain: "lvlbase.firebaseapp.com"\nstorageBucket: "lvlbase.firebasestorage.app"\nFirebase: Live\nVAPID: Set in firebase-config.js';}
+  
+    document.addEventListener('DOMContentLoaded', function() {
+      initAdminPage('platform');
+      if (typeof initPage === 'function') initPage();
+    });
+  </script>
+</body>
+</html>
