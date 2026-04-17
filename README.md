@@ -131,6 +131,41 @@ Enterprise-grade admin control panel with:
 - 🏆 Achievement celebration feed
 - 📋 Weekly/monthly performance reports
 - ⏱️ Time-on-platform analytics
+- 📣 Complaint & feedback submission portal
+- 📈 Detailed analytics sub-panel
+
+### 👩‍🏫 Teacher Dashboard
+
+- 📝 Assign and track tasks for students
+- 🧪 Create and manage tests
+- 📊 View class performance and individual student progress
+- ✅ Task management and completion tracking
+
+### 🏫 School Dashboard
+
+- 🏛️ School-level admin panel
+- 📋 School registration & signup
+- 🌐 Unified portal login for all roles (student, teacher, parent, admin)
+
+### 🔬 Virtual Science Lab
+
+- 🧪 Interactive science simulations
+- 📐 Experiment-based learning modules
+
+### 📸 Homework Scanner
+
+- 📷 Camera-based question capture
+- 🤖 AI-powered step-by-step homework solutions
+
+### 🏆 Certificate System
+
+- 🎓 Achievement certificates generation
+- 📤 Share and download certificates
+
+### 🥇 Competition Mode
+
+- 🌍 Platform-wide competitions and tournaments
+- 📊 Competition leaderboards and brackets
 
 ---
 
@@ -171,41 +206,60 @@ Deploy to any static host:
 
 ```
 lvlBase/
-├── 📄 index.html              # Landing page (hero, guilds, ranks, CTA)
-├── 📄 login.html              # 3-step onboarding (auth → profile → guild)
-├── 📄 dashboard.html          # Student command center
-├── 📄 subjects.html           # Subject selection hub
-├── 📄 learn.html              # Chapter learning with notes
-├── 📄 quiz.html               # Quiz engine (MCQ, timer, score)
-├── 📄 battles.html            # Battle arena (Solo/Duel/Guild)
-├── 📄 leaderboard.html        # Live rankings (Individual/Guild/National)
-├── 📄 ai-assistant.html       # Sage — AI study assistant
-├── 📄 goals.html              # Goal setting and progress tracking
-├── 📄 parent-dashboard.html   # Parent monitoring portal
-├── 📄 settings.html           # Profile, theme, preferences
+├── 📄 index.html                  # Landing page (hero, guilds, ranks, CTA)
+├── 📄 login.html                  # Login page
+├── 📄 signup.html                 # New user signup
+├── 📄 portal-login.html           # Unified portal login (student/teacher/parent/admin)
+├── 📄 dashboard.html              # Student command center
+├── 📄 subjects.html               # Subject selection hub
+├── 📄 learn.html                  # Chapter learning with notes
+├── 📄 quiz.html                   # Quiz engine (MCQ, timer, score)
+├── 📄 battles.html                # Battle arena (Solo/Duel/Guild)
+├── 📄 guild-wars.html             # Guild vs guild wars
+├── 📄 leaderboard.html            # Live rankings (Individual/Guild/National)
+├── 📄 competition.html            # Platform-wide competitions
+├── 📄 ai-assistant.html           # Sage — AI study assistant
+├── 📄 homework-scanner.html       # Camera-based homework solver
+├── 📄 science-lab.html            # Virtual science lab simulations
+├── 📄 goals.html                  # Goal setting and progress tracking
+├── 📄 certificate.html            # Achievement certificate generation
+├── 📄 parent-dashboard.html       # Parent monitoring portal
+├── 📄 parent-analytics.html       # Detailed parent analytics sub-panel
+├── 📄 parent-complaints.html      # Parent complaint & feedback portal
+├── 📄 teacher-dashboard.html      # Teacher command center
+├── 📄 teacher-tests.html          # Teacher test creation & management
+├── 📄 teacher-tasks.html          # Teacher task assignment & tracking
+├── 📄 school-dashboard.html       # School-level admin panel
+├── 📄 school-signup.html          # School registration
+├── 📄 settings.html               # Profile, theme, preferences
 │
 ├── 📁 admin/
-│   └── 📄 index.html          # Full admin control panel
+│   └── 📄 index.html              # Full admin control panel
 │
 ├── 📁 css/
-│   ├── 🎨 main.css            # Design system, components, animations
-│   ├── 🎨 dashboard.css       # Dashboard layout + sidebar
-│   ├── 🎨 quiz.css            # Quiz interface + result screens
-│   ├── 🎨 battle.css          # Battle arena + health bars
-│   └── 🎨 admin.css           # Admin panel + charts
+│   ├── 🎨 main.css                # Design system, components, animations
+│   ├── 🎨 dashboard.css           # Dashboard layout + sidebar
+│   ├── 🎨 quiz.css                # Quiz interface + result screens
+│   ├── 🎨 battle.css              # Battle arena + health bars
+│   └── 🎨 admin.css               # Admin panel + charts
 │
 └── 📁 js/
-    ├── ⚙️ firebase-config.js  # Firebase initialization (configure me!)
-    ├── ⚙️ auth.js             # Authentication (demo + Firebase modes)
-    ├── ⚙️ gamification.js     # XP engine, ranks, achievements, guilds
-    ├── ⚙️ quiz.js             # Quiz data (45+ questions), timer, scoring
-    ├── ⚙️ ai-assistant.js     # Sage AI response engine
-    ├── ⚙️ battles.js          # Battle state machine + AI opponent
-    ├── ⚙️ leaderboard.js      # Leaderboard fetching + rendering
-    ├── ⚙️ goals.js            # Goal CRUD + progress tracking
-    ├── ⚙️ subjects.js         # Curriculum content (chapters, topics)
-    ├── ⚙️ dashboard.js        # Dashboard data binding
-    └── ⚙️ admin.js            # Admin utilities + analytics
+    ├── ⚙️ firebase-config.js      # Firebase initialization (configure me!)
+    ├── ⚙️ auth.js                 # Authentication (demo + Firebase modes)
+    ├── ⚙️ rbac.js                 # Role-based access control
+    ├── ⚙️ gamification.js         # XP engine, ranks, achievements, guilds
+    ├── ⚙️ quiz.js                 # Quiz data (45+ questions), timer, scoring
+    ├── ⚙️ personalized-quiz.js    # AI-generated personalized quiz engine
+    ├── ⚙️ ai-assistant.js         # Sage AI response engine
+    ├── ⚙️ voice-ai.js             # Voice-based AI tutor (Web Speech API)
+    ├── ⚙️ battles.js              # Battle state machine + AI opponent
+    ├── ⚙️ guild-wars.js           # Guild war logic + team scoring
+    ├── ⚙️ leaderboard.js          # Leaderboard fetching + rendering
+    ├── ⚙️ goals.js                # Goal CRUD + progress tracking
+    ├── ⚙️ subjects.js             # Curriculum content (chapters, topics)
+    ├── ⚙️ dashboard.js            # Dashboard data binding
+    ├── ⚙️ popup.js                # Global popup / toast utilities
+    └── ⚙️ admin.js                # Admin utilities + analytics
 ```
 
 ---
@@ -399,16 +453,30 @@ const GEMINI_API_URL = "https://generativelanguage.googleapis.com/v1beta/models/
 | Page | URL | Auth Required | Description |
 |------|-----|---------------|-------------|
 | Homepage | `/index.html` | No | Marketing + features showcase |
-| Login/Signup | `/login.html` | No | 3-step onboarding |
+| Login | `/login.html` | No | User login |
+| Signup | `/signup.html` | No | New user registration |
+| Portal Login | `/portal-login.html` | No | Unified portal login (all roles) |
 | Dashboard | `/dashboard.html` | Yes | Student command center |
 | Subjects | `/subjects.html` | Yes | Subject selection |
 | Learn | `/learn.html?subject=math` | Yes | Chapter content |
 | Quiz | `/quiz.html` | Yes | Quiz engine |
 | Battles | `/battles.html` | Yes | Battle arena |
+| Guild Wars | `/guild-wars.html` | Yes | Guild vs guild battles |
+| Competition | `/competition.html` | Yes | Platform-wide competitions |
 | Leaderboard | `/leaderboard.html` | No | Global rankings |
 | AI Assistant | `/ai-assistant.html` | Yes | Sage AI chat |
+| Homework Scanner | `/homework-scanner.html` | Yes | Camera-based homework solver |
+| Science Lab | `/science-lab.html` | Yes | Virtual science simulations |
 | Goals | `/goals.html` | Yes | Goal tracking |
-| Parent Portal | `/parent-dashboard.html` | No | Parent view |
+| Certificate | `/certificate.html` | Yes | Achievement certificates |
+| Parent Portal | `/parent-dashboard.html` | No | Parent overview |
+| Parent Analytics | `/parent-analytics.html` | No | Detailed parent analytics |
+| Parent Complaints | `/parent-complaints.html` | No | Parent feedback & complaints |
+| Teacher Dashboard | `/teacher-dashboard.html` | Teacher | Teacher command center |
+| Teacher Tests | `/teacher-tests.html` | Teacher | Test creation & management |
+| Teacher Tasks | `/teacher-tasks.html` | Teacher | Task assignment & tracking |
+| School Dashboard | `/school-dashboard.html` | School Admin | School-level panel |
+| School Signup | `/school-signup.html` | No | School registration |
 | Settings | `/settings.html` | Yes | User preferences |
 | Admin | `/admin/index.html` | Admin only | Control panel |
 
@@ -558,27 +626,31 @@ vercel --prod
 - [x] Full gamification system
 - [x] 5 guilds with bonuses
 - [x] Battle arena (Solo + Duel + Guild)
-- [x] AI study assistant
+- [x] Guild wars (team vs team)
+- [x] AI study assistant (Sage)
+- [x] Voice-based AI tutor (Web Speech API)
+- [x] Homework scanner (camera → AI solve)
+- [x] Virtual science lab simulations
+- [x] AI-generated personalized quizzes
+- [x] Certificate generation & sharing
+- [x] Competition mode
+- [x] Teacher mode (dashboard, tests, tasks)
+- [x] School dashboard & signup
 - [x] Admin dashboard
-- [x] Parent portal
+- [x] Parent portal with analytics & complaints
+- [x] Role-based access control (RBAC)
 - [x] Dark/light theme
 - [x] 45+ quiz questions
 
 ### v1.1 — Coming Soon 🚧
 - [ ] Real Firebase integration (live data sync)
 - [ ] Push notifications (FCM)
-- [ ] Voice-based AI tutor (Web Speech API full integration)
-- [ ] Homework scanner (camera → AI solve)
-- [ ] Teacher mode (upload notes, create classes)
 - [ ] Offline mode with Service Worker
 
 ### v2.0 — Future Vision 🌟
 - [ ] Mobile apps (PWA → React Native)
 - [ ] Live guild wars (WebSocket real-time)
-- [ ] AI-generated personalized quizzes
-- [ ] Virtual science lab simulations
 - [ ] International competition mode
-- [ ] Certificate generation & sharing
 - [ ] School/institution licensing
 
 ---
