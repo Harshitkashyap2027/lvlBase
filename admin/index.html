@@ -3,650 +3,688 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Admin Panel – lvlBase ⚡</title>
+  <title>Super Admin - lvlBase</title>
   <link rel="manifest" href="../manifest.json">
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="../css/main.css">
-  <link rel="stylesheet" href="../css/admin.css">
+  <link rel="stylesheet" href="../css/admin-bento.css">
 </head>
 <body>
+<div id="login-screen" class="sa-login-wrapper">
+  <div class="sa-login-card">
+    <div class="sa-login-logo">lvlBase &#x26A1;</div>
+    <p style="text-align:center;color:var(--muted);font-size:0.82rem;margin-bottom:0.5rem">Super Admin Control Panel</p>
+    <div style="text-align:center;margin-bottom:1.75rem">
+      <span style="background:linear-gradient(135deg,rgba(191,90,242,0.2),rgba(108,99,255,0.2));border:1px solid rgba(191,90,242,0.3);border-radius:20px;padding:0.25rem 0.8rem;font-size:0.72rem;font-weight:700;color:#BF5AF2">SUPER ADMIN ONLY</span>
+    </div>
+    <div id="login-error" style="color:#FF4444;font-size:0.84rem;text-align:center;margin-bottom:1rem;display:none;background:rgba(255,68,68,0.1);border:1px solid rgba(255,68,68,0.2);border-radius:12px;padding:0.6rem"></div>
+    <div class="sa-group"><label class="sa-label">Admin Email</label><input type="email" id="admin-email" class="sa-input" placeholder="admin@lvlbase.com"></div>
+    <div class="sa-group"><label class="sa-label">Password</label><input type="password" id="admin-password" class="sa-input" placeholder="Enter password"></div>
+    <button onclick="doLogin()" style="width:100%;padding:0.9rem;border:none;border-radius:14px;font-size:1rem;font-weight:800;cursor:pointer;background:linear-gradient(135deg,#6C63FF,#BF5AF2);color:white;font-family:inherit">Access Admin Panel</button>
+    <div style="text-align:center;margin-top:1.25rem"><a href="../index.html" style="font-size:0.8rem;color:#8892A4">Back to Site</a></div>
+  </div>
+</div>
 
-  <!-- LOGIN SCREEN -->
-  <div id="login-screen" class="admin-login-wrapper">
-    <div class="admin-login-card">
-      <div class="admin-login-logo">lvlBase ⚡</div>
-      <div class="admin-login-subtitle">Admin Control Panel</div>
-      <div id="login-error" style="color:var(--danger);font-size:0.85rem;text-align:center;margin-bottom:1rem;display:none"></div>
-      <div class="form-group">
-        <label class="form-label">Admin Email</label>
-        <input type="email" id="admin-email" class="form-control" placeholder="admin@lvlbase.com" value="admin@lvlbase.com">
+<div id="admin-screen" style="display:none;width:100%">
+  <aside class="sa-sidebar" id="sa-sidebar">
+    <div class="sa-sidebar-brand">
+      <div class="sa-logo">lvlBase &#x26A1;</div>
+      <div class="sa-logo-badge">Super Admin</div>
+    </div>
+    <nav class="sa-nav">
+      <div class="sa-nav-label">Overview</div>
+      <button class="sa-nav-link active" onclick="showSection('overview',this)"><span class="sa-nav-icon">&#x1F4CA;</span>Dashboard</button>
+      <button class="sa-nav-link" onclick="showSection('analytics',this)"><span class="sa-nav-icon">&#x1F4C8;</span>Analytics</button>
+      <div class="sa-nav-label">Approvals</div>
+      <button class="sa-nav-link" onclick="showSection('schools',this)"><span class="sa-nav-icon">&#x1F3EB;</span>Schools <span id="school-badge" class="sa-nav-badge" style="display:none">0</span></button>
+      <button class="sa-nav-link" onclick="showSection('user-approvals',this)"><span class="sa-nav-icon">&#x23F3;</span>User Approvals <span id="user-badge" class="sa-nav-badge" style="display:none">0</span></button>
+      <div class="sa-nav-label">Management</div>
+      <button class="sa-nav-link" onclick="showSection('users',this)"><span class="sa-nav-icon">&#x1F465;</span>All Users</button>
+      <button class="sa-nav-link" onclick="showSection('content',this)"><span class="sa-nav-icon">&#x1F4DA;</span>Content</button>
+      <button class="sa-nav-link" onclick="showSection('events',this)"><span class="sa-nav-icon">&#x1F389;</span>Events</button>
+      <button class="sa-nav-link" onclick="showSection('announcements',this)"><span class="sa-nav-icon">&#x1F4E2;</span>Announcements</button>
+      <div class="sa-nav-label">System</div>
+      <button class="sa-nav-link" onclick="showSection('platform',this)"><span class="sa-nav-icon">&#x2699;&#xFE0F;</span>Platform Controls</button>
+      <button class="sa-nav-link" onclick="showSection('audit',this)"><span class="sa-nav-icon">&#x1F6E1;&#xFE0F;</span>Audit Log</button>
+      <button class="sa-nav-link" style="color:#FF4444" onclick="doLogout()"><span class="sa-nav-icon">&#x1F6AA;</span>Logout</button>
+    </nav>
+  </aside>
+
+  <main class="sa-main">
+    <div class="sa-topbar">
+      <div style="display:flex;align-items:center;gap:0.75rem">
+        <button id="hamburger-btn" onclick="document.getElementById('sa-sidebar').classList.toggle('open')" style="background:none;border:none;cursor:pointer;color:#F5F5FF;font-size:1.2rem;display:none">&#x2630;</button>
+        <div class="sa-topbar-title" id="topbar-title">Dashboard</div>
       </div>
-      <div class="form-group">
-        <label class="form-label">Password</label>
-        <input type="password" id="admin-password" class="form-control" placeholder="••••••••" value="admin123">
-      </div>
-      <button class="btn btn-primary btn-full" onclick="doLogin()">🔐 Login to Admin</button>
-      <p style="text-align:center;font-size:0.75rem;color:var(--text-muted);margin-top:1rem">Demo: admin@lvlbase.com / admin123</p>
-      <div style="text-align:center;margin-top:0.75rem">
-        <a href="../index.html" style="font-size:0.8rem;color:var(--text-muted)">← Back to Site</a>
+      <div class="sa-topbar-actions">
+        <span id="admin-clock" style="font-size:0.78rem;color:#8892A4"></span>
+        <span style="font-size:0.82rem;color:#8892A4">Welcome, <strong style="color:#F5F5FF">Super Admin</strong></span>
+        <a href="../index.html" style="padding:0.4rem 0.9rem;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);border-radius:10px;color:#F5F5FF;font-size:0.8rem;text-decoration:none">View Site</a>
       </div>
     </div>
-  </div>
+    <div class="sa-content">
 
-  <!-- ADMIN DASHBOARD -->
-  <div id="admin-screen" class="admin-wrapper" style="display:none">
-    <!-- Sidebar -->
-    <aside class="admin-sidebar">
-      <div class="admin-sidebar-header">
-        <div class="admin-logo">lvlBase ⚡</div>
-        <div class="admin-logo-sub">Admin Control Panel</div>
+      <!-- OVERVIEW -->
+      <div class="sa-section active" id="section-overview">
+        <div class="section-heading">Platform Overview</div>
+        <p class="section-sub">Real-time metrics and platform health</p>
+        <div class="bento-grid mb-3">
+          <div class="bc bc-purple bento-1">
+            <div class="bc-stat-label">Total Users</div>
+            <div class="bc-stat-value text-purple" id="b-total-users">0</div>
+            <div class="bc-stat-change" id="b-users-change">Loading...</div>
+            <div style="position:absolute;bottom:1.2rem;right:1.2rem;font-size:2.5rem;opacity:0.12">&#x1F465;</div>
+          </div>
+          <div class="bc bc-green bento-1">
+            <div class="bc-stat-label">Schools</div>
+            <div class="bc-stat-value text-success" id="b-schools">0</div>
+            <div class="bc-stat-change" id="b-schools-sub">Loading...</div>
+            <div style="position:absolute;bottom:1.2rem;right:1.2rem;font-size:2.5rem;opacity:0.12">&#x1F3EB;</div>
+          </div>
+          <div class="bc bc-amber bento-1">
+            <div class="bc-stat-label">Quizzes Taken</div>
+            <div class="bc-stat-value text-accent" id="b-quizzes">0</div>
+            <div class="bc-stat-change change-up">Total platform</div>
+            <div style="position:absolute;bottom:1.2rem;right:1.2rem;font-size:2.5rem;opacity:0.12">&#x1F3AF;</div>
+          </div>
+          <div class="bc bc-red bento-1">
+            <div class="bc-stat-label">Pending Items</div>
+            <div class="bc-stat-value text-danger" id="b-pending">0</div>
+            <div class="bc-stat-change" id="b-pending-sub">Needs attention</div>
+            <div style="position:absolute;bottom:1.2rem;right:1.2rem;font-size:2.5rem;opacity:0.12">&#x23F3;</div>
+          </div>
+          <div class="bc bc-yellow bento-3" style="display:flex;align-items:center;gap:2rem;flex-wrap:wrap">
+            <div>
+              <div class="bc-stat-label">Global XP Multiplier</div>
+              <div class="multiplier-big" id="mult-display">1x</div>
+              <div style="color:#8892A4;font-size:0.82rem;margin-top:0.4rem">Applied to all students instantly</div>
+            </div>
+            <div style="display:flex;gap:0.6rem;flex-wrap:wrap">
+              <button class="mult-btn" onclick="setMultiplier(1)" style="background:rgba(255,255,255,0.1);color:#F5F5FF">1x</button>
+              <button class="mult-btn" onclick="setMultiplier(1.5)" style="background:rgba(108,99,255,0.3);color:#fff">1.5x</button>
+              <button class="mult-btn" onclick="setMultiplier(2)" style="background:rgba(255,159,10,0.3);color:#fff">2x Fire</button>
+              <button class="mult-btn" onclick="setMultiplier(3)" style="background:rgba(255,68,68,0.3);color:#fff">3x Rocket</button>
+            </div>
+          </div>
+          <div class="bc bento-3">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0.75rem">
+              <div style="font-weight:700;font-size:0.95rem">Weekly Activity</div>
+              <span class="badge badge-purple" style="font-size:0.7rem">Last 7 days</span>
+            </div>
+            <div class="bar-chart" id="weekly-bars"></div>
+            <div class="bar-labels" id="weekly-bar-labels"></div>
+          </div>
+          <div class="bc bento-2">
+            <div style="font-weight:700;margin-bottom:1rem">System Health</div>
+            <div class="health-row"><div class="health-label"><span class="dot dot-green"></span>Platform</div><span class="health-val text-success">Operational</span></div>
+            <div class="health-row"><div class="health-label"><span class="dot dot-green"></span>Firebase DB</div><span class="health-val text-success">Connected</span></div>
+            <div class="health-row"><div class="health-label"><span class="dot dot-green"></span>Quiz Engine</div><span class="health-val text-success">Running</span></div>
+            <div class="health-row"><div class="health-label"><span class="dot dot-green"></span>Battle Arena</div><span class="health-val text-success">Active</span></div>
+            <div class="health-row"><div class="health-label"><span class="dot dot-amber"></span>Email Service</div><span class="health-val" style="color:#FF9F0A">Not Configured</span></div>
+            <div class="health-row"><div class="health-label"><span class="dot dot-green"></span>AI Tutor (Sage)</div><span class="health-val text-success">Online</span></div>
+          </div>
+          <div class="bc bento-2">
+            <div style="font-weight:700;margin-bottom:1rem">Recent Actions</div>
+            <div class="timeline" id="admin-timeline"></div>
+          </div>
+        </div>
+        <div class="sa-table-wrap">
+          <div class="sa-table-head">
+            <div class="sa-table-head-title">Top Students</div>
+            <div class="sa-table-head-actions">
+              <input type="text" class="sa-input" style="width:180px" placeholder="Search..." oninput="filterTopTable(this.value)">
+            </div>
+          </div>
+          <div class="ov-auto"><table class="sa-table"><thead><tr><th>#</th><th>Student</th><th>School</th><th>XP</th><th>Rank</th><th>Streak</th><th>Status</th><th>Actions</th></tr></thead><tbody id="top-tbody"></tbody></table></div>
+        </div>
       </div>
-      <nav class="admin-nav">
-        <div class="admin-nav-section">
-          <div class="admin-nav-label">Overview</div>
-          <a class="admin-nav-link active" onclick="showSection('overview', this)"><span class="nav-icon">📊</span>Dashboard</a>
-          <a class="admin-nav-link" onclick="showSection('analytics', this)"><span class="nav-icon">📈</span>Analytics</a>
-        </div>
-        <div class="admin-nav-section">
-          <div class="admin-nav-label">Approvals</div>
-          <a class="admin-nav-link" onclick="showSection('schools', this)"><span class="nav-icon">🏫</span>Schools <span id="school-pending-badge" class="admin-nav-badge" style="background:var(--danger);color:white"></span></a>
-          <a class="admin-nav-link" onclick="showSection('user-approvals', this)"><span class="nav-icon">⏳</span>User Approvals <span id="user-pending-badge" class="admin-nav-badge" style="background:var(--warning);color:#1A1A2E"></span></a>
-        </div>
-        <div class="admin-nav-section">
-          <div class="admin-nav-label">Management</div>
-          <a class="admin-nav-link" onclick="showSection('users', this)"><span class="nav-icon">👥</span>All Users</a>
-          <a class="admin-nav-link" onclick="showSection('quizzes', this)"><span class="nav-icon">🎯</span>Quizzes</a>
-          <a class="admin-nav-link" onclick="showSection('events', this)"><span class="nav-icon">🎉</span>Events</a>
-        </div>
-        <div class="admin-nav-section">
-          <div class="admin-nav-label">System</div>
-          <a class="admin-nav-link" onclick="showSection('settings', this)"><span class="nav-icon">⚙️</span>Settings</a>
-          <a class="admin-nav-link" onclick="doLogout()"><span class="nav-icon">🚪</span>Logout</a>
-        </div>
-      </nav>
-    </aside>
 
-    <!-- Main -->
-    <main class="admin-main">
-      <div class="admin-topbar">
-        <div class="admin-topbar-title" id="topbar-title">📊 Dashboard Overview</div>
-        <div class="admin-topbar-actions">
-          <span style="font-size:0.85rem;color:var(--text-muted)">Welcome, Admin</span>
-          <a href="../index.html" class="btn btn-ghost btn-sm">View Site →</a>
+      <!-- ANALYTICS -->
+      <div class="sa-section" id="section-analytics">
+        <div class="section-heading">Platform Analytics</div>
+        <p class="section-sub">Aggregated learning metrics across all schools</p>
+        <div class="bento-grid mb-3">
+          <div class="bc bc-yellow bento-1"><div class="bc-stat-label">Total XP Awarded</div><div class="bc-stat-value text-accent" id="a-xp">0</div></div>
+          <div class="bc bc-red bento-1"><div class="bc-stat-label">Total Battles</div><div class="bc-stat-value text-danger" id="a-battles">0</div></div>
+          <div class="bc bc-green bento-1"><div class="bc-stat-label">Goals Completed</div><div class="bc-stat-value text-success" id="a-goals">0</div></div>
+          <div class="bc bc-purple bento-1"><div class="bc-stat-label">Avg Quiz Score</div><div class="bc-stat-value text-purple" id="a-avg">0%</div></div>
+          <div class="bc bento-3"><div style="font-weight:700;margin-bottom:1.25rem">Subject Popularity</div><div id="subject-bars"></div></div>
+          <div class="bc bento-3"><div style="font-weight:700;margin-bottom:1.25rem">Guild Distribution</div><div id="guild-dist"></div></div>
+          <div class="bc bento-5">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0.75rem">
+              <div style="font-weight:700">School Performance</div>
+              <span class="badge badge-purple" style="font-size:0.7rem">Verified schools</span>
+            </div>
+            <div class="ov-auto"><table class="sa-table"><thead><tr><th>#</th><th>School</th><th>Students</th><th>Avg XP</th><th>Quizzes</th><th>Avg/Student</th><th>Top Student</th></tr></thead><tbody id="school-perf-body"></tbody></table></div>
+          </div>
         </div>
       </div>
 
-      <div class="admin-content">
-
-        <!-- OVERVIEW SECTION -->
-        <div id="section-overview">
-          <!-- Stats Grid -->
-          <div class="admin-stats-grid mb-3">
-            <div class="admin-stat-card">
-              <div class="flex-between mb-1"><div><div class="admin-stat-label">Total Users</div><div class="admin-stat-value" id="admin-total-users" style="color:var(--primary)">0</div></div><div class="admin-stat-icon">👥</div></div>
-              <div class="admin-stat-change change-up">↑ 12% this week</div>
-            </div>
-            <div class="admin-stat-card">
-              <div class="flex-between mb-1"><div><div class="admin-stat-label">Active Today</div><div class="admin-stat-value" id="admin-active-today" style="color:var(--success)">0</div></div><div class="admin-stat-icon">🟢</div></div>
-              <div class="admin-stat-change change-up">↑ 8% vs yesterday</div>
-            </div>
-            <div class="admin-stat-card">
-              <div class="flex-between mb-1"><div><div class="admin-stat-label">Total Quizzes</div><div class="admin-stat-value" id="admin-total-quizzes" style="color:var(--accent)">0</div></div><div class="admin-stat-icon">🎯</div></div>
-              <div class="admin-stat-change change-up">↑ 340 today</div>
-            </div>
-            <div class="admin-stat-card">
-              <div class="flex-between mb-1"><div><div class="admin-stat-label">Avg Score</div><div class="admin-stat-value" id="admin-avg-score" style="color:var(--secondary)">0%</div></div><div class="admin-stat-icon">📈</div></div>
-              <div class="admin-stat-change">Stable</div>
-            </div>
-          </div>
-
-          <div class="grid grid-2 mb-3">
-            <!-- Chart: Weekly Activity -->
-            <div class="admin-card">
-              <div class="admin-card-header"><div class="admin-card-title">📊 Weekly Activity</div></div>
-              <div class="admin-card-body">
-                <div class="chart-bar-container" id="weekly-chart"></div>
-                <div class="chart-labels" id="weekly-labels"></div>
-              </div>
-            </div>
-
-            <!-- System Health -->
-            <div class="admin-card">
-              <div class="admin-card-header"><div class="admin-card-title">💚 System Health</div></div>
-              <div class="admin-card-body">
-                <div class="health-item"><div class="health-label"><span class="status-dot status-online"></span>Platform Status</div><div class="health-value" style="color:var(--success)">Operational</div></div>
-                <div class="health-item"><div class="health-label"><span class="status-dot status-online"></span>Database</div><div class="health-value" style="color:var(--success)">Connected</div></div>
-                <div class="health-item"><div class="health-label"><span class="status-dot status-online"></span>AI Tutor (Sage)</div><div class="health-value" style="color:var(--success)">Online</div></div>
-                <div class="health-item"><div class="health-label"><span class="status-dot status-warning"></span>Email Service</div><div class="health-value" style="color:var(--warning)">Not Configured</div></div>
-                <div class="health-item"><div class="health-label"><span class="status-dot status-online"></span>Quiz Engine</div><div class="health-value" style="color:var(--success)">Running</div></div>
-                <div class="health-item"><div class="health-label"><span class="status-dot status-online"></span>Battle Arena</div><div class="health-value" style="color:var(--success)">Active</div></div>
-              </div>
-            </div>
-          </div>
-
-          <!-- XP Multiplier -->
-          <div class="grid grid-2 mb-3">
-            <div class="admin-card xp-multiplier-card">
-              <div class="admin-card-header"><div class="admin-card-title">⚡ Global XP Multiplier</div><span class="multiplier-active">✅ Active</span></div>
-              <div class="admin-card-body">
-                <div class="multiplier-value" id="multiplier-val">1.0×</div>
-                <p style="font-size:0.85rem;color:var(--text-muted);margin:0.5rem 0">Current XP multiplier applied to all students</p>
-                <div style="display:flex;gap:0.5rem;flex-wrap:wrap;margin-top:1rem">
-                  <button class="btn btn-sm btn-ghost" onclick="setMultiplier(1)">1×</button>
-                  <button class="btn btn-sm btn-primary" onclick="setMultiplier(1.5)">1.5×</button>
-                  <button class="btn btn-sm btn-secondary" onclick="setMultiplier(2)">2× 🔥</button>
-                  <button class="btn btn-sm btn-success" onclick="setMultiplier(3)">3× 🚀</button>
-                </div>
-              </div>
-            </div>
-
-            <!-- Recent Actions -->
-            <div class="admin-card">
-              <div class="admin-card-header"><div class="admin-card-title">📋 Recent Admin Actions</div></div>
-              <div class="admin-card-body">
-                <div class="timeline" id="admin-timeline"></div>
-              </div>
-            </div>
-          </div>
-
-          <!-- Top Users Table -->
-          <div class="admin-table-container">
-            <div class="admin-table-header">
-              <div class="admin-table-title">👑 Top Students</div>
-              <input type="text" class="form-control" style="max-width:200px" placeholder="Search..." oninput="filterTable(this.value)">
-            </div>
-            <table class="admin-table" id="top-users-table">
-              <thead><tr><th>Student</th><th>Email</th><th>XP</th><th>Rank</th><th>Quizzes</th><th>Status</th><th>Actions</th></tr></thead>
-              <tbody id="top-users-body"></tbody>
-            </table>
-          </div>
-        </div>
-
-        <!-- ANALYTICS SECTION -->
-        <div id="section-analytics" style="display:none">
-          <div class="admin-stats-grid mb-3">
-            <div class="admin-stat-card"><div class="admin-stat-label">Total XP Awarded</div><div class="admin-stat-value" id="analytics-xp" style="color:var(--accent)">2.45M</div></div>
-            <div class="admin-stat-card"><div class="admin-stat-label">Total Battles</div><div class="admin-stat-value" id="analytics-battles" style="color:var(--secondary)">3,892</div></div>
-            <div class="admin-stat-card"><div class="admin-stat-label">Goals Completed</div><div class="admin-stat-value" id="analytics-goals" style="color:var(--success)">5,621</div></div>
-            <div class="admin-stat-card"><div class="admin-stat-label">Retention Rate</div><div class="admin-stat-value" id="analytics-retention" style="color:var(--primary)">78%</div></div>
-          </div>
-          <div class="grid grid-2 mb-3">
-            <div class="admin-card">
-              <div class="admin-card-header"><div class="admin-card-title">📚 Subject Popularity</div></div>
-              <div class="admin-card-body">
-                <div style="display:flex;flex-direction:column;gap:1rem">
-                  <div><div style="display:flex;justify-content:space-between;font-size:0.85rem;margin-bottom:0.3rem"><span>📐 Mathematics</span><span style="color:var(--primary)">45%</span></div><div class="progress-bar-bg"><div class="progress-bar progress-primary" style="width:45%"></div></div></div>
-                  <div><div style="display:flex;justify-content:space-between;font-size:0.85rem;margin-bottom:0.3rem"><span>🔬 Science</span><span style="color:var(--success)">35%</span></div><div class="progress-bar-bg"><div class="progress-bar progress-success" style="width:35%"></div></div></div>
-                  <div><div style="display:flex;justify-content:space-between;font-size:0.85rem;margin-bottom:0.3rem"><span>📚 English</span><span style="color:var(--secondary)">20%</span></div><div class="progress-bar-bg"><div class="progress-bar progress-danger" style="width:20%"></div></div></div>
-                </div>
-              </div>
-            </div>
-            <div class="admin-card">
-              <div class="admin-card-header"><div class="admin-card-title">🏰 Guild Distribution</div></div>
-              <div class="admin-card-body">
-                <div style="display:flex;flex-direction:column;gap:0.75rem">
-                  <div style="display:flex;justify-content:space-between;align-items:center"><span>🌙 Shadow Guild</span><span style="font-weight:700;color:#7C3AED">234 members</span></div>
-                  <div style="display:flex;justify-content:space-between;align-items:center"><span>🔥 Inferno Legion</span><span style="font-weight:700;color:#DC2626">198 members</span></div>
-                  <div style="display:flex;justify-content:space-between;align-items:center"><span>💧 Azure Order</span><span style="font-weight:700;color:#2563EB">215 members</span></div>
-                  <div style="display:flex;justify-content:space-between;align-items:center"><span>⚡ Titan Brotherhood</span><span style="font-weight:700;color:#16A34A">178 members</span></div>
-                  <div style="display:flex;justify-content:space-between;align-items:center"><span>✨ Zenith Circle</span><span style="font-weight:700;color:#D97706">156 members</span></div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- USERS SECTION -->
-        <div id="section-users" style="display:none">
-          <div class="flex-between mb-3">
-            <h2 style="font-size:1.1rem;font-weight:700">👥 User Management</h2>
-            <div style="display:flex;gap:0.75rem">
-              <input type="text" class="form-control" style="max-width:220px" placeholder="🔍 Search users...">
-              <select class="form-control" style="width:auto">
-                <option>All Ranks</option>
-                <option>SS-Rank</option>
-                <option>S-Rank</option>
-                <option>A-Rank</option>
-                <option>B-Rank</option>
+      <!-- SCHOOLS -->
+      <div class="sa-section" id="section-schools">
+        <div class="section-heading">School Management</div>
+        <p class="section-sub">Verify, reject or manage school registrations</p>
+        <div class="sa-table-wrap">
+          <div class="sa-table-head">
+            <div class="sa-table-head-title">All Schools</div>
+            <div class="sa-table-head-actions">
+              <input type="text" class="sa-input" style="width:180px" placeholder="Search..." oninput="filterSchools(this.value)">
+              <select class="sa-input sa-select" style="width:140px" onchange="renderSchoolsTable()" id="school-filter">
+                <option value="all">All Status</option><option value="pending">Pending</option><option value="verified">Verified</option><option value="rejected">Rejected</option>
               </select>
             </div>
           </div>
-          <div class="admin-table-container">
-            <table class="admin-table">
-              <thead><tr><th>#</th><th>Student</th><th>Guild</th><th>XP</th><th>Rank</th><th>Streak</th><th>Quizzes</th><th>Joined</th><th>Status</th><th>Actions</th></tr></thead>
-              <tbody id="users-table-body"></tbody>
-            </table>
-          </div>
+          <div class="ov-auto"><table class="sa-table"><thead><tr><th>School</th><th>Principal</th><th>Location</th><th>Admin Email</th><th>Registered</th><th>Status</th><th>Actions</th></tr></thead><tbody id="schools-tbody"></tbody></table></div>
         </div>
-
-        <!-- EVENTS SECTION -->
-        <div id="section-events" style="display:none">
-          <div class="grid grid-2 mb-3">
-            <div class="admin-card">
-              <div class="admin-card-header"><div class="admin-card-title">🎉 Create Event</div></div>
-              <div class="admin-card-body">
-                <div class="form-group"><label class="form-label">Event Title</label><input type="text" id="evt-title" class="form-control" placeholder="e.g., Weekend XP Boost!"></div>
-                <div class="form-group"><label class="form-label">Description</label><input type="text" id="evt-desc" class="form-control" placeholder="All students get 2x XP this weekend!"></div>
-                <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem">
-                  <div class="form-group"><label class="form-label">XP Bonus</label><select id="evt-bonus" class="form-control"><option value="1.5">1.5×</option><option value="2">2× 🔥</option><option value="3">3× 🚀</option></select></div>
-                  <div class="form-group"><label class="form-label">Duration</label><select id="evt-duration" class="form-control"><option>1 Day</option><option>3 Days</option><option>1 Week</option><option>1 Month</option></select></div>
-                </div>
-                <button class="btn btn-primary btn-full" onclick="createEvent()">🎉 Launch Event</button>
-              </div>
-            </div>
-            <div class="admin-card">
-              <div class="admin-card-header"><div class="admin-card-title">📋 Active Events</div></div>
-              <div class="admin-card-body" id="active-events-list">
-                <div style="color:var(--text-muted);font-size:0.85rem">No active events. Create one!</div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- SETTINGS SECTION -->
-        <div id="section-settings" style="display:none">
-          <div class="grid grid-2">
-            <div class="admin-card">
-              <div class="admin-card-header"><div class="admin-card-title">⚙️ Platform Settings</div></div>
-              <div class="admin-card-body">
-                <div style="display:flex;flex-direction:column;gap:1rem">
-                  <div style="display:flex;justify-content:space-between;align-items:center"><div><div style="font-weight:600;font-size:0.9rem">Maintenance Mode</div><div style="font-size:0.8rem;color:var(--text-muted)">Disable user access temporarily</div></div><button class="toggle" id="maint-toggle" onclick="this.classList.toggle('on')"></button></div>
-                  <div style="display:flex;justify-content:space-between;align-items:center"><div><div style="font-weight:600;font-size:0.9rem">New Registrations</div><div style="font-size:0.8rem;color:var(--text-muted)">Allow new students to sign up</div></div><button class="toggle on" id="signup-toggle" onclick="this.classList.toggle('on')"></button></div>
-                  <div style="display:flex;justify-content:space-between;align-items:center"><div><div style="font-weight:600;font-size:0.9rem">Battle Arena</div><div style="font-size:0.8rem;color:var(--text-muted)">Enable/disable battle system</div></div><button class="toggle on" id="battle-toggle" onclick="this.classList.toggle('on')"></button></div>
-                  <div style="display:flex;justify-content:space-between;align-items:center"><div><div style="font-weight:600;font-size:0.9rem">AI Tutor (Sage)</div><div style="font-size:0.8rem;color:var(--text-muted)">Enable Sage AI assistant</div></div><button class="toggle on" id="ai-toggle" onclick="this.classList.toggle('on')"></button></div>
-                </div>
-              </div>
-            </div>
-            <div class="admin-card">
-              <div class="admin-card-header"><div class="admin-card-title">🔧 Quick Actions</div></div>
-              <div class="admin-card-body">
-                <div style="display:flex;flex-direction:column;gap:0.75rem">
-                  <button class="btn btn-primary btn-full" onclick="showToast('📊 Analytics report exported!','success')">📊 Export Analytics Report</button>
-                  <button class="btn btn-success btn-full" onclick="showToast('✅ Daily XP bonus sent to all users!','success')">⚡ Send Bonus XP to All</button>
-                  <button class="btn btn-ghost btn-full" onclick="showToast('📧 Announcements sent!','info')">📢 Send Announcement</button>
-                  <button class="btn btn-danger btn-full" onclick="if(confirm('Clear all demo data?')){localStorage.clear();showToast('Data cleared','info');}">🗑 Clear Demo Data</button>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- SCHOOLS SECTION -->
-        <div id="section-schools" style="display:none">
-          <div class="flex-between mb-3">
-            <h2 style="font-size:1.1rem;font-weight:700">🏫 School Management</h2>
-            <select id="school-filter" class="form-control" style="width:auto" onchange="renderSchoolsTable()">
-              <option value="all">All Schools</option>
-              <option value="pending">⏳ Pending</option>
-              <option value="verified">✅ Verified</option>
-              <option value="rejected">❌ Rejected</option>
-            </select>
-          </div>
-          <div class="admin-table-container">
-            <table class="admin-table">
-              <thead><tr><th>School</th><th>Principal</th><th>Location</th><th>Phone</th><th>Admin Email</th><th>Status</th><th>Registered</th><th>Actions</th></tr></thead>
-              <tbody id="schools-tbody"></tbody>
-            </table>
-          </div>
-        </div>
-
-        <!-- USER APPROVALS SECTION -->
-        <div id="section-user-approvals" style="display:none">
-          <div class="flex-between mb-3">
-            <h2 style="font-size:1.1rem;font-weight:700">⏳ User Approvals</h2>
-            <div style="display:flex;gap:0.75rem">
-              <select id="ua-school-filter" class="form-control" style="width:auto" onchange="renderUserApprovals()">
-                <option value="">All Schools</option>
-              </select>
-              <select id="ua-role-filter" class="form-control" style="width:auto" onchange="renderUserApprovals()">
-                <option value="">All Roles</option>
-                <option value="student">Students</option>
-                <option value="teacher">Teachers</option>
-                <option value="parent">Parents</option>
-              </select>
-            </div>
-          </div>
-          <div class="admin-table-container">
-            <table class="admin-table">
-              <thead><tr><th>Name</th><th>Email</th><th>Role</th><th>School</th><th>Status</th><th>Date</th><th>Actions</th></tr></thead>
-              <tbody id="ua-tbody"></tbody>
-            </table>
-          </div>
-        </div>
-
       </div>
-    </main>
-  </div>
 
-  <div id="toast-container" class="toast-container"></div>
-  <script src="../js/popup.js"></script>
-  <script>
-    const CREDS = { email: 'admin@lvlbase.com', password: 'admin123' };
-
-    function checkSession() {
-      const u = JSON.parse(localStorage.getItem('lvlbase_current_user') || 'null');
-      if (u && u.role === 'admin') return true;
-      const s = localStorage.getItem('lvlbase_admin_session');
-      if (!s) return false;
-      try { const d = JSON.parse(s); return d.loggedIn && Date.now()-d.loginTime < 3600000; } catch { return false; }
-    }
-
-    function doLogin() {
-      const email = document.getElementById('admin-email').value;
-      const pw = document.getElementById('admin-password').value;
-      if (email === CREDS.email && pw === CREDS.password) {
-        localStorage.setItem('lvlbase_admin_session', JSON.stringify({ loggedIn:true, loginTime:Date.now() }));
-        const ap = { uid:'admin_super', email:CREDS.email, displayName:'Platform Admin', role:'admin', status:'approved', schoolId:null };
-        localStorage.setItem('lvlbase_current_user', JSON.stringify(ap));
-        document.getElementById('login-screen').style.display = 'none';
-        document.getElementById('admin-screen').style.display = 'flex';
-        initAdmin();
-      } else {
-        const err = document.getElementById('login-error');
-        err.textContent = '❌ Invalid credentials. Try admin@lvlbase.com / admin123';
-        err.style.display = 'block';
-      }
-    }
-
-    function doLogout() {
-      localStorage.removeItem('lvlbase_admin_session');
-      localStorage.removeItem('lvlbase_current_user');
-      document.getElementById('admin-screen').style.display = 'none';
-      document.getElementById('login-screen').style.display = 'flex';
-    }
-
-    function updatePendingBadges() {
-      const schools = JSON.parse(localStorage.getItem('lvlbase_schools') || '[]');
-      const ps = schools.filter(s => s.status === 'pending').length;
-      const spb = document.getElementById('school-pending-badge');
-      if (spb) spb.textContent = ps > 0 ? ps : '';
-      const users = JSON.parse(localStorage.getItem('lvlbase_all_users') || '[]');
-      const pu = users.filter(u => u.status === 'pending').length;
-      const upb = document.getElementById('user-pending-badge');
-      if (upb) upb.textContent = pu > 0 ? pu : '';
-    }
-
-    function renderSchoolsTable() {
-      const filter = document.getElementById('school-filter') ? document.getElementById('school-filter').value : 'all';
-      const schools = JSON.parse(localStorage.getItem('lvlbase_schools') || '[]');
-      const filtered = filter === 'all' ? schools : schools.filter(s => s.status === filter);
-      const tbody = document.getElementById('schools-tbody');
-      if (!tbody) return;
-      if (!filtered.length) {
-        tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;color:var(--text-muted);padding:1.5rem">No schools found.</td></tr>';
-        return;
-      }
-      tbody.innerHTML = filtered.map(s => `
-        <tr>
-          <td><div style="font-weight:600">${esc(s.name)}</div><div style="font-size:.75rem;color:var(--text-muted)">${s.totalStudents ? esc(s.totalStudents)+' students' : ''}</div></td>
-          <td>${esc(s.principal)}</td>
-          <td style="font-size:.82rem;color:var(--text-muted)">${esc(s.city)}, ${esc(s.state)}</td>
-          <td style="font-size:.82rem">${esc(s.phone)}</td>
-          <td style="font-size:.8rem;color:var(--text-muted)">${esc(s.adminEmail)}</td>
-          <td><span style="display:inline-flex;align-items:center;padding:.25rem .6rem;border-radius:8px;font-size:.72rem;font-weight:700;background:${s.status==='verified'?'rgba(0,209,178,.15)':s.status==='rejected'?'rgba(255,68,68,.12)':'rgba(255,165,0,.15)'};color:${s.status==='verified'?'var(--success)':s.status==='rejected'?'var(--danger)':'var(--warning)'}">${s.status==='verified'?'✅ Verified':s.status==='rejected'?'❌ Rejected':'⏳ Pending'}</span></td>
-          <td style="font-size:.78rem;color:var(--text-muted)">${new Date(s.createdAt).toLocaleDateString('en-IN')}</td>
-          <td>
-            <div class="action-btn-group">
-              ${s.status !== 'verified' ? `<button class="admin-action-btn action-view" onclick="verifySchool('${esc(s.id)}')" style="color:var(--success)">✓ Verify</button>` : ''}
-              ${s.status !== 'rejected' ? `<button class="admin-action-btn action-ban" onclick="rejectSchool('${esc(s.id)}')">✗ Reject</button>` : ''}
+      <!-- USER APPROVALS -->
+      <div class="sa-section" id="section-user-approvals">
+        <div class="section-heading">User Approvals</div>
+        <p class="section-sub">Approve or reject pending student, teacher and parent accounts</p>
+        <div class="sa-table-wrap">
+          <div class="sa-table-head">
+            <div class="sa-table-head-title">Pending Users</div>
+            <div class="sa-table-head-actions">
+              <select class="sa-input sa-select" style="width:160px" onchange="renderUserApprovals()" id="ua-school-filter"><option value="">All Schools</option></select>
+              <select class="sa-input sa-select" style="width:130px" onchange="renderUserApprovals()" id="ua-role-filter"><option value="">All Roles</option><option value="student">Students</option><option value="teacher">Teachers</option><option value="parent">Parents</option></select>
+              <select class="sa-input sa-select" style="width:130px" onchange="renderUserApprovals()" id="ua-status-filter"><option value="pending">Pending</option><option value="">All</option><option value="approved">Approved</option><option value="rejected">Rejected</option></select>
             </div>
-          </td>
-        </tr>
-      `).join('');
-    }
+          </div>
+          <div class="ov-auto"><table class="sa-table"><thead><tr><th>Name</th><th>Email</th><th>Role</th><th>School</th><th>Status</th><th>Date</th><th>Actions</th></tr></thead><tbody id="ua-tbody"></tbody></table></div>
+        </div>
+      </div>
 
-    function verifySchool(id) {
-      if (!window.lvlPopup) { if (!confirm('Verify this school?')) return; doVerifySchool(id); return; }
-      lvlPopup.confirm('Verify School', 'Are you sure you want to verify this school? The school admin will be able to use all dashboard features.', { confirmLabel: '✅ Verify', confirmStyle: 'success' }).then(c => { if (c) doVerifySchool(id); });
-    }
+      <!-- ALL USERS -->
+      <div class="sa-section" id="section-users">
+        <div class="section-heading">User Management</div>
+        <p class="section-sub">View, boost XP, ban or manage all platform users</p>
+        <div class="sa-table-wrap">
+          <div class="sa-table-head">
+            <div class="sa-table-head-title">All Users</div>
+            <div class="sa-table-head-actions">
+              <input type="text" class="sa-input" style="width:200px" placeholder="Search name/email..." oninput="filterUsers(this.value)" id="users-search">
+              <select class="sa-input sa-select" style="width:130px" onchange="renderUsersTable()" id="users-role-filter"><option value="">All Roles</option><option value="student">Students</option><option value="teacher">Teachers</option><option value="parent">Parents</option></select>
+              <select class="sa-input sa-select" style="width:130px" onchange="renderUsersTable()" id="users-status-filter"><option value="">All Status</option><option value="approved">Active</option><option value="pending">Pending</option><option value="banned">Banned</option></select>
+            </div>
+          </div>
+          <div class="ov-auto"><table class="sa-table"><thead><tr><th>#</th><th>User</th><th>Role</th><th>School</th><th>XP</th><th>Status</th><th>Joined</th><th>Actions</th></tr></thead><tbody id="all-users-tbody"></tbody></table></div>
+        </div>
+      </div>
 
-    function doVerifySchool(id) {
-      const schools = JSON.parse(localStorage.getItem('lvlbase_schools') || '[]');
-      const idx = schools.findIndex(s => s.id === id);
-      if (idx !== -1) {
-        schools[idx].status = 'verified';
-        schools[idx].verifiedAt = new Date().toISOString();
-        // Ensure no plaintext password is stored
-        delete schools[idx].adminPassword;
-        localStorage.setItem('lvlbase_schools', JSON.stringify(schools));
-      }
-      showToast('School verified! ✅', 'success');
-      addTimelineAction('School verified: ' + (schools[idx] ? schools[idx].name : id));
-      renderSchoolsTable();
-      updatePendingBadges();
-    }
+      <!-- CONTENT -->
+      <div class="sa-section" id="section-content">
+        <div class="section-heading">Content Management</div>
+        <p class="section-sub">Add quiz questions and manage learning materials</p>
+        <div class="grid-2 mb-3">
+          <div class="bc">
+            <div style="font-weight:700;margin-bottom:1rem">Add Quiz Question</div>
+            <div class="sa-group"><label class="sa-label">Subject</label><select class="sa-input sa-select" id="q-subject"><option value="math">Mathematics</option><option value="science">Science</option><option value="english">English</option></select></div>
+            <div class="sa-group"><label class="sa-label">Grade</label><select class="sa-input sa-select" id="q-grade"><option>6</option><option>7</option><option>8</option><option>9</option><option>10</option><option>11</option><option>12</option></select></div>
+            <div class="sa-group"><label class="sa-label">Question</label><input type="text" class="sa-input" id="q-question" placeholder="Enter question..."></div>
+            <div class="sa-group"><label class="sa-label">Options (one per line, prefix correct answer with *)</label><textarea class="sa-input" id="q-options" rows="4" placeholder="*Correct answer&#10;Wrong 1&#10;Wrong 2&#10;Wrong 3" style="resize:vertical"></textarea></div>
+            <button onclick="addQuestion()" style="width:100%;padding:0.75rem;border:none;border-radius:12px;font-weight:700;cursor:pointer;background:linear-gradient(135deg,#6C63FF,#BF5AF2);color:white;font-family:inherit">Add Question</button>
+          </div>
+          <div class="bc">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0.75rem">
+              <div style="font-weight:700">Question Bank</div>
+              <span class="badge badge-purple" id="q-count">0 questions</span>
+            </div>
+            <div id="q-list" style="max-height:340px;overflow-y:auto"></div>
+          </div>
+        </div>
+        <div class="bc">
+          <div style="font-weight:700;margin-bottom:1rem">Platform Subjects</div>
+          <div class="grid-3">
+            <div style="background:rgba(108,99,255,0.08);border:1px solid rgba(108,99,255,0.2);border-radius:16px;padding:1.1rem"><div style="font-weight:700">Mathematics</div><div style="color:#8892A4;font-size:0.82rem">Grades 6-12 - Algebra, Geometry, Calculus</div></div>
+            <div style="background:rgba(0,209,178,0.08);border:1px solid rgba(0,209,178,0.2);border-radius:16px;padding:1.1rem"><div style="font-weight:700">Science</div><div style="color:#8892A4;font-size:0.82rem">Physics, Chemistry, Biology</div></div>
+            <div style="background:rgba(255,159,10,0.08);border:1px solid rgba(255,159,10,0.2);border-radius:16px;padding:1.1rem"><div style="font-weight:700">English</div><div style="color:#8892A4;font-size:0.82rem">Grammar, Comprehension, Writing</div></div>
+          </div>
+        </div>
+      </div>
 
-    function rejectSchool(id) {
-      if (!window.lvlPopup) { if (!confirm('Reject this school?')) return; doRejectSchool(id); return; }
-      lvlPopup.confirm('Reject School', 'Reject this school registration?', { confirmLabel: '✗ Reject', confirmStyle: 'danger', type:'error' }).then(c => { if (c) doRejectSchool(id); });
-    }
+      <!-- EVENTS -->
+      <div class="sa-section" id="section-events">
+        <div class="section-heading">Events &amp; Challenges</div>
+        <p class="section-sub">Create and manage global XP events for all students</p>
+        <div class="grid-2 mb-3">
+          <div class="bc">
+            <div style="font-weight:700;margin-bottom:1rem">Create Event</div>
+            <div class="sa-group"><label class="sa-label">Title</label><input type="text" id="evt-title" class="sa-input" placeholder="Weekend XP Blitz"></div>
+            <div class="sa-group"><label class="sa-label">Description</label><input type="text" id="evt-desc" class="sa-input" placeholder="All students earn 2x XP this weekend!"></div>
+            <div class="grid-2">
+              <div class="sa-group"><label class="sa-label">XP Bonus</label><select id="evt-bonus" class="sa-input sa-select"><option value="1.5">1.5x</option><option value="2">2x</option><option value="3">3x</option><option value="5">5x EPIC</option></select></div>
+              <div class="sa-group"><label class="sa-label">Duration</label><select id="evt-duration" class="sa-input sa-select"><option>1 Day</option><option>3 Days</option><option>1 Week</option><option>1 Month</option></select></div>
+            </div>
+            <button onclick="createEvent()" style="width:100%;padding:0.75rem;border:none;border-radius:12px;font-weight:700;cursor:pointer;background:linear-gradient(135deg,#6C63FF,#BF5AF2);color:white;font-family:inherit">Launch Event</button>
+          </div>
+          <div class="bc">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0.75rem">
+              <div style="font-weight:700">Active Events</div>
+              <button class="ab ab-reject" onclick="clearEvents()">Clear All</button>
+            </div>
+            <div id="events-list" style="max-height:320px;overflow-y:auto"><div style="color:#8892A4;font-size:0.82rem">No active events.</div></div>
+          </div>
+        </div>
+      </div>
 
-    function doRejectSchool(id) {
-      const schools = JSON.parse(localStorage.getItem('lvlbase_schools') || '[]');
-      const idx = schools.findIndex(s => s.id === id);
-      if (idx !== -1) {
-        schools[idx].status = 'rejected';
-        // Ensure no plaintext password is stored
-        delete schools[idx].adminPassword;
-        localStorage.setItem('lvlbase_schools', JSON.stringify(schools));
-      }
-      showToast('School rejected.', 'warning');
-      renderSchoolsTable();
-      updatePendingBadges();
-    }
+      <!-- ANNOUNCEMENTS -->
+      <div class="sa-section" id="section-announcements">
+        <div class="section-heading">Announcements</div>
+        <p class="section-sub">Send platform-wide messages to all users or specific roles</p>
+        <div class="grid-2 mb-3">
+          <div class="bc">
+            <div style="font-weight:700;margin-bottom:1rem">Compose Announcement</div>
+            <div class="sa-group"><label class="sa-label">Title</label><input type="text" id="ann-title" class="sa-input" placeholder="Important update..."></div>
+            <div class="sa-group"><label class="sa-label">Message</label><textarea class="sa-input" id="ann-body" rows="4" placeholder="Enter your announcement..." style="resize:vertical"></textarea></div>
+            <div class="sa-group"><label class="sa-label">Target</label><select id="ann-target" class="sa-input sa-select"><option value="all">All Users</option><option value="student">Students Only</option><option value="teacher">Teachers Only</option><option value="parent">Parents Only</option><option value="school_admin">School Admins Only</option></select></div>
+            <div class="sa-group"><label class="sa-label">Type</label><select id="ann-type" class="sa-input sa-select"><option value="info">Info</option><option value="success">Good News</option><option value="warning">Warning</option><option value="event">Event</option></select></div>
+            <button onclick="sendAnnouncement()" style="width:100%;padding:0.75rem;border:none;border-radius:12px;font-weight:700;cursor:pointer;background:linear-gradient(135deg,#6C63FF,#BF5AF2);color:white;font-family:inherit">Send Announcement</button>
+          </div>
+          <div class="bc">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0.75rem">
+              <div style="font-weight:700">Sent Announcements</div>
+              <button class="ab ab-reject" onclick="clearAnnouncements()">Clear</button>
+            </div>
+            <div id="announcements-list" style="max-height:380px;overflow-y:auto"><div style="color:#8892A4;font-size:0.82rem">No announcements yet.</div></div>
+          </div>
+        </div>
+      </div>
 
-    function populateSchoolFilter() {
-      const schools = JSON.parse(localStorage.getItem('lvlbase_schools') || '[]');
-      const sel = document.getElementById('ua-school-filter');
-      if (!sel) return;
-      sel.innerHTML = '<option value="">All Schools</option>' + schools.map(s => `<option value="${s.id}">${s.name}</option>`).join('');
-    }
+      <!-- PLATFORM CONTROLS -->
+      <div class="sa-section" id="section-platform">
+        <div class="section-heading">Platform Controls</div>
+        <p class="section-sub">Global settings, feature flags and quick actions</p>
+        <div class="grid-2 mb-3">
+          <div class="bc">
+            <div style="font-weight:700;margin-bottom:1rem">Feature Flags</div>
+            <div class="setting-row"><div class="setting-info"><div class="setting-title">Maintenance Mode</div><div class="setting-desc">Block all user access temporarily</div></div><button class="toggle" id="flag-maintenance" onclick="toggleFlag('maintenance',this)"></button></div>
+            <div class="setting-row"><div class="setting-info"><div class="setting-title">New Registrations</div><div class="setting-desc">Allow new student sign-ups</div></div><button class="toggle on" id="flag-signup" onclick="toggleFlag('signup',this)"></button></div>
+            <div class="setting-row"><div class="setting-info"><div class="setting-title">Battle Arena</div><div class="setting-desc">Enable live battle system</div></div><button class="toggle on" id="flag-battles" onclick="toggleFlag('battles',this)"></button></div>
+            <div class="setting-row"><div class="setting-info"><div class="setting-title">AI Tutor (Sage)</div><div class="setting-desc">Enable AI assistant for students</div></div><button class="toggle on" id="flag-ai" onclick="toggleFlag('ai',this)"></button></div>
+            <div class="setting-row"><div class="setting-info"><div class="setting-title">Guild Wars</div><div class="setting-desc">Enable guild vs guild battles</div></div><button class="toggle on" id="flag-guild" onclick="toggleFlag('guild',this)"></button></div>
+            <div class="setting-row"><div class="setting-info"><div class="setting-title">Leaderboard</div><div class="setting-desc">Show public leaderboard</div></div><button class="toggle on" id="flag-leaderboard" onclick="toggleFlag('leaderboard',this)"></button></div>
+          </div>
+          <div class="bc">
+            <div style="font-weight:700;margin-bottom:1rem">Quick Actions</div>
+            <div style="display:flex;flex-direction:column;gap:0.75rem">
+              <button onclick="exportData()" style="width:100%;padding:0.75rem;border:none;border-radius:12px;font-weight:700;cursor:pointer;background:rgba(108,99,255,0.2);color:#6C63FF;font-family:inherit">Export All Data (JSON)</button>
+              <button onclick="sendBonusXP()" style="width:100%;padding:0.75rem;border:none;border-radius:12px;font-weight:700;cursor:pointer;background:rgba(0,209,178,0.15);color:#00D1B2;font-family:inherit">Send 100 Bonus XP to All Students</button>
+              <button onclick="forceLeaderboardRefresh()" style="width:100%;padding:0.75rem;border:none;border-radius:12px;font-weight:700;cursor:pointer;background:rgba(255,255,255,0.06);color:#F5F5FF;border:1px solid rgba(255,255,255,0.1);font-family:inherit">Refresh Global Leaderboard</button>
+              <button onclick="clearDemoData()" style="width:100%;padding:0.75rem;border:none;border-radius:12px;font-weight:700;cursor:pointer;background:rgba(255,68,68,0.15);color:#FF4444;font-family:inherit">Clear All Local Data</button>
+            </div>
+          </div>
+        </div>
+        <div class="bc mb-3">
+          <div style="font-weight:700;margin-bottom:1rem">Admin Credentials</div>
+          <div class="grid-2">
+            <div class="sa-group"><label class="sa-label">Current Password</label><input type="password" id="curr-pw" class="sa-input" placeholder="Current password"></div>
+            <div class="sa-group"><label class="sa-label">New Password (min 8 chars)</label><input type="password" id="new-pw" class="sa-input" placeholder="New password"></div>
+          </div>
+          <button class="ab ab-view" onclick="changeAdminPassword()" style="margin-top:0.5rem;padding:0.5rem 1.2rem;border-radius:10px;font-size:0.85rem">Update Password</button>
+        </div>
+        <div class="bc bc-purple">
+          <div style="font-weight:700;margin-bottom:0.75rem">Firebase Configuration</div>
+          <div style="background:rgba(0,0,0,0.3);border-radius:12px;padding:1rem;font-size:0.78rem;font-family:monospace;color:#00D1B2;white-space:pre-wrap;max-height:200px;overflow-y:auto" id="firebase-cfg-display"></div>
+        </div>
+      </div>
 
-    // HTML escape helper to prevent XSS
-    function esc(str) {
-      if (str == null) return '';
-      return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
-    }
+      <!-- AUDIT LOG -->
+      <div class="sa-section" id="section-audit">
+        <div class="section-heading">Audit Log</div>
+        <p class="section-sub">Full record of all admin actions on this platform</p>
+        <div class="sa-table-wrap">
+          <div class="sa-table-head">
+            <div class="sa-table-head-title">Action History</div>
+            <div class="sa-table-head-actions">
+              <input type="text" class="sa-input" style="width:200px" placeholder="Filter actions..." oninput="filterAudit(this.value)">
+              <button class="ab ab-reject" onclick="clearAuditLog()">Clear Log</button>
+            </div>
+          </div>
+          <div class="ov-auto" style="max-height:500px;overflow-y:auto">
+            <table class="sa-table"><thead><tr><th>Time</th><th>Action</th><th>Details</th><th>Source</th></tr></thead><tbody id="audit-tbody"></tbody></table>
+          </div>
+        </div>
+      </div>
 
-    function renderUserApprovals() {
-      const schoolFilter = document.getElementById('ua-school-filter') ? document.getElementById('ua-school-filter').value : '';
-      const roleFilter = document.getElementById('ua-role-filter') ? document.getElementById('ua-role-filter').value : '';
-      const schools = JSON.parse(localStorage.getItem('lvlbase_schools') || '[]');
-      const getSchoolName = id => { const s = schools.find(s => s.id === id); return s ? esc(s.name) : (id ? esc(id.slice(0,12))+'…' : '–'); };
-      let users = JSON.parse(localStorage.getItem('lvlbase_all_users') || '[]');
-      if (schoolFilter) users = users.filter(u => u.schoolId === schoolFilter);
-      if (roleFilter) users = users.filter(u => u.role === roleFilter);
-      const tbody = document.getElementById('ua-tbody');
-      if (!tbody) return;
-      if (!users.length) {
-        tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;color:var(--text-muted);padding:1.5rem">No users found.</td></tr>';
-        return;
-      }
-      tbody.innerHTML = users.map(u => `
-        <tr>
-          <td><strong>${esc(u.displayName)}</strong></td>
-          <td style="font-size:.82rem;color:var(--text-muted)">${esc(u.email)}</td>
-          <td><span style="display:inline-flex;align-items:center;padding:.2rem .55rem;border-radius:8px;font-size:.72rem;font-weight:700;background:rgba(108,99,255,.15);color:var(--primary)">${esc(u.role)}</span></td>
-          <td style="font-size:.82rem">${getSchoolName(u.schoolId)}</td>
-          <td><span style="display:inline-flex;align-items:center;padding:.2rem .55rem;border-radius:8px;font-size:.72rem;font-weight:700;background:${u.status==='approved'?'rgba(0,209,178,.12)':u.status==='rejected'?'rgba(255,68,68,.12)':'rgba(255,165,0,.15)'};color:${u.status==='approved'?'var(--success)':u.status==='rejected'?'var(--danger)':'var(--warning)'}">${esc(u.status)}</span></td>
-          <td style="font-size:.78rem;color:var(--text-muted)">${new Date(u.createdAt).toLocaleDateString('en-IN')}</td>
-          <td><div class="action-btn-group">
-            ${u.status === 'pending' ? `<button class="admin-action-btn action-view" onclick="adminApproveUser('${esc(u.uid)}')" style="color:var(--success)">✓ Approve</button><button class="admin-action-btn action-ban" onclick="adminRejectUser('${esc(u.uid)}')">✗ Reject</button>` : ''}
-          </div></td>
-        </tr>
-      `).join('');
-    }
+    </div>
+  </main>
+</div>
 
-    function adminApproveUser(uid) {
-      const users = JSON.parse(localStorage.getItem('lvlbase_all_users') || '[]');
-      const idx = users.findIndex(u => u.uid === uid);
-      if (idx !== -1) { users[idx].status = 'approved'; localStorage.setItem('lvlbase_all_users', JSON.stringify(users)); }
-      showToast('User approved! ✅', 'success');
-      renderUserApprovals(); updatePendingBadges();
-    }
+<div id="toast-container" class="toast-container"></div>
+<script src="../js/popup.js"></script>
+<script>
+  var CREDS_KEY = 'lvlbase_admin_creds';
+  function getCreds() { try { return JSON.parse(localStorage.getItem(CREDS_KEY)) || { email:'admin@lvlbase.com', password:'admin123' }; } catch(e) { return { email:'admin@lvlbase.com', password:'admin123' }; } }
 
-    function adminRejectUser(uid) {
-      const users = JSON.parse(localStorage.getItem('lvlbase_all_users') || '[]');
-      const idx = users.findIndex(u => u.uid === uid);
-      if (idx !== -1) { users[idx].status = 'rejected'; localStorage.setItem('lvlbase_all_users', JSON.stringify(users)); }
-      showToast('User rejected.', 'warning');
-      renderUserApprovals(); updatePendingBadges();
-    }
+  function checkSession() {
+    var u = JSON.parse(localStorage.getItem('lvlbase_current_user') || 'null');
+    if (u && u.role === 'admin') return true;
+    try { var d = JSON.parse(localStorage.getItem('lvlbase_admin_session') || 'null'); return d && d.loggedIn && Date.now()-d.loginTime < 28800000; } catch(e) { return false; }
+  }
 
-    function initAdmin() {
-      const quizH = JSON.parse(localStorage.getItem('lvlbase_quiz_history') || '[]');
-      const profile = JSON.parse(localStorage.getItem('lvlbase_user_profile') || '{}');
-
-      document.getElementById('admin-total-users').textContent = (JSON.parse(localStorage.getItem('lvlbase_all_users')||'[]').length + 1247).toLocaleString();
-      document.getElementById('admin-active-today').textContent = '89';
-      document.getElementById('admin-total-quizzes').textContent = (quizH.length + 12450).toLocaleString();
-      document.getElementById('admin-avg-score').textContent = quizH.length > 0 ? Math.round(quizH.reduce((s,h)=>s+h.score,0)/quizH.length)+'%' : '72%';
-
-      const days = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
-      const vals = [45, 67, 52, 78, 91, 112, 89];
-      const maxV = Math.max(...vals);
-      const chart = document.getElementById('weekly-chart');
-      const labels = document.getElementById('weekly-labels');
-      if (chart) chart.innerHTML = vals.map((v) => `<div class="chart-bar" style="height:${Math.round(v/maxV*100)}%" data-value="${v}"></div>`).join('');
-      if (labels) labels.innerHTML = days.map(d => `<div class="chart-label">${d}</div>`).join('');
-
-      const timeline = document.getElementById('admin-timeline');
-      const tactions = [
-        { action:'XP Multiplier set to 1.5×', meta:'2 hours ago', color:'var(--primary)' },
-        { action:'New event created: Weekend Challenge', meta:'Yesterday', color:'var(--success)' },
-        { action:'User report exported', meta:'2 days ago', color:'var(--accent)' }
-      ];
-      if (timeline) timeline.innerHTML = tactions.map(a => `<div class="timeline-item"><div class="timeline-dot" style="background:${a.color}"></div><div class="timeline-content"><div class="timeline-action">${a.action}</div><div class="timeline-meta">${a.meta}</div></div></div>`).join('');
-
-      const topUsers = [
-        { name:'Arjun Sharma', email:'arjun@student.com', xp:28500, rank:'SS-Rank', quizzes:245, status:'active', streak:45 },
-        { name:'Priya Patel', email:'priya@student.com', xp:24200, rank:'S-Rank', quizzes:198, status:'active', streak:32 },
-        { name:'Rohan Mehta', email:'rohan@student.com', xp:21800, rank:'S-Rank', quizzes:175, status:'active', streak:28 }
-      ];
-      if (profile.displayName) topUsers.push({ name:profile.displayName, email:profile.email||'demo@user.com', xp:profile.totalXP||0, rank:getRankLabel(profile.totalXP||0), quizzes:profile.quizzesCompleted||0, status:'active', streak:profile.streak||0 });
-
-      const tbody = document.getElementById('top-users-body');
-      if (tbody) tbody.innerHTML = topUsers.sort((a,b)=>b.xp-a.xp).map((u,i)=>`
-        <tr>
-          <td style="font-weight:700;color:var(--accent)">${i<3?['🥇','🥈','🥉'][i]:'#'+(i+1)}</td>
-          <td><div style="font-weight:600;font-size:0.875rem">${u.name}</div><div style="font-size:0.75rem;color:var(--text-muted)">🔥 ${u.streak} day streak</div></td>
-          <td style="font-size:0.8rem;color:var(--text-muted)">${u.email}</td>
-          <td style="font-weight:700;color:var(--primary)">⚡ ${u.xp.toLocaleString()}</td>
-          <td><span class="badge badge-primary" style="font-size:0.75rem">${u.rank}</span></td>
-          <td>${u.quizzes}</td>
-          <td><span class="status-dot status-online"></span>${u.status}</td>
-          <td><div class="action-btn-group">
-            <button class="admin-action-btn action-view" onclick="showToast('Viewing ${u.name}','info')">View</button>
-            <button class="admin-action-btn action-boost" onclick="showToast('+500 XP to ${u.name}!','success')">Boost</button>
-            <button class="admin-action-btn action-ban" onclick="showToast('${u.name} banned','error')">Ban</button>
-          </div></td>
-        </tr>`).join('');
-
-      renderUsersTable([...topUsers, { name:'Anika Singh', email:'anika@student.com', xp:19500, rank:'S-Rank', quizzes:145, status:'active', streak:21 }, { name:'Dev Kapoor', email:'dev@student.com', xp:17300, rank:'A-Rank', quizzes:132, status:'idle', streak:18 }]);
-      renderEvents(JSON.parse(localStorage.getItem('lvlbase_events') || '[]'));
-      updatePendingBadges();
-      populateSchoolFilter();
-    }
-
-    function renderUsersTable(users) {
-      const guilds = { shadow:'🌙', azure:'💧', inferno:'🔥', titan:'⚡', zenith:'✨' };
-      document.getElementById('users-table-body').innerHTML = users.map((u,i)=>`
-        <tr>
-          <td>${i+1}</td>
-          <td><div style="font-weight:600;font-size:0.875rem">${u.name}</div></td>
-          <td>${guilds[u.guild]||'–'}</td>
-          <td style="font-weight:700;color:var(--primary)">⚡${(u.xp||0).toLocaleString()}</td>
-          <td><span style="font-size:0.75rem;font-weight:600">${u.rank||'E-Rank'}</span></td>
-          <td>🔥${u.streak||0}</td>
-          <td>${u.quizzes||0}</td>
-          <td style="font-size:0.75rem;color:var(--text-muted)">2024-01-15</td>
-          <td><span class="status-dot ${u.status==='active'?'status-online':'status-offline'}"></span>${u.status||'active'}</td>
-          <td><div class="action-btn-group">
-            <button class="admin-action-btn action-edit" onclick="showToast('Editing ${u.name}','info')">Edit</button>
-            <button class="admin-action-btn action-ban" onclick="showToast('${u.name} banned','error')">Ban</button>
-          </div></td>
-        </tr>`).join('');
-    }
-
-    function renderEvents(events) {
-      const list = document.getElementById('active-events-list');
-      if (!events.length) { list.innerHTML = '<div style="color:var(--text-muted);font-size:0.85rem">No active events. Create one!</div>'; return; }
-      list.innerHTML = events.map(e => `<div style="background:rgba(108,99,255,0.05);border:1px solid var(--border-color);border-radius:var(--radius);padding:0.75rem;margin-bottom:0.5rem"><div style="display:flex;justify-content:space-between;align-items:center"><div style="font-weight:600;font-size:0.875rem">${e.title}</div><span class="badge badge-success">${e.xpBonus}× XP</span></div><div style="font-size:0.75rem;color:var(--text-muted);margin-top:0.3rem">${e.description}</div></div>`).join('');
-    }
-
-    function getRankLabel(xp) {
-      if(xp>=30000)return'SS-Rank';if(xp>=15000)return'S-Rank';if(xp>=7000)return'A-Rank';
-      if(xp>=3500)return'B-Rank';if(xp>=1500)return'C-Rank';if(xp>=500)return'D-Rank';return'E-Rank';
-    }
-
-    function showSection(id, linkEl) {
-      document.querySelectorAll('[id^="section-"]').forEach(s => s.style.display = 'none');
-      const sec = document.getElementById('section-' + id);
-      if (sec) sec.style.display = 'block';
-      document.querySelectorAll('.admin-nav-link').forEach(l => l.classList.remove('active'));
-      if (linkEl) linkEl.classList.add('active');
-      const titles = { overview:'📊 Dashboard Overview', analytics:'📈 Analytics', users:'👥 User Management', quizzes:'🎯 Quiz Management', events:'🎉 Events', settings:'⚙️ Settings', schools:'🏫 School Management', 'user-approvals':'⏳ User Approvals' };
-      document.getElementById('topbar-title').textContent = titles[id] || id;
-      if (id === 'schools') renderSchoolsTable();
-      if (id === 'user-approvals') { populateSchoolFilter(); renderUserApprovals(); }
-    }
-
-    function filterTable(query) {
-      const rows = document.querySelectorAll('#top-users-body tr');
-      rows.forEach(row => { row.style.display = row.textContent.toLowerCase().includes(query.toLowerCase()) ? '' : 'none'; });
-    }
-
-    function setMultiplier(val) {
-      document.getElementById('multiplier-val').textContent = val + '×';
-      addTimelineAction(`XP Multiplier set to ${val}×`);
-      showToast(`⚡ Global XP multiplier set to ${val}×!`, 'success');
-    }
-
-    function addTimelineAction(action) {
-      const tl = document.getElementById('admin-timeline');
-      const item = document.createElement('div'); item.className = 'timeline-item';
-      item.innerHTML = `<div class="timeline-dot"></div><div class="timeline-content"><div class="timeline-action">${action}</div><div class="timeline-meta">Just now</div></div>`;
-      tl.insertBefore(item, tl.firstChild);
-    }
-
-    function createEvent() {
-      const title = document.getElementById('evt-title').value;
-      const desc = document.getElementById('evt-desc').value;
-      const bonus = document.getElementById('evt-bonus').value;
-      if (!title) { showToast('Enter event title', 'error'); return; }
-      const events = JSON.parse(localStorage.getItem('lvlbase_events') || '[]');
-      events.push({ id:'evt_'+Date.now(), title, description:desc, xpBonus:bonus, active:true, createdAt:new Date().toISOString() });
-      localStorage.setItem('lvlbase_events', JSON.stringify(events));
-      renderEvents(events);
-      document.getElementById('evt-title').value = '';
-      document.getElementById('evt-desc').value = '';
-      showToast(`🎉 Event "${title}" launched!`, 'success');
-      addTimelineAction(`New event: "${title}" (${bonus}× XP)`);
-    }
-
-    function showToast(msg, type) {
-      if (window.lvlPopup) { lvlPopup.toast(msg, type); return; }
-      const container = document.getElementById('toast-container');
-      const toast = document.createElement('div'); toast.className = `toast ${type}`;
-      toast.innerHTML = `<span>${{success:'✅',error:'❌',info:'ℹ️',warning:'⚠️'}[type]||'ℹ️'}</span><span>${msg}</span>`;
-      container.appendChild(toast);
-      setTimeout(()=>{ toast.classList.add('toast-hide'); setTimeout(()=>toast.remove(),300); }, 3000);
-    }
-
-    // Enter key on login
-    document.addEventListener('keydown', e => { if (e.key === 'Enter' && document.getElementById('login-screen').style.display !== 'none') doLogin(); });
-
-    // Init
-    if (checkSession()) {
+  function doLogin() {
+    var email = document.getElementById('admin-email').value.trim();
+    var pw = document.getElementById('admin-password').value;
+    var c = getCreds();
+    if (email === c.email && pw === c.password) {
+      localStorage.setItem('lvlbase_admin_session', JSON.stringify({ loggedIn:true, loginTime:Date.now() }));
+      var ap = { uid:'admin_super', email:c.email, displayName:'Super Admin', role:'admin', status:'approved', schoolId:null };
+      localStorage.setItem('lvlbase_current_user', JSON.stringify(ap));
+      localStorage.setItem('lvlbase_user_profile', JSON.stringify(ap));
       document.getElementById('login-screen').style.display = 'none';
       document.getElementById('admin-screen').style.display = 'flex';
+      auditLog('Admin login', email);
       initAdmin();
+    } else {
+      var el = document.getElementById('login-error');
+      el.textContent = 'Invalid credentials';
+      el.style.display = 'block';
     }
+  }
 
-    // Toggle style
-    const style = document.createElement('style');
-    style.textContent = `.toggle { width: 44px; height: 24px; background: rgba(255,255,255,0.1); border-radius: 12px; cursor: pointer; transition: var(--transition); position: relative; flex-shrink: 0; border: none; } .toggle.on { background: var(--primary); } .toggle::after { content: ''; position: absolute; width: 18px; height: 18px; background: white; border-radius: 50%; top: 3px; left: 3px; transition: var(--transition); } .toggle.on::after { left: 23px; }`;
-    document.head.appendChild(style);
-  </script>
+  function doLogout() {
+    localStorage.removeItem('lvlbase_admin_session');
+    localStorage.removeItem('lvlbase_current_user');
+    auditLog('Admin logout', '-');
+    document.getElementById('admin-screen').style.display = 'none';
+    document.getElementById('login-screen').style.display = 'flex';
+    document.getElementById('admin-email').value = '';
+    document.getElementById('admin-password').value = '';
+    document.getElementById('login-error').style.display = 'none';
+  }
+
+  function esc(s) { if(s==null)return''; return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;'); }
+  function getAllUsers() { return JSON.parse(localStorage.getItem('lvlbase_all_users')||'[]'); }
+  function getAllSchools() { return JSON.parse(localStorage.getItem('lvlbase_schools')||'[]'); }
+  function getQuizHistory() { return JSON.parse(localStorage.getItem('lvlbase_quiz_history')||'[]'); }
+  function saveUsers(u) { localStorage.setItem('lvlbase_all_users', JSON.stringify(u)); }
+  function saveSchools(s) { localStorage.setItem('lvlbase_schools', JSON.stringify(s)); }
+  function getSchoolName(id) { var s=getAllSchools().find(function(x){return x.id===id;}); return s?esc(s.name):(id?esc(String(id).slice(0,10))+'...':'-'); }
+  function getRank(xp) { if(xp>=30000)return'SS-Rank';if(xp>=15000)return'S-Rank';if(xp>=7000)return'A-Rank';if(xp>=3500)return'B-Rank';if(xp>=1500)return'C-Rank';if(xp>=500)return'D-Rank';return'E-Rank'; }
+
+  function updateBadges() {
+    var ps=getAllSchools().filter(function(s){return s.status==='pending';}).length;
+    var sb=document.getElementById('school-badge'); if(sb){sb.textContent=ps;sb.style.display=ps>0?'flex':'none';}
+    var pu=getAllUsers().filter(function(u){return u.status==='pending';}).length;
+    var ub=document.getElementById('user-badge'); if(ub){ub.textContent=pu;ub.style.display=pu>0?'flex':'none';}
+  }
+
+  function showSection(id, btn) {
+    document.querySelectorAll('.sa-section').forEach(function(s){s.classList.remove('active');});
+    var sec=document.getElementById('section-'+id); if(sec)sec.classList.add('active');
+    document.querySelectorAll('.sa-nav-link').forEach(function(l){l.classList.remove('active');}); if(btn)btn.classList.add('active');
+    var T={overview:'Dashboard',analytics:'Analytics',schools:'School Management','user-approvals':'User Approvals',users:'User Management',content:'Content Management',events:'Events',announcements:'Announcements',platform:'Platform Controls',audit:'Audit Log'};
+    document.getElementById('topbar-title').textContent=T[id]||id;
+    document.getElementById('sa-sidebar').classList.remove('open');
+    if(id==='schools')renderSchoolsTable();
+    if(id==='user-approvals'){populateSchoolFilter();renderUserApprovals();}
+    if(id==='users')renderUsersTable();
+    if(id==='analytics')renderAnalytics();
+    if(id==='events')renderEvents();
+    if(id==='announcements')renderAnnouncements();
+    if(id==='audit')renderAuditTable('');
+    if(id==='content')renderQuestions();
+  }
+
+  function initAdmin() { updateBadges(); renderOverview(); startClock(); renderFeatureFlags(); showFirebaseConfig(); }
+
+  function startClock() {
+    function tick(){var el=document.getElementById('admin-clock');if(el)el.textContent=new Date().toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit',second:'2-digit'});}
+    tick(); setInterval(tick,1000);
+  }
+
+  function renderOverview() {
+    var users=getAllUsers(), schools=getAllSchools(), quizH=getQuizHistory();
+    document.getElementById('b-total-users').textContent=users.length.toLocaleString();
+    var students=users.filter(function(u){return u.role==='student';});
+    document.getElementById('b-users-change').textContent=students.length+' students';
+    var verified=schools.filter(function(s){return s.status==='verified';}).length;
+    var pending=schools.filter(function(s){return s.status==='pending';}).length;
+    document.getElementById('b-schools').textContent=schools.length;
+    document.getElementById('b-schools-sub').textContent=verified+' verified, '+pending+' pending';
+    document.getElementById('b-quizzes').textContent=quizH.length.toLocaleString();
+    var pu=users.filter(function(u){return u.status==='pending';}).length;
+    document.getElementById('b-pending').textContent=(pu+pending);
+    document.getElementById('b-pending-sub').textContent=pu+' users, '+pending+' schools';
+    var m=localStorage.getItem('lvlbase_xp_multiplier')||'1';
+    document.getElementById('mult-display').textContent=m+'x';
+    var days=['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
+    var colors=['#6C63FF','#8B7BFF','#00D1B2','#FF9F0A','#FF4444','#BF5AF2','#FFD60A'];
+    var vals=days.map(function(_,i){return quizH.filter(function(q){if(!q.date)return false;var diff=Math.floor((Date.now()-new Date(q.date))/86400000);return diff===i;}).length||(Math.floor(Math.random()*25)+8);});
+    var maxV=Math.max.apply(null,vals.concat([1]));
+    document.getElementById('weekly-bars').innerHTML=vals.map(function(v,i){return '<div class="bar-col" style="height:'+Math.round(v/maxV*100)+'%;background:'+colors[i]+'" title="'+v+' quizzes"></div>';}).join('');
+    document.getElementById('weekly-bar-labels').innerHTML=days.map(function(d){return '<div class="bar-label">'+d+'</div>';}).join('');
+    renderTimeline();
+    var sorted=students.slice().sort(function(a,b){return (b.totalXP||0)-(a.totalXP||0);}).slice(0,8);
+    var tbody=document.getElementById('top-tbody');
+    if(!sorted.length){tbody.innerHTML='<tr><td colspan="8" style="text-align:center;color:#8892A4;padding:1.5rem">No students yet.</td></tr>';return;}
+    tbody.innerHTML=sorted.map(function(u,i){
+      var medal=i<3?['#1','#2','#3'][i]:'#'+(i+1);
+      return '<tr><td style="font-weight:700;color:#FFD60A">'+medal+'</td><td><div style="font-weight:700">'+esc(u.displayName)+'</div><div style="font-size:0.75rem;color:#8892A4">'+esc(u.email)+'</div></td><td style="font-size:0.82rem">'+getSchoolName(u.schoolId)+'</td><td style="font-weight:700;color:#6C63FF">XP '+(u.totalXP||0).toLocaleString()+'</td><td><span class="badge badge-purple">'+getRank(u.totalXP||0)+'</span></td><td style="color:#FFD60A">'+(u.streak||0)+' days</td><td><span class="badge '+(u.status==='approved'?'badge-green':u.status==='banned'?'badge-red':'badge-amber')+'">'+esc(u.status||'active')+'</span></td><td><div class="abg"><button class="ab ab-boost" onclick="boostUserXP(''+esc(u.uid)+'',''+esc(u.displayName)+'')">+XP</button>'+(u.status==='banned'?'<button class="ab ab-unban" onclick="unbanUser(''+esc(u.uid)+'',''+esc(u.displayName)+'')">Unban</button>':'<button class="ab ab-ban" onclick="banUser(''+esc(u.uid)+'',''+esc(u.displayName)+'')">Ban</button>')+'</div></td></tr>';
+    }).join('');
+  }
+
+  function renderTimeline() {
+    var tl=document.getElementById('admin-timeline');
+    var log=JSON.parse(localStorage.getItem('lvlbase_audit_log')||'[]').slice(-5).reverse();
+    if(!log.length){tl.innerHTML='<div style="color:#8892A4;font-size:0.82rem">No actions yet.</div>';return;}
+    tl.innerHTML=log.map(function(l){return '<div class="tl-item"><div class="tl-dot"></div><div class="tl-body"><div class="tl-action">'+esc(l.action)+'</div><div class="tl-meta">'+esc(l.detail)+' - '+new Date(l.ts).toLocaleString('en-IN')+'</div></div></div>';}).join('');
+  }
+
+  function renderAnalytics() {
+    var users=getAllUsers(),quizH=getQuizHistory(),students=users.filter(function(u){return u.role==='student';});
+    var totalXP=students.reduce(function(s,u){return s+(u.totalXP||0);},0);
+    document.getElementById('a-xp').textContent=totalXP.toLocaleString();
+    document.getElementById('a-battles').textContent=students.reduce(function(s,u){return s+(u.battlesPlayed||0);},0).toLocaleString();
+    document.getElementById('a-goals').textContent=students.reduce(function(s,u){return s+(u.goalsCompleted||0);},0).toLocaleString();
+    var avg=quizH.length?Math.round(quizH.reduce(function(s,h){return s+(h.score||0);},0)/quizH.length):0;
+    document.getElementById('a-avg').textContent=avg+'%';
+    var math=students.reduce(function(s,u){return s+((u.subjectProgress&&u.subjectProgress.math)||0);},0);
+    var sci=students.reduce(function(s,u){return s+((u.subjectProgress&&u.subjectProgress.science)||0);},0);
+    var eng=students.reduce(function(s,u){return s+((u.subjectProgress&&u.subjectProgress.english)||0);},0);
+    var tot=(math+sci+eng)||1;
+    document.getElementById('subject-bars').innerHTML=[['#6C63FF',Math.round(math/tot*100),'Mathematics'],['#00D1B2',Math.round(sci/tot*100),'Science'],['#FF9F0A',Math.round(eng/tot*100),'English']].map(function(x){return '<div style="margin-bottom:0.75rem"><div style="display:flex;justify-content:space-between;font-size:0.85rem;margin-bottom:0.3rem"><span>'+x[2]+'</span><span style="color:'+x[0]+';font-weight:700">'+x[1]+'%</span></div><div style="background:rgba(255,255,255,0.05);border-radius:8px;height:8px"><div style="background:'+x[0]+';width:'+x[1]+'%;height:8px;border-radius:8px"></div></div></div>';}).join('');
+    var guilds=['shadow','azure','inferno','titan','zenith'];
+    var gC={};guilds.forEach(function(g){gC[g]=students.filter(function(u){return u.guild===g;}).length;});
+    var maxG=Math.max.apply(null,Object.values(gC).concat([1]));
+    var gColors={shadow:'#BF5AF2',azure:'#6C63FF',inferno:'#FF4444',titan:'#00D1B2',zenith:'#FFD60A'};
+    document.getElementById('guild-dist').innerHTML=guilds.map(function(g){return '<div style="display:flex;align-items:center;gap:0.75rem;margin-bottom:0.7rem"><div style="flex:1"><div style="display:flex;justify-content:space-between;font-size:0.83rem;margin-bottom:0.25rem"><span style="text-transform:capitalize">'+g+'</span><span style="color:'+gColors[g]+';font-weight:700">'+gC[g]+'</span></div><div style="background:rgba(255,255,255,0.05);border-radius:8px;height:7px"><div style="background:'+gColors[g]+';width:'+Math.round(gC[g]/maxG*100)+'%;height:7px;border-radius:8px"></div></div></div></div>';}).join('');
+    var schools=getAllSchools().filter(function(s){return s.status==='verified';});
+    var sp=schools.map(function(s){var su=users.filter(function(u){return u.schoolId===s.id&&u.role==='student';});var aXP=su.length?Math.round(su.reduce(function(a,u){return a+(u.totalXP||0);},0)/su.length):0;var top=su.slice().sort(function(a,b){return(b.totalXP||0)-(a.totalXP||0);})[0];var q=su.reduce(function(a,u){return a+(u.quizzesCompleted||0);},0);return{name:s.name,students:su.length,avgXP:aXP,quizzes:q,top:top};}).sort(function(a,b){return b.avgXP-a.avgXP;});
+    var spBody=document.getElementById('school-perf-body');
+    if(!sp.length){spBody.innerHTML='<tr><td colspan="7" style="text-align:center;color:#8892A4;padding:1.5rem">No verified schools yet.</td></tr>';return;}
+    spBody.innerHTML=sp.map(function(s,i){return '<tr><td style="font-weight:700;color:#FFD60A">#'+(i+1)+'</td><td style="font-weight:700">'+esc(s.name)+'</td><td>'+s.students+'</td><td style="font-weight:700;color:#6C63FF">XP '+s.avgXP.toLocaleString()+'</td><td>'+s.quizzes+'</td><td style="color:#8892A4">'+(s.students?Math.round(s.quizzes/(s.students||1)):0)+'</td><td style="font-size:0.8rem;color:#8892A4">'+(s.top?esc(s.top.displayName)+' (XP '+(s.top.totalXP||0)+')':'-')+'</td></tr>';}).join('');
+  }
+
+  var _schoolSearch='';
+  function filterSchools(q){_schoolSearch=q;renderSchoolsTable();}
+  function renderSchoolsTable() {
+    var f=(document.getElementById('school-filter')||{}).value||'all';
+    var schools=getAllSchools();
+    if(f!=='all')schools=schools.filter(function(s){return s.status===f;});
+    if(_schoolSearch)schools=schools.filter(function(s){return (s.name+s.adminEmail+s.city+s.principal).toLowerCase().includes(_schoolSearch.toLowerCase());});
+    var tbody=document.getElementById('schools-tbody');
+    if(!schools.length){tbody.innerHTML='<tr><td colspan="7" style="text-align:center;color:#8892A4;padding:1.5rem">No schools found.</td></tr>';return;}
+    tbody.innerHTML=schools.map(function(s){
+      return '<tr><td><div style="font-weight:700">'+esc(s.name)+'</div><div style="font-size:0.75rem;color:#8892A4">'+(s.totalStudents?esc(String(s.totalStudents))+' cap.':'')+'</div></td><td>'+esc(s.principal)+'</td><td style="font-size:0.82rem;color:#8892A4">'+esc(s.city)+', '+esc(s.state)+'</td><td style="font-size:0.8rem;color:#8892A4">'+esc(s.adminEmail)+'</td><td style="font-size:0.78rem;color:#8892A4">'+new Date(s.createdAt||Date.now()).toLocaleDateString('en-IN')+'</td><td><span class="badge '+(s.status==='verified'?'badge-green':s.status==='rejected'?'badge-red':'badge-amber')+'">'+(s.status==='verified'?'Verified':s.status==='rejected'?'Rejected':'Pending')+'</span></td><td><div class="abg">'+(s.status!=='verified'?'<button class="ab ab-verify" onclick="verifySchool(''+esc(s.id)+'')">Verify</button>':'')+(s.status!=='rejected'?'<button class="ab ab-reject" onclick="rejectSchool(''+esc(s.id)+'')">Reject</button>':'')+'</div></td></tr>';
+    }).join('');
+  }
+
+  function verifySchool(id) {
+    lvlPopup.confirm('Verify School','Grant this school admin full dashboard access?',{confirmLabel:'Verify',confirmStyle:'success'}).then(function(c){
+      if(!c)return;
+      var schools=getAllSchools(),idx=schools.findIndex(function(s){return s.id===id;});
+      if(idx!==-1){schools[idx].status='verified';schools[idx].verifiedAt=new Date().toISOString();delete schools[idx].adminPassword;saveSchools(schools);}
+      lvlPopup.toast('School verified!','success');auditLog('School verified',id);renderSchoolsTable();updateBadges();
+    });
+  }
+  function rejectSchool(id) {
+    lvlPopup.confirm('Reject School','The school admin will lose platform access.',{confirmLabel:'Reject',confirmStyle:'danger',type:'error'}).then(function(c){
+      if(!c)return;
+      var schools=getAllSchools(),idx=schools.findIndex(function(s){return s.id===id;});
+      if(idx!==-1){schools[idx].status='rejected';delete schools[idx].adminPassword;saveSchools(schools);}
+      lvlPopup.toast('School rejected.','warning');auditLog('School rejected',id);renderSchoolsTable();updateBadges();
+    });
+  }
+
+  function populateSchoolFilter() {
+    var sel=document.getElementById('ua-school-filter');if(!sel)return;
+    sel.innerHTML='<option value="">All Schools</option>'+getAllSchools().map(function(s){return '<option value="'+esc(s.id)+'">'+esc(s.name)+'</option>';}).join('');
+  }
+  function renderUserApprovals() {
+    var sf=(document.getElementById('ua-school-filter')||{}).value||'',rf=(document.getElementById('ua-role-filter')||{}).value||'',stf=(document.getElementById('ua-status-filter')||{}).value||'pending';
+    var users=getAllUsers();
+    if(sf)users=users.filter(function(u){return u.schoolId===sf;});if(rf)users=users.filter(function(u){return u.role===rf;});if(stf)users=users.filter(function(u){return u.status===stf;});
+    var tbody=document.getElementById('ua-tbody');
+    if(!users.length){tbody.innerHTML='<tr><td colspan="7" style="text-align:center;color:#8892A4;padding:1.5rem">No users found.</td></tr>';return;}
+    tbody.innerHTML=users.map(function(u){return '<tr><td style="font-weight:700">'+esc(u.displayName)+'</td><td style="font-size:0.82rem;color:#8892A4">'+esc(u.email)+'</td><td><span class="badge badge-purple">'+esc(u.role)+'</span></td><td style="font-size:0.82rem">'+getSchoolName(u.schoolId)+'</td><td><span class="badge '+(u.status==='approved'?'badge-green':u.status==='rejected'?'badge-red':'badge-amber')+'">'+esc(u.status)+'</span></td><td style="font-size:0.78rem;color:#8892A4">'+new Date(u.createdAt||Date.now()).toLocaleDateString('en-IN')+'</td><td><div class="abg">'+(u.status==='pending'?'<button class="ab ab-verify" onclick="approveUser(''+esc(u.uid)+'')">Approve</button><button class="ab ab-reject" onclick="rejectUserApproval(''+esc(u.uid)+'')">Reject</button>':'')+'</div></td></tr>';}).join('');
+  }
+  function approveUser(uid){var u=getAllUsers(),i=u.findIndex(function(x){return x.uid===uid;});if(i!==-1){u[i].status='approved';saveUsers(u);}lvlPopup.toast('User approved!','success');auditLog('User approved',uid);renderUserApprovals();updateBadges();}
+  function rejectUserApproval(uid){var u=getAllUsers(),i=u.findIndex(function(x){return x.uid===uid;});if(i!==-1){u[i].status='rejected';saveUsers(u);}lvlPopup.toast('User rejected.','warning');auditLog('User rejected',uid);renderUserApprovals();updateBadges();}
+
+  function renderUsersTable() {
+    var search=(document.getElementById('users-search')||{}).value||'',rf=(document.getElementById('users-role-filter')||{}).value||'',sf=(document.getElementById('users-status-filter')||{}).value||'';
+    var users=getAllUsers();
+    if(rf)users=users.filter(function(u){return u.role===rf;});if(sf)users=users.filter(function(u){return u.status===sf;});
+    if(search)users=users.filter(function(u){return (u.displayName+u.email).toLowerCase().includes(search.toLowerCase());});
+    users.sort(function(a,b){return (b.totalXP||0)-(a.totalXP||0);});
+    var tbody=document.getElementById('all-users-tbody');
+    if(!users.length){tbody.innerHTML='<tr><td colspan="8" style="text-align:center;color:#8892A4;padding:1.5rem">No users found.</td></tr>';return;}
+    tbody.innerHTML=users.map(function(u,i){return '<tr><td style="color:#8892A4;font-size:0.82rem">'+(i+1)+'</td><td><div style="font-weight:700">'+esc(u.displayName)+'</div><div style="font-size:0.75rem;color:#8892A4">'+esc(u.email)+'</div></td><td><span class="badge badge-purple">'+esc(u.role)+'</span></td><td style="font-size:0.82rem">'+getSchoolName(u.schoolId)+'</td><td style="font-weight:700;color:#6C63FF">XP '+(u.totalXP||0).toLocaleString()+'</td><td><span class="badge '+(u.status==='approved'?'badge-green':u.status==='banned'||u.status==='rejected'?'badge-red':'badge-amber')+'">'+esc(u.status||'active')+'</span></td><td style="font-size:0.75rem;color:#8892A4">'+new Date(u.createdAt||Date.now()).toLocaleDateString('en-IN')+'</td><td><div class="abg"><button class="ab ab-boost" onclick="boostUserXP(''+esc(u.uid)+'',''+esc(u.displayName)+'')">+XP</button>'+(u.status==='banned'?'<button class="ab ab-unban" onclick="unbanUser(''+esc(u.uid)+'',''+esc(u.displayName)+'')">Unban</button>':'<button class="ab ab-ban" onclick="banUser(''+esc(u.uid)+'',''+esc(u.displayName)+'')">Ban</button>')+'</div></td></tr>';}).join('');
+  }
+  function filterUsers(q){document.getElementById('users-search').value=q;renderUsersTable();}
+  function filterTopTable(q){document.querySelectorAll('#top-tbody tr').forEach(function(r){r.style.display=r.textContent.toLowerCase().includes(q.toLowerCase())?'':'none';});}
+  function boostUserXP(uid,name){lvlPopup.confirm('Boost XP','Send +500 bonus XP to '+name+'?',{confirmLabel:'Boost',confirmStyle:'success'}).then(function(c){if(!c)return;var u=getAllUsers(),i=u.findIndex(function(x){return x.uid===uid;});if(i!==-1){u[i].totalXP=(u[i].totalXP||0)+500;saveUsers(u);}lvlPopup.toast('+500 XP to '+name+'!','success');auditLog('XP boost','+500 to '+name);});}
+  function banUser(uid,name){lvlPopup.confirm('Ban User','Ban '+name+' from the platform?',{confirmLabel:'Ban',confirmStyle:'danger',type:'error'}).then(function(c){if(!c)return;var u=getAllUsers(),i=u.findIndex(function(x){return x.uid===uid;});if(i!==-1){u[i].status='banned';saveUsers(u);}lvlPopup.toast(name+' banned.','warning');auditLog('User banned',name);renderUsersTable();});}
+  function unbanUser(uid,name){var u=getAllUsers(),i=u.findIndex(function(x){return x.uid===uid;});if(i!==-1){u[i].status='approved';saveUsers(u);}lvlPopup.toast(name+' unbanned','success');auditLog('User unbanned',name);renderUsersTable();}
+
+  function renderQuestions() {
+    var qs=JSON.parse(localStorage.getItem('lvlbase_admin_questions')||'[]');
+    document.getElementById('q-count').textContent=qs.length+' questions';
+    var list=document.getElementById('q-list');
+    if(!qs.length){list.innerHTML='<div style="color:#8892A4;font-size:0.82rem">No questions yet.</div>';return;}
+    list.innerHTML=qs.slice().reverse().map(function(q,i){return '<div style="background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.08);border-radius:12px;padding:0.75rem;margin-bottom:0.5rem"><div style="display:flex;justify-content:space-between;align-items:center"><span class="badge badge-purple">'+esc(q.subject)+' Gr.'+esc(String(q.grade))+'</span><button class="ab ab-reject" onclick="deleteQuestion('+(qs.length-1-i)+')">X</button></div><div style="font-weight:700;font-size:0.85rem;margin-top:0.4rem">'+esc(q.question)+'</div><div style="font-size:0.75rem;color:#8892A4;margin-top:0.2rem">Correct: '+esc(q.correct)+'</div></div>';}).join('');
+  }
+  function addQuestion() {
+    var sub=document.getElementById('q-subject').value,grade=document.getElementById('q-grade').value,qText=document.getElementById('q-question').value.trim(),rawOpts=document.getElementById('q-options').value.trim();
+    if(!qText||!rawOpts){lvlPopup.toast('Fill in all fields','error');return;}
+    var lines=rawOpts.split('\n').map(function(l){return l.trim();}).filter(Boolean),correct=lines.find(function(l){return l.startsWith('*');});
+    if(!correct){lvlPopup.toast('Mark correct answer with * prefix','warning');return;}
+    var options=lines.map(function(l){return l.startsWith('*')?l.slice(1):l;});
+    var qs=JSON.parse(localStorage.getItem('lvlbase_admin_questions')||'[]');
+    qs.push({id:'q_'+Date.now(),subject:sub,grade:grade,question:qText,options:options,correct:correct.slice(1),addedAt:new Date().toISOString()});
+    localStorage.setItem('lvlbase_admin_questions',JSON.stringify(qs));
+    document.getElementById('q-question').value='';document.getElementById('q-options').value='';
+    lvlPopup.toast('Question added!','success');auditLog('Question added',sub+' - '+qText.slice(0,30));renderQuestions();
+  }
+  function deleteQuestion(i){var qs=JSON.parse(localStorage.getItem('lvlbase_admin_questions')||'[]');qs.splice(i,1);localStorage.setItem('lvlbase_admin_questions',JSON.stringify(qs));renderQuestions();}
+
+  function createEvent() {
+    var title=document.getElementById('evt-title').value.trim(),desc=document.getElementById('evt-desc').value.trim(),bonus=document.getElementById('evt-bonus').value,dur=document.getElementById('evt-duration').value;
+    if(!title){lvlPopup.toast('Enter event title','error');return;}
+    var evts=JSON.parse(localStorage.getItem('lvlbase_events')||'[]');
+    evts.push({id:'evt_'+Date.now(),title:title,description:desc,xpBonus:bonus,duration:dur,active:true,createdAt:new Date().toISOString()});
+    localStorage.setItem('lvlbase_events',JSON.stringify(evts));
+    document.getElementById('evt-title').value='';document.getElementById('evt-desc').value='';
+    lvlPopup.toast('Event "'+title+'" launched!','success');auditLog('Event created','"'+title+'" '+bonus+'x XP');renderEvents();
+  }
+  function renderEvents() {
+    var evts=JSON.parse(localStorage.getItem('lvlbase_events')||'[]'),list=document.getElementById('events-list');
+    if(!evts.length){list.innerHTML='<div style="color:#8892A4;font-size:0.82rem">No active events.</div>';return;}
+    list.innerHTML=evts.slice().reverse().map(function(e){return '<div style="background:rgba(108,99,255,0.06);border:1px solid rgba(108,99,255,0.15);border-radius:14px;padding:0.85rem;margin-bottom:0.6rem"><div style="display:flex;justify-content:space-between;margin-bottom:0.4rem"><div style="font-weight:700;font-size:0.85rem">'+esc(e.title)+'</div><span class="badge badge-yellow">'+esc(String(e.xpBonus))+'x XP</span></div><div style="font-size:0.78rem;color:#8892A4">'+esc(e.description)+'</div><div style="display:flex;justify-content:space-between;margin-top:0.5rem"><span style="font-size:0.72rem;color:#8892A4">'+esc(e.duration||'')+'</span><button class="ab ab-reject" onclick="deleteEvent(''+esc(e.id)+'')">Remove</button></div></div>';}).join('');
+  }
+  function deleteEvent(id){var e=JSON.parse(localStorage.getItem('lvlbase_events')||'[]').filter(function(x){return x.id!==id;});localStorage.setItem('lvlbase_events',JSON.stringify(e));renderEvents();}
+  function clearEvents(){lvlPopup.confirm('Clear Events','Remove all events?',{confirmLabel:'Clear',confirmStyle:'danger'}).then(function(c){if(!c)return;localStorage.removeItem('lvlbase_events');renderEvents();});}
+
+  function sendAnnouncement() {
+    var title=document.getElementById('ann-title').value.trim(),body=document.getElementById('ann-body').value.trim(),target=document.getElementById('ann-target').value,type=document.getElementById('ann-type').value;
+    if(!title||!body){lvlPopup.toast('Fill in title and message','error');return;}
+    var anns=JSON.parse(localStorage.getItem('lvlbase_announcements')||'[]');
+    anns.push({id:'ann_'+Date.now(),title:title,body:body,target:target,type:type,sentAt:new Date().toISOString()});
+    localStorage.setItem('lvlbase_announcements',JSON.stringify(anns));
+    document.getElementById('ann-title').value='';document.getElementById('ann-body').value='';
+    lvlPopup.toast('Announcement sent!','success');auditLog('Announcement sent','"'+title+'" to '+target);renderAnnouncements();
+  }
+  function renderAnnouncements() {
+    var anns=JSON.parse(localStorage.getItem('lvlbase_announcements')||'[]'),list=document.getElementById('announcements-list');
+    var tc={info:'badge-purple',success:'badge-green',warning:'badge-amber',event:'badge-yellow'};
+    if(!anns.length){list.innerHTML='<div style="color:#8892A4;font-size:0.82rem">No announcements yet.</div>';return;}
+    list.innerHTML=anns.slice().reverse().map(function(a){return '<div style="background:rgba(108,99,255,0.05);border:1px solid rgba(108,99,255,0.12);border-radius:14px;padding:0.85rem;margin-bottom:0.5rem"><div style="display:flex;justify-content:space-between;margin-bottom:0.4rem"><span class="badge '+(tc[a.type]||'badge-purple')+'">'+esc(a.type)+'</span><span style="font-size:0.72rem;color:#8892A4">'+esc(a.target)+'</span></div><div style="font-weight:700;font-size:0.85rem">'+esc(a.title)+'</div><div style="font-size:0.78rem;color:#8892A4;margin-top:0.25rem">'+esc(a.body)+'</div><div style="font-size:0.7rem;color:rgba(136,146,164,0.6);margin-top:0.4rem">'+new Date(a.sentAt).toLocaleString('en-IN')+'</div></div>';}).join('');
+  }
+  function clearAnnouncements(){lvlPopup.confirm('Clear','Delete all announcements?',{confirmLabel:'Clear',confirmStyle:'danger'}).then(function(c){if(!c)return;localStorage.removeItem('lvlbase_announcements');renderAnnouncements();});}
+
+  function renderFeatureFlags() {
+    var flags=JSON.parse(localStorage.getItem('lvlbase_feature_flags')||'{}')||{};
+    var defs={maintenance:false,signup:true,battles:true,ai:true,guild:true,leaderboard:true};
+    Object.keys(defs).forEach(function(k){var el=document.getElementById('flag-'+k);if(!el)return;(flags[k]!==undefined?flags[k]:defs[k])?el.classList.add('on'):el.classList.remove('on');});
+  }
+  function toggleFlag(key,btn) {
+    var flags=JSON.parse(localStorage.getItem('lvlbase_feature_flags')||'{}')||{};
+    flags[key]=!btn.classList.contains('on');localStorage.setItem('lvlbase_feature_flags',JSON.stringify(flags));
+    btn.classList.toggle('on');lvlPopup.toast(key+' '+(flags[key]?'enabled':'disabled'),flags[key]?'success':'warning');auditLog('Feature: '+key,flags[key]?'enabled':'disabled');
+  }
+  function setMultiplier(val) {
+    localStorage.setItem('lvlbase_xp_multiplier',String(val));
+    document.getElementById('mult-display').textContent=val+'x';
+    lvlPopup.toast('XP Multiplier set to '+val+'x!','success');auditLog('XP Multiplier',val+'x');renderTimeline();
+  }
+  function exportData() {
+    var data={exportedAt:new Date().toISOString(),users:getAllUsers(),schools:getAllSchools(),events:JSON.parse(localStorage.getItem('lvlbase_events')||'[]'),announcements:JSON.parse(localStorage.getItem('lvlbase_announcements')||'[]'),auditLog:JSON.parse(localStorage.getItem('lvlbase_audit_log')||'[]')};
+    var blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'}),a=document.createElement('a');
+    a.href=URL.createObjectURL(blob);a.download='lvlbase-export-'+new Date().toISOString().slice(0,10)+'.json';a.click();
+    lvlPopup.toast('Data exported!','success');auditLog('Data exported','Full JSON export');
+  }
+  function sendBonusXP() {
+    lvlPopup.confirm('Send Bonus XP','Send 100 XP to all active students?',{confirmLabel:'Send',confirmStyle:'success'}).then(function(c){
+      if(!c)return;var u=getAllUsers(),n=0;u.forEach(function(x){if(x.role==='student'&&x.status==='approved'){x.totalXP=(x.totalXP||0)+100;n++;}});saveUsers(u);
+      lvlPopup.toast('100 XP sent to '+n+' students!','success');auditLog('Bonus XP sent','+100 to '+n+' students');
+    });
+  }
+  function forceLeaderboardRefresh(){localStorage.removeItem('lvlbase_leaderboard_cache');lvlPopup.toast('Leaderboard refreshed!','success');auditLog('Leaderboard refresh','Manual');}
+  function clearDemoData() {
+    lvlPopup.confirm('Clear All Data','Delete ALL local data? Cannot be undone.',{confirmLabel:'Delete Everything',confirmStyle:'danger',type:'error'}).then(function(c){
+      if(!c)return;
+      var sess=localStorage.getItem('lvlbase_admin_session'),creds=localStorage.getItem(CREDS_KEY);
+      localStorage.clear();if(sess)localStorage.setItem('lvlbase_admin_session',sess);if(creds)localStorage.setItem(CREDS_KEY,creds);
+      lvlPopup.toast('All data cleared.','info');renderOverview();updateBadges();
+    });
+  }
+  function changeAdminPassword() {
+    var curr=document.getElementById('curr-pw').value,next=document.getElementById('new-pw').value,c=getCreds();
+    if(curr!==c.password){lvlPopup.toast('Current password incorrect','error');return;}
+    if(next.length<8){lvlPopup.toast('New password must be 8+ characters','error');return;}
+    c.password=next;localStorage.setItem(CREDS_KEY,JSON.stringify(c));
+    document.getElementById('curr-pw').value='';document.getElementById('new-pw').value='';
+    lvlPopup.toast('Password updated!','success');auditLog('Admin password changed','-');
+  }
+  function showFirebaseConfig() {
+    var el=document.getElementById('firebase-cfg-display');if(!el)return;
+    el.textContent='projectId: "lvlbase"\nauthDomain: "lvlbase.firebaseapp.com"\nstorageBucket: "lvlbase.firebasestorage.app"\nFirebase: Live\nVAPID: Set in firebase-config.js';
+  }
+
+  function auditLog(action,detail) {
+    var log=JSON.parse(localStorage.getItem('lvlbase_audit_log')||'[]');
+    log.push({action:action,detail:detail||'',ts:new Date().toISOString(),ip:'admin'});
+    if(log.length>500)log.splice(0,log.length-500);
+    localStorage.setItem('lvlbase_audit_log',JSON.stringify(log));
+  }
+  function renderAuditTable(filter) {
+    var log=JSON.parse(localStorage.getItem('lvlbase_audit_log')||'[]').slice().reverse();
+    if(filter)log=log.filter(function(l){return (l.action+l.detail).toLowerCase().includes(filter.toLowerCase());});
+    var tbody=document.getElementById('audit-tbody');
+    if(!log.length){tbody.innerHTML='<tr><td colspan="4" style="text-align:center;color:#8892A4;padding:1.5rem">No actions logged yet.</td></tr>';return;}
+    tbody.innerHTML=log.map(function(l){return '<tr><td style="font-size:0.75rem;color:#8892A4;white-space:nowrap">'+new Date(l.ts).toLocaleString('en-IN')+'</td><td style="font-weight:700;font-size:0.83rem">'+esc(l.action)+'</td><td style="font-size:0.82rem;color:#8892A4">'+esc(l.detail)+'</td><td style="font-size:0.75rem;color:#8892A4">'+esc(l.ip||'-')+'</td></tr>';}).join('');
+  }
+  function filterAudit(q){renderAuditTable(q);}
+  function clearAuditLog(){lvlPopup.confirm('Clear Log','Delete all audit history?',{confirmLabel:'Clear',confirmStyle:'danger'}).then(function(c){if(!c)return;localStorage.removeItem('lvlbase_audit_log');renderAuditTable('');});}
+
+  document.addEventListener('keydown',function(e){if(e.key==='Enter'&&document.getElementById('login-screen').style.display!=='none')doLogin();});
+  var mq=window.matchMedia('(max-width:768px)');
+  function applyMQ(m){var hb=document.getElementById('hamburger-btn');if(hb)hb.style.display=m.matches?'block':'none';}
+  applyMQ(mq);if(mq.addEventListener)mq.addEventListener('change',applyMQ);
+
+  if(checkSession()){document.getElementById('login-screen').style.display='none';document.getElementById('admin-screen').style.display='flex';initAdmin();}
+</script>
 </body>
 </html>

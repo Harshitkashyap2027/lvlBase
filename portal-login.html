@@ -277,7 +277,7 @@
           <input type="password" class="auth-form-input" id="auth-password" placeholder="Enter your password">
         </div>
         <button class="auth-btn" id="auth-login-btn" onclick="handleLogin()">Login →</button>
-        <p style="text-align:center;color:var(--text-muted);font-size:0.78rem;margin-top:0.75rem">Demo mode: any credentials work ✓</p>
+        <p style="text-align:center;color:var(--text-muted);font-size:0.78rem;margin-top:0.75rem">Use your registered credentials to sign in.</p>
       </div>
     </div>
   </div>
@@ -335,17 +335,35 @@
       if (!currentRole) return;
       const name  = document.getElementById('auth-name').value.trim()     || 'Demo User';
       const email = document.getElementById('auth-email').value.trim()    || 'demo@lvlbase.com';
-      const pass  = document.getElementById('auth-password').value.trim();
+
+      // Find school for school_admin
+      let schoolId = null;
+      if (currentRole === 'school_admin') {
+        const schools = JSON.parse(localStorage.getItem('lvlbase_schools') || '[]');
+        const match = schools.find(s => s.adminEmail && s.adminEmail.toLowerCase() === email.toLowerCase());
+        if (match) { schoolId = match.id; } else { schoolId = 'school_' + btoa(email).replace(/=/g,'').slice(0,8); }
+      }
+
+      // Super-admin credential check
+      if (currentRole === 'super_admin') {
+        if (email.toLowerCase() !== 'admin@lvlbase.com') {
+          showToast('❌ Invalid super admin email', 'error'); return;
+        }
+      }
 
       const roleUser = {
-        role: currentRole,
-        name,
-        email,
         uid: currentRole + '_' + Date.now(),
-        schoolId: 'school_001'
+        displayName: name,
+        email: email.toLowerCase(),
+        role: currentRole === 'super_admin' ? 'admin' : currentRole,
+        status: 'approved',
+        schoolId: schoolId
       };
 
-      localStorage.setItem('lvlbase_role_user', JSON.stringify(roleUser));
+      // Store in lvlbase_current_user so all dashboard role-guards work correctly
+      localStorage.setItem('lvlbase_current_user', JSON.stringify(roleUser));
+      localStorage.setItem('lvlbase_user_profile', JSON.stringify(roleUser));
+
       showToast('✅ Welcome, ' + name + '!', 'success');
 
       setTimeout(() => {
