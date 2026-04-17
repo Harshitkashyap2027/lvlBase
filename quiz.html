@@ -4,11 +4,13 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Quiz – lvlBase ⚡</title>
+  <link rel="manifest" href="manifest.json">
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="css/main.css">
   <link rel="stylesheet" href="css/quiz.css">
 </head>
 <body>
+  <script src="js/popup.js"></script>
   <nav class="navbar">
     <a href="index.html" class="navbar-brand">lvlBase ⚡</a>
     <div class="navbar-nav">
@@ -263,10 +265,172 @@
       return [...bank].sort(() => Math.random()-0.5).slice(0, Math.min(count, bank.length));
     }
 
+    // ── Cheat Detection ──
+    let cheatState = { warnings: 0, terminated: false, examMode: false };
+
+    function initCheatDetection() {
+      if (!cheatState.examMode) return;
+      cheatState.warnings = 0;
+      cheatState.terminated = false;
+
+      // Tab visibility change
+      document.addEventListener('visibilitychange', handleCheatVisibility);
+      // Copy-paste detection
+      document.addEventListener('copy', handleCheatCopy);
+      document.addEventListener('cut', handleCheatCopy);
+      // Right-click
+      document.addEventListener('contextmenu', handleCheatCopy);
+      // Key shortcuts
+      document.addEventListener('keydown', handleCheatKey);
+    }
+
+    function cleanupCheatDetection() {
+      document.removeEventListener('visibilitychange', handleCheatVisibility);
+      document.removeEventListener('copy', handleCheatCopy);
+      document.removeEventListener('cut', handleCheatCopy);
+      document.removeEventListener('contextmenu', handleCheatCopy);
+      document.removeEventListener('keydown', handleCheatKey);
+    }
+
+    function handleCheatVisibility() {
+      if (document.hidden && cheatState.examMode && !cheatState.terminated) {
+        triggerCheatWarning('tab switch');
+      }
+    }
+
+    function handleCheatCopy(e) {
+      if (!cheatState.examMode || cheatState.terminated) return;
+      if (e.type === 'contextmenu') { e.preventDefault(); triggerCheatWarning('right-click'); }
+      else triggerCheatWarning('copy/cut');
+    }
+
+    function handleCheatKey(e) {
+      if (!cheatState.examMode || cheatState.terminated) return;
+      // Block Ctrl+C, Ctrl+V, Ctrl+A, F12, Alt+Tab
+      if ((e.ctrlKey && ['c','v','a','x'].includes(e.key.toLowerCase())) || e.key === 'F12') {
+        e.preventDefault();
+        triggerCheatWarning('keyboard shortcut');
+      }
+    }
+
+    function triggerCheatWarning(reason) {
+      if (cheatState.terminated) return;
+      cheatState.warnings++;
+
+      const isTerminal = cheatState.warnings >= 2;
+      if (isTerminal) {
+        cheatState.terminated = true;
+        cleanupCheatDetection();
+        // Stop timer
+        if (quizState.timer) { clearInterval(quizState.timer); quizState.timer = null; }
+        // Save cheat report
+        saveCheatReport(true);
+        // Show popup
+        if (window.lvlPopup) {
+          lvlPopup.cheatWarning(cheatState.warnings, true).then(() => {
+            window.location.href = 'dashboard.html';
+          });
+        } else {
+          alert('Exam terminated due to cheating.');
+          window.location.href = 'dashboard.html';
+        }
+      } else {
+        // First warning
+        saveCheatReport(false);
+        if (window.lvlPopup) {
+          // Pause timer if running
+          if (quizState.timer) { clearInterval(quizState.timer); quizState.timer = null; }
+          lvlPopup.cheatWarning(cheatState.warnings, false).then((res) => {
+            if (res === 'resume') {
+              // Resume timer if time-based mode
+              if (quizState.mode !== 'practice') startTimer();
+            }
+          });
+        } else {
+          alert('Warning ' + cheatState.warnings + '/2: Suspicious activity detected!');
+        }
+      }
+    }
+
+    function saveCheatReport(terminated) {
+      const user = JSON.parse(localStorage.getItem('lvlbase_current_user') || 'null');
+      if (!user) return;
+      const reports = JSON.parse(localStorage.getItem('lvlbase_cheat_reports') || '[]');
+      const existingIdx = reports.findIndex(r => r.studentUid === user.uid && !r.terminated);
+      const report = {
+        id: 'cheat_' + Date.now(),
+        studentUid: user.uid,
+        studentName: user.displayName,
+        studentEmail: user.email,
+        schoolId: user.schoolId,
+        examName: 'Online Quiz – ' + (quizState.subject || 'Mixed'),
+        warnings: cheatState.warnings,
+        terminated,
+        retakeAllowed: false,
+        date: new Date().toISOString()
+      };
+      if (existingIdx !== -1) {
+        reports[existingIdx] = { ...reports[existingIdx], warnings: cheatState.warnings, terminated };
+      } else {
+        reports.push(report);
+      }
+      localStorage.setItem('lvlbase_cheat_reports', JSON.stringify(reports));
+
+      // Notify parent
+      if (user.schoolId) {
+        const users = JSON.parse(localStorage.getItem('lvlbase_all_users') || '[]');
+        const parent = users.find(p => p.role === 'parent' && p.childUid === user.uid);
+        if (parent) {
+          const notifs = JSON.parse(localStorage.getItem('lvlbase_notifications') || '[]');
+          notifs.unshift({
+            id: 'notif_' + Date.now(),
+            type: 'cheat_alert',
+            userId: parent.uid,
+            schoolId: user.schoolId,
+            message: terminated
+              ? `⚠️ EXAM TERMINATED: Your child ${user.displayName} was caught cheating and their exam has been terminated.`
+              : `⚠️ WARNING: Your child ${user.displayName} received warning ${cheatState.warnings}/2 for suspicious activity during an exam.`,
+            read: false,
+            createdAt: new Date().toISOString()
+          });
+          localStorage.setItem('lvlbase_notifications', JSON.stringify(notifs));
+        }
+      }
+    }
+
+    function checkRetakeAllowed() {
+      const user = JSON.parse(localStorage.getItem('lvlbase_current_user') || 'null');
+      if (!user) return true;
+      const reports = JSON.parse(localStorage.getItem('lvlbase_cheat_reports') || '[]');
+      const blocked = reports.find(r => r.studentUid === user.uid && r.terminated && !r.retakeAllowed);
+      return !blocked;
+    }
+
     function startQuiz() {
+      // Check if student is blocked from retaking due to cheating
+      if (!checkRetakeAllowed()) {
+        if (window.lvlPopup) {
+          lvlPopup.show({
+            type: 'error', icon: '🚫',
+            title: 'Exam Access Blocked',
+            message: 'You have been blocked from taking exams due to a cheating violation. Please contact your teacher or school to restore your access.',
+            dismissable: false,
+            buttons: [{ label: 'Go to Dashboard', style: 'danger', action: 'exit' }]
+          }).then(() => window.location.href = 'dashboard.html');
+        } else {
+          alert('Access blocked. Contact your school.');
+        }
+        return;
+      }
+
       quizState.questions = getQuestions(quizState.subject, quizState.count);
       quizState.current = 0; quizState.score = 0; quizState.answers = []; quizState.xpEarned = 0;
       quizState.startTime = Date.now();
+
+      // Enable cheat detection in exam/speed mode
+      cheatState.examMode = (quizState.mode === 'exam' || quizState.mode === 'speed');
+      if (cheatState.examMode) initCheatDetection();
+
       document.getElementById('screen-select').style.display = 'none';
       document.getElementById('screen-quiz').style.display = 'block';
       showQuestion();
@@ -369,6 +533,8 @@
 
     function showResults() {
       clearInterval(quizState.timer);
+      cleanupCheatDetection();
+      cheatState.examMode = false;
       const total = quizState.questions.length;
       const correct = quizState.score;
       const pct = Math.round((correct/total)*100);

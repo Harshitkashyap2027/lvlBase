@@ -4,6 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Login – lvlBase ⚡</title>
+  <link rel="manifest" href="manifest.json">
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="css/main.css">
   <style>
@@ -39,283 +40,117 @@
       <div class="login-brand">lvlBase ⚡</div>
       <p style="text-align:center;color:var(--text-muted);font-size:0.85rem;margin-bottom:1.5rem">Your epic learning journey awaits</p>
 
-      <!-- Step Indicators -->
-      <div class="step-indicators">
-        <div class="step-dot active" id="dot-1"></div>
-        <div class="step-dot" id="dot-2"></div>
-        <div class="step-dot" id="dot-3"></div>
+      <!-- Login Form -->
+      <div class="form-group">
+        <label class="form-label">Email Address</label>
+        <input type="email" id="login-email" class="form-control" placeholder="you@example.com" onkeydown="if(event.key==='Enter')handleLogin()">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Password</label>
+        <input type="password" id="login-password" class="form-control" placeholder="••••••••" onkeydown="if(event.key==='Enter')handleLogin()">
+        <div id="login-error" style="color:var(--danger);font-size:0.8rem;margin-top:0.3rem;display:none"></div>
+      </div>
+      <button class="btn btn-primary btn-full" onclick="handleLogin()" id="login-btn">
+        <span id="login-text">⚡ Login</span>
+        <span id="login-spinner" style="display:none" class="spinner spinner-sm"></span>
+      </button>
+
+      <div style="text-align:center;margin-top:1.25rem;font-size:0.82rem;color:var(--text-muted)">
+        Don't have an account?
+        <a href="signup.html" style="color:var(--primary);font-weight:600"> Sign Up here</a>
+      </div>
+      <div style="text-align:center;margin-top:0.5rem;font-size:0.82rem;color:var(--text-muted)">
+        Are you a school?
+        <a href="school-signup.html" style="color:var(--success);font-weight:600"> Register School →</a>
       </div>
 
-      <!-- STEP 1: Auth -->
-      <div id="step-1">
-        <div style="display:flex;gap:0.5rem;margin-bottom:1.5rem;background:rgba(255,255,255,0.05);padding:0.3rem;border-radius:var(--radius)">
-          <button class="tab-btn active" id="tab-login" onclick="switchTab('login')">Login</button>
-          <button class="tab-btn" id="tab-signup" onclick="switchTab('signup')">Sign Up</button>
-        </div>
-
-        <!-- Login Form -->
-        <div id="form-login">
-          <div class="form-group">
-            <label class="form-label">Email Address</label>
-            <input type="email" id="login-email" class="form-control" placeholder="you@example.com">
-          </div>
-          <div class="form-group">
-            <label class="form-label">Password</label>
-            <input type="password" id="login-password" class="form-control" placeholder="••••••••">
-            <div class="error-text" id="login-error">Invalid email or password</div>
-          </div>
-          <button class="btn btn-primary btn-full" onclick="handleLogin()" id="login-btn">
-            <span id="login-text">⚡ Login</span>
-            <span id="login-spinner" style="display:none" class="spinner spinner-sm"></span>
-          </button>
-          <div class="divider">or</div>
-          <button class="google-btn" onclick="handleGoogle()">
-            <span style="font-size:1.2rem">G</span> Continue with Google
-          </button>
-          <p style="text-align:center;font-size:0.8rem;color:var(--text-muted)">Demo: any email/password works!</p>
-        </div>
-
-        <!-- Signup Form -->
-        <div id="form-signup" style="display:none">
-          <div class="form-group">
-            <label class="form-label">Full Name</label>
-            <input type="text" id="signup-name" class="form-control" placeholder="Your full name">
-          </div>
-          <div class="form-group">
-            <label class="form-label">Email Address</label>
-            <input type="email" id="signup-email" class="form-control" placeholder="you@example.com">
-          </div>
-          <div class="form-group">
-            <label class="form-label">Password</label>
-            <input type="password" id="signup-password" class="form-control" placeholder="Min 6 characters">
-            <div class="error-text" id="signup-error"></div>
-          </div>
-          <button class="btn btn-primary btn-full" onclick="handleSignup()" id="signup-btn">
-            <span id="signup-text">🚀 Create Account</span>
-            <span id="signup-spinner" style="display:none" class="spinner spinner-sm"></span>
-          </button>
-          <div class="divider">or</div>
-          <button class="google-btn" onclick="handleGoogle()">
-            <span style="font-size:1.2rem">G</span> Continue with Google
-          </button>
+      <!-- Role hints -->
+      <div style="margin-top:1.5rem;background:rgba(255,255,255,0.03);border:1px solid var(--border-color);border-radius:16px;padding:1rem">
+        <p style="font-size:0.78rem;color:var(--text-muted);font-weight:600;margin-bottom:0.5rem">🔐 Login by role:</p>
+        <div style="font-size:0.75rem;color:var(--text-muted);line-height:1.9">
+          🎓 <strong style="color:var(--text-light)">Students / Teachers / Parents:</strong> Use your registered email<br>
+          🏫 <strong style="color:var(--text-light)">School Admin:</strong> Use your school admin email<br>
+          ⚙️ <strong style="color:var(--text-light)">Platform Admin:</strong> admin@lvlbase.com
         </div>
       </div>
 
-      <!-- STEP 2: Profile Setup -->
-      <div id="step-2" style="display:none">
-        <h2 style="font-size:1.3rem;font-weight:800;margin-bottom:0.25rem">📋 Set Up Your Profile</h2>
-        <p style="color:var(--text-muted);font-size:0.85rem;margin-bottom:1.5rem">Tell us about yourself to personalize your experience</p>
-
-        <div class="form-group">
-          <label class="form-label">Select Your Grade</label>
-          <div class="grade-grid" id="grade-grid">
-            <div class="grade-btn" onclick="selectGrade(this,'6')">Grade 6</div>
-            <div class="grade-btn" onclick="selectGrade(this,'7')">Grade 7</div>
-            <div class="grade-btn" onclick="selectGrade(this,'8')">Grade 8</div>
-            <div class="grade-btn" onclick="selectGrade(this,'9')">Grade 9</div>
-            <div class="grade-btn selected" onclick="selectGrade(this,'10')">Grade 10</div>
-            <div class="grade-btn" onclick="selectGrade(this,'11')">Grade 11</div>
-            <div class="grade-btn" onclick="selectGrade(this,'12')">Grade 12</div>
-            <div class="grade-btn" onclick="selectGrade(this,'other')">Other</div>
-          </div>
-        </div>
-
-        <div class="form-group">
-          <label class="form-label">Display Name (optional)</label>
-          <input type="text" id="profile-name" class="form-control" placeholder="How should we call you?">
-        </div>
-
-        <button class="btn btn-primary btn-full" onclick="goToStep3()">Continue → Choose Guild</button>
-      </div>
-
-      <!-- STEP 3: Guild Selection -->
-      <div id="step-3" style="display:none">
-        <h2 style="font-size:1.3rem;font-weight:800;margin-bottom:0.25rem">🏰 Choose Your Guild</h2>
-        <p style="color:var(--text-muted);font-size:0.85rem;margin-bottom:1.5rem">Your guild gives you XP bonuses in specific subjects</p>
-
-        <div class="guild-select-grid" id="guild-grid">
-          <div class="guild-select-item" style="background:linear-gradient(135deg,#4C1D95,#7C3AED)" onclick="selectGuild(this,'shadow')">
-            <div class="gi-emoji">🌙</div>
-            <div class="gi-name">Shadow</div>
-            <div class="gi-bonus">+15% Math XP</div>
-          </div>
-          <div class="guild-select-item" style="background:linear-gradient(135deg,#1E3A8A,#2563EB)" onclick="selectGuild(this,'azure')">
-            <div class="gi-emoji">💧</div>
-            <div class="gi-name">Azure</div>
-            <div class="gi-bonus">+15% Science XP</div>
-          </div>
-          <div class="guild-select-item" style="background:linear-gradient(135deg,#7F1D1D,#DC2626)" onclick="selectGuild(this,'inferno')">
-            <div class="gi-emoji">🔥</div>
-            <div class="gi-name">Inferno</div>
-            <div class="gi-bonus">+20% Battle XP</div>
-          </div>
-          <div class="guild-select-item" style="background:linear-gradient(135deg,#14532D,#16A34A)" onclick="selectGuild(this,'titan')">
-            <div class="gi-emoji">⚡</div>
-            <div class="gi-name">Titan</div>
-            <div class="gi-bonus">+15% English XP</div>
-          </div>
-        </div>
-        <div class="guild-select-grid" style="grid-template-columns:1fr;margin-top:0.75rem">
-          <div class="guild-select-item" style="background:linear-gradient(135deg,#78350F,#D97706)" onclick="selectGuild(this,'zenith')">
-            <div class="gi-emoji">✨</div>
-            <div class="gi-name">Zenith Circle – All Rounder</div>
-            <div class="gi-bonus">+10% XP on Everything</div>
-          </div>
-        </div>
-        <p style="color:var(--text-muted);font-size:0.75rem;text-align:center;margin:0.75rem 0">You can change your guild after 30 days</p>
-        <button class="btn btn-primary btn-full" id="finish-btn" onclick="finishSetup()" disabled>
-          🎮 Enter the Arena!
-        </button>
-      </div>
-
-      <!-- Back link -->
-      <div style="text-align:center;margin-top:1.5rem">
-        <a href="index.html" style="color:var(--text-muted);font-size:0.85rem">← Back to Home</a>
+      <div style="text-align:center;margin-top:1.25rem">
+        <a href="index.html" style="color:var(--text-muted);font-size:0.82rem">← Back to Home</a>
       </div>
     </div>
   </div>
 
-  <div id="toast-container" class="toast-container"></div>
-
+  <script src="js/popup.js"></script>
   <script>
-    let currentStep = 1;
-    let selectedGrade = '10';
-    let selectedGuild = null;
-    let tempProfile = null;
+    // Redirect if already logged in
+    (function() {
+      const u = JSON.parse(localStorage.getItem('lvlbase_current_user') || 'null');
+      if (u) {
+        const map = { student: 'dashboard.html', teacher: 'teacher-dashboard.html', parent: 'parent-dashboard.html', school_admin: 'school-dashboard.html', admin: 'admin/index.html' };
+        window.location.href = map[u.role] || 'dashboard.html';
+      }
+    })();
 
-    function switchTab(tab) {
-      const isLogin = tab === 'login';
-      document.getElementById('form-login').style.display = isLogin ? 'block' : 'none';
-      document.getElementById('form-signup').style.display = isLogin ? 'none' : 'block';
-      document.getElementById('tab-login').classList.toggle('active', isLogin);
-      document.getElementById('tab-signup').classList.toggle('active', !isLogin);
+    function getDashboardUrl(role) {
+      const map = { student: 'dashboard.html', teacher: 'teacher-dashboard.html', parent: 'parent-dashboard.html', school_admin: 'school-dashboard.html', admin: 'admin/index.html' };
+      return map[role] || 'dashboard.html';
     }
 
-    function selectGrade(el, grade) {
-      selectedGrade = grade;
-      document.querySelectorAll('.grade-btn').forEach(b => b.classList.remove('selected'));
-      el.classList.add('selected');
-    }
-
-    function selectGuild(el, guild) {
-      selectedGuild = guild;
-      document.querySelectorAll('.guild-select-item').forEach(b => b.classList.remove('selected'));
-      el.classList.add('selected');
-      document.getElementById('finish-btn').disabled = false;
-    }
-
-    function goToStep(step) {
-      document.getElementById('step-' + currentStep).style.display = 'none';
-      currentStep = step;
-      document.getElementById('step-' + currentStep).style.display = 'block';
-      document.querySelectorAll('.step-dot').forEach((dot, i) => {
-        dot.classList.remove('active', 'done');
-        if (i + 1 < step) dot.classList.add('done');
-        else if (i + 1 === step) dot.classList.add('active');
-      });
-    }
-
-    function goToStep3() { goToStep(3); }
-
-    function showToast(msg, type = 'info') {
-      const container = document.getElementById('toast-container');
-      const icons = { success: '✅', error: '❌', info: 'ℹ️' };
-      const toast = document.createElement('div');
-      toast.className = `toast ${type}`;
-      toast.innerHTML = `<span>${icons[type]}</span><span>${msg}</span>`;
-      container.appendChild(toast);
-      setTimeout(() => { toast.classList.add('toast-hide'); setTimeout(() => toast.remove(), 300); }, 3000);
-    }
-
-    async function handleLogin() {
+    function handleLogin() {
       const email = document.getElementById('login-email').value.trim();
       const password = document.getElementById('login-password').value;
-      if (!email || !password) { showToast('Please fill in all fields', 'error'); return; }
+      if (!email || !password) { lvlPopup.toast('Please fill in all fields', 'error'); return; }
 
       const btn = document.getElementById('login-btn');
       btn.disabled = true;
       document.getElementById('login-text').style.display = 'none';
       document.getElementById('login-spinner').style.display = 'inline-block';
-
-      try {
-        // Demo mode: simulate auth
-        const uid = 'user_' + btoa(email).replace(/=/g,'');
-        const stored = JSON.parse(localStorage.getItem('lvlbase_user_profile') || 'null');
-        let profile;
-        if (stored && stored.email === email) {
-          profile = stored;
-        } else {
-          profile = { uid, email, displayName: email.split('@')[0], grade: '10', guild: null, totalXP: 20, streak: 1, lastLogin: new Date().toISOString(), quizzesCompleted: 0, battlesWon: 0, battlesPlayed: 0, goalsCompleted: 0, perfectScores: 0, lateNightStudy: 0, earlyMorningStudy: 0, achievements: [], subjectProgress: { math: 0, science: 0, english: 0 }, joinedAt: new Date().toISOString(), role: 'student' };
-        }
-        profile.lastLogin = new Date().toISOString();
-        profile.totalXP = (profile.totalXP || 0) + 20;
-        localStorage.setItem('lvlbase_user_profile', JSON.stringify(profile));
-        localStorage.setItem('lvlbase_current_user', JSON.stringify({ uid, email, displayName: profile.displayName }));
-
-        tempProfile = profile;
-        setTimeout(() => {
-          if (!profile.guild) goToStep(2);
-          else { showToast('Welcome back! 🎮', 'success'); setTimeout(() => window.location.href = 'dashboard.html', 800); }
-        }, 600);
-      } catch (e) {
-        showToast('Login failed: ' + e.message, 'error');
-        btn.disabled = false;
-        document.getElementById('login-text').style.display = 'inline';
-        document.getElementById('login-spinner').style.display = 'none';
-      }
-    }
-
-    async function handleSignup() {
-      const name = document.getElementById('signup-name').value.trim();
-      const email = document.getElementById('signup-email').value.trim();
-      const password = document.getElementById('signup-password').value;
-      if (!name || !email || !password) { showToast('Please fill all fields', 'error'); return; }
-      if (password.length < 6) { document.getElementById('signup-error').textContent = 'Password must be at least 6 characters'; document.getElementById('signup-error').style.display = 'block'; return; }
-
-      const btn = document.getElementById('signup-btn');
-      btn.disabled = true;
-      document.getElementById('signup-text').style.display = 'none';
-      document.getElementById('signup-spinner').style.display = 'inline-block';
+      document.getElementById('login-error').style.display = 'none';
 
       setTimeout(() => {
-        const uid = 'user_' + Date.now();
-        const profile = { uid, email, displayName: name, grade: '10', guild: null, totalXP: 20, streak: 1, lastLogin: new Date().toISOString(), quizzesCompleted: 0, battlesWon: 0, battlesPlayed: 0, goalsCompleted: 0, perfectScores: 0, lateNightStudy: 0, earlyMorningStudy: 0, achievements: [], subjectProgress: { math: 0, science: 0, english: 0 }, joinedAt: new Date().toISOString(), role: 'student' };
-        localStorage.setItem('lvlbase_user_profile', JSON.stringify(profile));
-        localStorage.setItem('lvlbase_current_user', JSON.stringify({ uid, email, displayName: name }));
-        tempProfile = profile;
-        document.getElementById('profile-name').value = name;
-        goToStep(2);
-      }, 800);
+        try {
+          const profile = loginUser(email, password);
+          lvlPopup.toast('Welcome back, ' + profile.displayName + '! 🎮', 'success');
+          setTimeout(() => window.location.href = getDashboardUrl(profile.role), 700);
+        } catch(e) {
+          document.getElementById('login-error').textContent = e.message;
+          document.getElementById('login-error').style.display = 'block';
+          btn.disabled = false;
+          document.getElementById('login-text').style.display = 'inline';
+          document.getElementById('login-spinner').style.display = 'none';
+        }
+      }, 600);
     }
 
-    async function handleGoogle() {
-      const names = ['Arjun Kumar', 'Priya Sharma', 'Rohan Patel'];
-      const displayName = names[Math.floor(Math.random() * names.length)];
-      const email = displayName.toLowerCase().replace(' ', '.') + '@gmail.com';
-      const uid = 'google_' + Date.now();
-      const profile = { uid, email, displayName, grade: '10', guild: null, totalXP: 20, streak: 1, lastLogin: new Date().toISOString(), quizzesCompleted: 0, battlesWon: 0, battlesPlayed: 0, goalsCompleted: 0, perfectScores: 0, lateNightStudy: 0, earlyMorningStudy: 0, achievements: [], subjectProgress: { math: 0, science: 0, english: 0 }, joinedAt: new Date().toISOString(), role: 'student' };
-      localStorage.setItem('lvlbase_user_profile', JSON.stringify(profile));
-      localStorage.setItem('lvlbase_current_user', JSON.stringify({ uid, email, displayName }));
-      tempProfile = profile;
-      document.getElementById('profile-name').value = displayName;
-      showToast('Signed in with Google! 🎉', 'success');
-      setTimeout(() => goToStep(2), 500);
-    }
-
-    function finishSetup() {
-      const stored = JSON.parse(localStorage.getItem('lvlbase_user_profile') || '{}');
-      const nameInput = document.getElementById('profile-name').value.trim();
-      stored.grade = selectedGrade;
-      stored.guild = selectedGuild;
-      if (nameInput) stored.displayName = nameInput;
-      localStorage.setItem('lvlbase_user_profile', JSON.stringify(stored));
-      showToast(`⚡ Welcome to ${selectedGuild ? selectedGuild.charAt(0).toUpperCase() + selectedGuild.slice(1) : ''} Guild! Let's battle!`, 'success');
-      setTimeout(() => window.location.href = 'dashboard.html', 1000);
-    }
-
-    // Check already logged in
-    if (localStorage.getItem('lvlbase_current_user')) {
-      window.location.href = 'dashboard.html';
+    function loginUser(email, password) {
+      const lower = email.toLowerCase().trim();
+      // Super admin
+      if (lower === 'admin@lvlbase.com' && password === 'admin123') {
+        const p = { uid: 'admin_super', email: lower, displayName: 'Platform Admin', role: 'admin', status: 'approved', schoolId: null };
+        localStorage.setItem('lvlbase_current_user', JSON.stringify(p));
+        localStorage.setItem('lvlbase_user_profile', JSON.stringify(p));
+        return p;
+      }
+      // School admin
+      const schools = JSON.parse(localStorage.getItem('lvlbase_schools') || '[]');
+      const school = schools.find(s => s.adminEmail && s.adminEmail.toLowerCase() === lower && s.adminPassword === password);
+      if (school) {
+        const p = { uid: 'school_admin_' + school.id, email: lower, displayName: school.adminName || school.principal, role: 'school_admin', status: school.status === 'verified' ? 'approved' : 'pending', schoolId: school.id, schoolStatus: school.status };
+        localStorage.setItem('lvlbase_current_user', JSON.stringify(p));
+        localStorage.setItem('lvlbase_user_profile', JSON.stringify(p));
+        return p;
+      }
+      // Regular users
+      const users = JSON.parse(localStorage.getItem('lvlbase_all_users') || '[]');
+      const user = users.find(u => u.email && u.email.toLowerCase() === lower);
+      if (!user) throw new Error('No account found with this email. Please sign up first.');
+      // Demo: any password works (no password hashing in this localStorage demo)
+      user.lastLogin = new Date().toISOString();
+      const idx = users.findIndex(u => u.uid === user.uid);
+      if (idx !== -1) { users[idx] = user; localStorage.setItem('lvlbase_all_users', JSON.stringify(users)); }
+      localStorage.setItem('lvlbase_current_user', JSON.stringify(user));
+      localStorage.setItem('lvlbase_user_profile', JSON.stringify(user));
+      return user;
     }
   </script>
 </body>

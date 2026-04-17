@@ -4,6 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Admin Panel – lvlBase ⚡</title>
+  <link rel="manifest" href="../manifest.json">
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="../css/main.css">
   <link rel="stylesheet" href="../css/admin.css">
@@ -47,8 +48,13 @@
           <a class="admin-nav-link" onclick="showSection('analytics', this)"><span class="nav-icon">📈</span>Analytics</a>
         </div>
         <div class="admin-nav-section">
+          <div class="admin-nav-label">Approvals</div>
+          <a class="admin-nav-link" onclick="showSection('schools', this)"><span class="nav-icon">🏫</span>Schools <span id="school-pending-badge" class="admin-nav-badge" style="background:var(--danger);color:white"></span></a>
+          <a class="admin-nav-link" onclick="showSection('user-approvals', this)"><span class="nav-icon">⏳</span>User Approvals <span id="user-pending-badge" class="admin-nav-badge" style="background:var(--warning);color:#1A1A2E"></span></a>
+        </div>
+        <div class="admin-nav-section">
           <div class="admin-nav-label">Management</div>
-          <a class="admin-nav-link" onclick="showSection('users', this)"><span class="nav-icon">👥</span>Users<span class="admin-nav-badge">1.2K</span></a>
+          <a class="admin-nav-link" onclick="showSection('users', this)"><span class="nav-icon">👥</span>All Users</a>
           <a class="admin-nav-link" onclick="showSection('quizzes', this)"><span class="nav-icon">🎯</span>Quizzes</a>
           <a class="admin-nav-link" onclick="showSection('events', this)"><span class="nav-icon">🎉</span>Events</a>
         </div>
@@ -265,17 +271,61 @@
           </div>
         </div>
 
+        <!-- SCHOOLS SECTION -->
+        <div id="section-schools" style="display:none">
+          <div class="flex-between mb-3">
+            <h2 style="font-size:1.1rem;font-weight:700">🏫 School Management</h2>
+            <select id="school-filter" class="form-control" style="width:auto" onchange="renderSchoolsTable()">
+              <option value="all">All Schools</option>
+              <option value="pending">⏳ Pending</option>
+              <option value="verified">✅ Verified</option>
+              <option value="rejected">❌ Rejected</option>
+            </select>
+          </div>
+          <div class="admin-table-container">
+            <table class="admin-table">
+              <thead><tr><th>School</th><th>Principal</th><th>Location</th><th>Phone</th><th>Admin Email</th><th>Status</th><th>Registered</th><th>Actions</th></tr></thead>
+              <tbody id="schools-tbody"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- USER APPROVALS SECTION -->
+        <div id="section-user-approvals" style="display:none">
+          <div class="flex-between mb-3">
+            <h2 style="font-size:1.1rem;font-weight:700">⏳ User Approvals</h2>
+            <div style="display:flex;gap:0.75rem">
+              <select id="ua-school-filter" class="form-control" style="width:auto" onchange="renderUserApprovals()">
+                <option value="">All Schools</option>
+              </select>
+              <select id="ua-role-filter" class="form-control" style="width:auto" onchange="renderUserApprovals()">
+                <option value="">All Roles</option>
+                <option value="student">Students</option>
+                <option value="teacher">Teachers</option>
+                <option value="parent">Parents</option>
+              </select>
+            </div>
+          </div>
+          <div class="admin-table-container">
+            <table class="admin-table">
+              <thead><tr><th>Name</th><th>Email</th><th>Role</th><th>School</th><th>Status</th><th>Date</th><th>Actions</th></tr></thead>
+              <tbody id="ua-tbody"></tbody>
+            </table>
+          </div>
+        </div>
+
       </div>
     </main>
   </div>
 
   <div id="toast-container" class="toast-container"></div>
-
+  <script src="../js/popup.js"></script>
   <script>
-    // Admin auth (demo)
     const CREDS = { email: 'admin@lvlbase.com', password: 'admin123' };
 
     function checkSession() {
+      const u = JSON.parse(localStorage.getItem('lvlbase_current_user') || 'null');
+      if (u && u.role === 'admin') return true;
       const s = localStorage.getItem('lvlbase_admin_session');
       if (!s) return false;
       try { const d = JSON.parse(s); return d.loggedIn && Date.now()-d.loginTime < 3600000; } catch { return false; }
@@ -286,6 +336,8 @@
       const pw = document.getElementById('admin-password').value;
       if (email === CREDS.email && pw === CREDS.password) {
         localStorage.setItem('lvlbase_admin_session', JSON.stringify({ loggedIn:true, loginTime:Date.now() }));
+        const ap = { uid:'admin_super', email:CREDS.email, displayName:'Platform Admin', role:'admin', status:'approved', schoolId:null };
+        localStorage.setItem('lvlbase_current_user', JSON.stringify(ap));
         document.getElementById('login-screen').style.display = 'none';
         document.getElementById('admin-screen').style.display = 'flex';
         initAdmin();
@@ -298,39 +350,157 @@
 
     function doLogout() {
       localStorage.removeItem('lvlbase_admin_session');
+      localStorage.removeItem('lvlbase_current_user');
       document.getElementById('admin-screen').style.display = 'none';
       document.getElementById('login-screen').style.display = 'flex';
     }
 
+    function updatePendingBadges() {
+      const schools = JSON.parse(localStorage.getItem('lvlbase_schools') || '[]');
+      const ps = schools.filter(s => s.status === 'pending').length;
+      const spb = document.getElementById('school-pending-badge');
+      if (spb) spb.textContent = ps > 0 ? ps : '';
+      const users = JSON.parse(localStorage.getItem('lvlbase_all_users') || '[]');
+      const pu = users.filter(u => u.status === 'pending').length;
+      const upb = document.getElementById('user-pending-badge');
+      if (upb) upb.textContent = pu > 0 ? pu : '';
+    }
+
+    function renderSchoolsTable() {
+      const filter = document.getElementById('school-filter') ? document.getElementById('school-filter').value : 'all';
+      const schools = JSON.parse(localStorage.getItem('lvlbase_schools') || '[]');
+      const filtered = filter === 'all' ? schools : schools.filter(s => s.status === filter);
+      const tbody = document.getElementById('schools-tbody');
+      if (!tbody) return;
+      if (!filtered.length) {
+        tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;color:var(--text-muted);padding:1.5rem">No schools found.</td></tr>';
+        return;
+      }
+      tbody.innerHTML = filtered.map(s => `
+        <tr>
+          <td><div style="font-weight:600">${s.name}</div><div style="font-size:.75rem;color:var(--text-muted)">${s.totalStudents ? s.totalStudents+' students' : ''}</div></td>
+          <td>${s.principal}</td>
+          <td style="font-size:.82rem;color:var(--text-muted)">${s.city}, ${s.state}</td>
+          <td style="font-size:.82rem">${s.phone}</td>
+          <td style="font-size:.8rem;color:var(--text-muted)">${s.adminEmail}</td>
+          <td><span style="display:inline-flex;align-items:center;padding:.25rem .6rem;border-radius:8px;font-size:.72rem;font-weight:700;background:${s.status==='verified'?'rgba(0,209,178,.15)':s.status==='rejected'?'rgba(255,68,68,.12)':'rgba(255,165,0,.15)'};color:${s.status==='verified'?'var(--success)':s.status==='rejected'?'var(--danger)':'var(--warning)'}">${s.status==='verified'?'✅ Verified':s.status==='rejected'?'❌ Rejected':'⏳ Pending'}</span></td>
+          <td style="font-size:.78rem;color:var(--text-muted)">${new Date(s.createdAt).toLocaleDateString('en-IN')}</td>
+          <td>
+            <div class="action-btn-group">
+              ${s.status !== 'verified' ? `<button class="admin-action-btn action-view" onclick="verifySchool('${s.id}')" style="color:var(--success)">✓ Verify</button>` : ''}
+              ${s.status !== 'rejected' ? `<button class="admin-action-btn action-ban" onclick="rejectSchool('${s.id}')">✗ Reject</button>` : ''}
+            </div>
+          </td>
+        </tr>
+      `).join('');
+    }
+
+    function verifySchool(id) {
+      if (!window.lvlPopup) { if (!confirm('Verify this school?')) return; doVerifySchool(id); return; }
+      lvlPopup.confirm('Verify School', 'Are you sure you want to verify this school? The school admin will be able to use all dashboard features.', { confirmLabel: '✅ Verify', confirmStyle: 'success' }).then(c => { if (c) doVerifySchool(id); });
+    }
+
+    function doVerifySchool(id) {
+      const schools = JSON.parse(localStorage.getItem('lvlbase_schools') || '[]');
+      const idx = schools.findIndex(s => s.id === id);
+      if (idx !== -1) { schools[idx].status = 'verified'; schools[idx].verifiedAt = new Date().toISOString(); localStorage.setItem('lvlbase_schools', JSON.stringify(schools)); }
+      showToast('School verified! ✅', 'success');
+      addTimelineAction('School verified: ' + (schools[idx] ? schools[idx].name : id));
+      renderSchoolsTable();
+      updatePendingBadges();
+    }
+
+    function rejectSchool(id) {
+      if (!window.lvlPopup) { if (!confirm('Reject this school?')) return; doRejectSchool(id); return; }
+      lvlPopup.confirm('Reject School', 'Reject this school registration?', { confirmLabel: '✗ Reject', confirmStyle: 'danger', type:'error' }).then(c => { if (c) doRejectSchool(id); });
+    }
+
+    function doRejectSchool(id) {
+      const schools = JSON.parse(localStorage.getItem('lvlbase_schools') || '[]');
+      const idx = schools.findIndex(s => s.id === id);
+      if (idx !== -1) { schools[idx].status = 'rejected'; localStorage.setItem('lvlbase_schools', JSON.stringify(schools)); }
+      showToast('School rejected.', 'warning');
+      renderSchoolsTable();
+      updatePendingBadges();
+    }
+
+    function populateSchoolFilter() {
+      const schools = JSON.parse(localStorage.getItem('lvlbase_schools') || '[]');
+      const sel = document.getElementById('ua-school-filter');
+      if (!sel) return;
+      sel.innerHTML = '<option value="">All Schools</option>' + schools.map(s => `<option value="${s.id}">${s.name}</option>`).join('');
+    }
+
+    function renderUserApprovals() {
+      const schoolFilter = document.getElementById('ua-school-filter') ? document.getElementById('ua-school-filter').value : '';
+      const roleFilter = document.getElementById('ua-role-filter') ? document.getElementById('ua-role-filter').value : '';
+      const schools = JSON.parse(localStorage.getItem('lvlbase_schools') || '[]');
+      const getSchoolName = id => { const s = schools.find(s => s.id === id); return s ? s.name : (id ? id.slice(0,12)+'…' : '–'); };
+      let users = JSON.parse(localStorage.getItem('lvlbase_all_users') || '[]');
+      if (schoolFilter) users = users.filter(u => u.schoolId === schoolFilter);
+      if (roleFilter) users = users.filter(u => u.role === roleFilter);
+      const tbody = document.getElementById('ua-tbody');
+      if (!tbody) return;
+      if (!users.length) {
+        tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;color:var(--text-muted);padding:1.5rem">No users found.</td></tr>';
+        return;
+      }
+      tbody.innerHTML = users.map(u => `
+        <tr>
+          <td><strong>${u.displayName}</strong></td>
+          <td style="font-size:.82rem;color:var(--text-muted)">${u.email}</td>
+          <td><span style="display:inline-flex;align-items:center;padding:.2rem .55rem;border-radius:8px;font-size:.72rem;font-weight:700;background:rgba(108,99,255,.15);color:var(--primary)">${u.role}</span></td>
+          <td style="font-size:.82rem">${getSchoolName(u.schoolId)}</td>
+          <td><span style="display:inline-flex;align-items:center;padding:.2rem .55rem;border-radius:8px;font-size:.72rem;font-weight:700;background:${u.status==='approved'?'rgba(0,209,178,.12)':u.status==='rejected'?'rgba(255,68,68,.12)':'rgba(255,165,0,.15)'};color:${u.status==='approved'?'var(--success)':u.status==='rejected'?'var(--danger)':'var(--warning)'}">${u.status}</span></td>
+          <td style="font-size:.78rem;color:var(--text-muted)">${new Date(u.createdAt).toLocaleDateString('en-IN')}</td>
+          <td><div class="action-btn-group">
+            ${u.status === 'pending' ? `<button class="admin-action-btn action-view" onclick="adminApproveUser('${u.uid}')" style="color:var(--success)">✓ Approve</button><button class="admin-action-btn action-ban" onclick="adminRejectUser('${u.uid}')">✗ Reject</button>` : ''}
+          </div></td>
+        </tr>
+      `).join('');
+    }
+
+    function adminApproveUser(uid) {
+      const users = JSON.parse(localStorage.getItem('lvlbase_all_users') || '[]');
+      const idx = users.findIndex(u => u.uid === uid);
+      if (idx !== -1) { users[idx].status = 'approved'; localStorage.setItem('lvlbase_all_users', JSON.stringify(users)); }
+      showToast('User approved! ✅', 'success');
+      renderUserApprovals(); updatePendingBadges();
+    }
+
+    function adminRejectUser(uid) {
+      const users = JSON.parse(localStorage.getItem('lvlbase_all_users') || '[]');
+      const idx = users.findIndex(u => u.uid === uid);
+      if (idx !== -1) { users[idx].status = 'rejected'; localStorage.setItem('lvlbase_all_users', JSON.stringify(users)); }
+      showToast('User rejected.', 'warning');
+      renderUserApprovals(); updatePendingBadges();
+    }
+
     function initAdmin() {
       const quizH = JSON.parse(localStorage.getItem('lvlbase_quiz_history') || '[]');
-      const battleH = JSON.parse(localStorage.getItem('lvlbase_battle_history') || '[]');
       const profile = JSON.parse(localStorage.getItem('lvlbase_user_profile') || '{}');
 
-      document.getElementById('admin-total-users').textContent = '1,247';
+      document.getElementById('admin-total-users').textContent = (JSON.parse(localStorage.getItem('lvlbase_all_users')||'[]').length + 1247).toLocaleString();
       document.getElementById('admin-active-today').textContent = '89';
       document.getElementById('admin-total-quizzes').textContent = (quizH.length + 12450).toLocaleString();
       document.getElementById('admin-avg-score').textContent = quizH.length > 0 ? Math.round(quizH.reduce((s,h)=>s+h.score,0)/quizH.length)+'%' : '72%';
 
-      // Chart
       const days = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
       const vals = [45, 67, 52, 78, 91, 112, 89];
       const maxV = Math.max(...vals);
       const chart = document.getElementById('weekly-chart');
       const labels = document.getElementById('weekly-labels');
-      chart.innerHTML = vals.map((v,i) => `<div class="chart-bar" style="height:${Math.round(v/maxV*100)}%" data-value="${v}"></div>`).join('');
-      labels.innerHTML = days.map(d => `<div class="chart-label">${d}</div>`).join('');
+      if (chart) chart.innerHTML = vals.map((v) => `<div class="chart-bar" style="height:${Math.round(v/maxV*100)}%" data-value="${v}"></div>`).join('');
+      if (labels) labels.innerHTML = days.map(d => `<div class="chart-label">${d}</div>`).join('');
 
-      // Timeline
       const timeline = document.getElementById('admin-timeline');
-      const actions = [
+      const tactions = [
         { action:'XP Multiplier set to 1.5×', meta:'2 hours ago', color:'var(--primary)' },
         { action:'New event created: Weekend Challenge', meta:'Yesterday', color:'var(--success)' },
         { action:'User report exported', meta:'2 days ago', color:'var(--accent)' }
       ];
-      timeline.innerHTML = actions.map(a => `<div class="timeline-item"><div class="timeline-dot" style="background:${a.color}"></div><div class="timeline-content"><div class="timeline-action">${a.action}</div><div class="timeline-meta">${a.meta}</div></div></div>`).join('');
+      if (timeline) timeline.innerHTML = tactions.map(a => `<div class="timeline-item"><div class="timeline-dot" style="background:${a.color}"></div><div class="timeline-content"><div class="timeline-action">${a.action}</div><div class="timeline-meta">${a.meta}</div></div></div>`).join('');
 
-      // Top users
       const topUsers = [
         { name:'Arjun Sharma', email:'arjun@student.com', xp:28500, rank:'SS-Rank', quizzes:245, status:'active', streak:45 },
         { name:'Priya Patel', email:'priya@student.com', xp:24200, rank:'S-Rank', quizzes:198, status:'active', streak:32 },
@@ -339,7 +509,7 @@
       if (profile.displayName) topUsers.push({ name:profile.displayName, email:profile.email||'demo@user.com', xp:profile.totalXP||0, rank:getRankLabel(profile.totalXP||0), quizzes:profile.quizzesCompleted||0, status:'active', streak:profile.streak||0 });
 
       const tbody = document.getElementById('top-users-body');
-      tbody.innerHTML = topUsers.sort((a,b)=>b.xp-a.xp).map((u,i)=>`
+      if (tbody) tbody.innerHTML = topUsers.sort((a,b)=>b.xp-a.xp).map((u,i)=>`
         <tr>
           <td style="font-weight:700;color:var(--accent)">${i<3?['🥇','🥈','🥉'][i]:'#'+(i+1)}</td>
           <td><div style="font-weight:600;font-size:0.875rem">${u.name}</div><div style="font-size:0.75rem;color:var(--text-muted)">🔥 ${u.streak} day streak</div></td>
@@ -350,17 +520,15 @@
           <td><span class="status-dot status-online"></span>${u.status}</td>
           <td><div class="action-btn-group">
             <button class="admin-action-btn action-view" onclick="showToast('Viewing ${u.name}','info')">View</button>
-            <button class="admin-action-btn action-boost" onclick="showToast('+500 XP sent to ${u.name}!','success')">Boost</button>
+            <button class="admin-action-btn action-boost" onclick="showToast('+500 XP to ${u.name}!','success')">Boost</button>
             <button class="admin-action-btn action-ban" onclick="showToast('${u.name} banned','error')">Ban</button>
           </div></td>
         </tr>`).join('');
 
-      // Users table
       renderUsersTable([...topUsers, { name:'Anika Singh', email:'anika@student.com', xp:19500, rank:'S-Rank', quizzes:145, status:'active', streak:21 }, { name:'Dev Kapoor', email:'dev@student.com', xp:17300, rank:'A-Rank', quizzes:132, status:'idle', streak:18 }]);
-
-      // Active events
-      const events = JSON.parse(localStorage.getItem('lvlbase_events') || '[]');
-      renderEvents(events);
+      renderEvents(JSON.parse(localStorage.getItem('lvlbase_events') || '[]'));
+      updatePendingBadges();
+      populateSchoolFilter();
     }
 
     function renderUsersTable(users) {
@@ -396,11 +564,14 @@
 
     function showSection(id, linkEl) {
       document.querySelectorAll('[id^="section-"]').forEach(s => s.style.display = 'none');
-      document.getElementById('section-' + id).style.display = 'block';
+      const sec = document.getElementById('section-' + id);
+      if (sec) sec.style.display = 'block';
       document.querySelectorAll('.admin-nav-link').forEach(l => l.classList.remove('active'));
       if (linkEl) linkEl.classList.add('active');
-      const titles = { overview:'📊 Dashboard Overview', analytics:'📈 Analytics', users:'👥 User Management', quizzes:'🎯 Quiz Management', events:'🎉 Events', settings:'⚙️ Settings' };
+      const titles = { overview:'📊 Dashboard Overview', analytics:'📈 Analytics', users:'👥 User Management', quizzes:'🎯 Quiz Management', events:'🎉 Events', settings:'⚙️ Settings', schools:'🏫 School Management', 'user-approvals':'⏳ User Approvals' };
       document.getElementById('topbar-title').textContent = titles[id] || id;
+      if (id === 'schools') renderSchoolsTable();
+      if (id === 'user-approvals') { populateSchoolFilter(); renderUserApprovals(); }
     }
 
     function filterTable(query) {
@@ -437,6 +608,7 @@
     }
 
     function showToast(msg, type) {
+      if (window.lvlPopup) { lvlPopup.toast(msg, type); return; }
       const container = document.getElementById('toast-container');
       const toast = document.createElement('div'); toast.className = `toast ${type}`;
       toast.innerHTML = `<span>${{success:'✅',error:'❌',info:'ℹ️',warning:'⚠️'}[type]||'ℹ️'}</span><span>${msg}</span>`;

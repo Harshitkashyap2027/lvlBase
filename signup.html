@@ -1,0 +1,378 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sign Up – lvlBase ⚡</title>
+  <link rel="manifest" href="manifest.json">
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/main.css">
+  <style>
+    .su-wrapper { min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 2rem 1rem; background: radial-gradient(ellipse at 30% 50%, rgba(108,99,255,0.15) 0%, transparent 60%), var(--dark-bg); }
+    .su-card { background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 28px; padding: 2.5rem; width: 100%; max-width: 500px; }
+    .brand { text-align: center; font-size: 1.8rem; font-weight: 900; background: linear-gradient(135deg, var(--primary), var(--secondary)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; margin-bottom: 0.4rem; }
+    .role-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.75rem; margin-bottom: 1.5rem; }
+    .role-card { border: 2px solid var(--border-color); border-radius: 18px; padding: 1rem 0.5rem; text-align: center; cursor: pointer; transition: all 0.25s; }
+    .role-card:hover { border-color: var(--primary); background: rgba(108,99,255,0.06); transform: translateY(-2px); }
+    .role-card.selected { border-color: var(--primary); background: rgba(108,99,255,0.12); }
+    .role-card .rc-icon { font-size: 1.8rem; margin-bottom: 0.4rem; }
+    .role-card .rc-label { font-size: 0.82rem; font-weight: 700; }
+    .step-bar { display: flex; gap: 0.4rem; margin-bottom: 1.5rem; }
+    .step-seg { flex: 1; height: 4px; border-radius: 4px; background: var(--border-color); transition: background 0.3s; }
+    .step-seg.active { background: var(--primary); }
+    .step-seg.done { background: var(--success); }
+    .school-option { display: flex; align-items: center; gap: 0.6rem; padding: 0.75rem 1rem; border: 1px solid var(--border-color); border-radius: 12px; cursor: pointer; transition: all 0.2s; margin-bottom: 0.5rem; }
+    .school-option:hover { border-color: var(--primary); background: rgba(108,99,255,0.05); }
+    .school-option.selected { border-color: var(--primary); background: rgba(108,99,255,0.1); }
+    .school-name-tag { font-weight: 600; font-size: 0.88rem; }
+    .school-meta { font-size: 0.75rem; color: var(--text-muted); }
+    .guild-mini-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.5rem; }
+    .guild-mini { border: 2px solid transparent; border-radius: 12px; padding: 0.6rem 0.4rem; text-align: center; cursor: pointer; transition: all 0.2s; }
+    .guild-mini:hover { transform: translateY(-2px); }
+    .guild-mini.selected { border-color: white; box-shadow: 0 0 12px rgba(255,255,255,0.15); }
+  </style>
+</head>
+<body>
+  <div class="su-wrapper">
+    <div class="su-card animate-fadeIn">
+      <div class="brand">lvlBase ⚡</div>
+      <p style="text-align:center;color:var(--text-muted);font-size:0.82rem;margin-bottom:1.5rem">Create your account – it's free!</p>
+
+      <!-- Step Bar -->
+      <div class="step-bar">
+        <div class="step-seg active" id="seg1"></div>
+        <div class="step-seg" id="seg2"></div>
+        <div class="step-seg" id="seg3"></div>
+      </div>
+
+      <!-- STEP 1: Role Selection -->
+      <div id="step1">
+        <h3 style="font-size:1rem;font-weight:800;margin-bottom:0.25rem">👋 Who are you?</h3>
+        <p style="color:var(--text-muted);font-size:0.82rem;margin-bottom:1rem">Select your role to get the right experience</p>
+
+        <div class="role-grid">
+          <div class="role-card selected" id="role-student" onclick="selectRole('student')">
+            <div class="rc-icon">🎓</div>
+            <div class="rc-label">Student</div>
+          </div>
+          <div class="role-card" id="role-teacher" onclick="selectRole('teacher')">
+            <div class="rc-icon">👨‍🏫</div>
+            <div class="rc-label">Teacher</div>
+          </div>
+          <div class="role-card" id="role-parent" onclick="selectRole('parent')">
+            <div class="rc-icon">👨‍👩‍👧</div>
+            <div class="rc-label">Parent</div>
+          </div>
+        </div>
+
+        <!-- Basic Info -->
+        <div class="form-group">
+          <label class="form-label">Full Name *</label>
+          <input type="text" id="full-name" class="form-control" placeholder="Your full name">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Email Address *</label>
+          <input type="email" id="email" class="form-control" placeholder="you@example.com">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Password *</label>
+          <input type="password" id="password" class="form-control" placeholder="Min 6 characters">
+        </div>
+
+        <!-- Role-specific fields (show/hide based on role) -->
+        <!-- Student -->
+        <div id="fields-student">
+          <div class="form-group">
+            <label class="form-label">Grade *</label>
+            <select id="grade" class="form-control">
+              <option value="">Select your grade</option>
+              <option>6</option><option>7</option><option>8</option>
+              <option>9</option><option>10</option><option>11</option><option>12</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Teacher -->
+        <div id="fields-teacher" style="display:none">
+          <div class="form-group">
+            <label class="form-label">Subject Specialization *</label>
+            <select id="subject" class="form-control">
+              <option value="">Select subject</option>
+              <option>Mathematics</option>
+              <option>Science</option>
+              <option>English</option>
+              <option>Social Studies</option>
+              <option>Computer Science</option>
+              <option>Other</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Qualification</label>
+            <input type="text" id="qualification" class="form-control" placeholder="e.g. B.Ed, M.Sc Mathematics">
+          </div>
+        </div>
+
+        <!-- Parent -->
+        <div id="fields-parent" style="display:none">
+          <div class="form-group">
+            <label class="form-label">Your Child's Email (registered on lvlBase) *</label>
+            <input type="email" id="student-email" class="form-control" placeholder="child@example.com">
+            <div id="student-check-msg" style="font-size:0.78rem;margin-top:0.3rem"></div>
+          </div>
+        </div>
+
+        <button class="btn btn-primary btn-full" onclick="goToStep2()">Continue →</button>
+        <p style="text-align:center;margin-top:1rem;font-size:0.8rem;color:var(--text-muted)">Are you a school? <a href="school-signup.html" style="color:var(--primary)">Register your school →</a></p>
+      </div>
+
+      <!-- STEP 2: School Selection -->
+      <div id="step2" style="display:none">
+        <h3 style="font-size:1rem;font-weight:800;margin-bottom:0.25rem">🏫 Select Your School</h3>
+        <p style="color:var(--text-muted);font-size:0.82rem;margin-bottom:1rem">Choose the school you belong to</p>
+
+        <div class="form-group">
+          <input type="text" id="school-search" class="form-control" placeholder="🔍 Search school by name or city..." oninput="filterSchools(this.value)">
+        </div>
+
+        <div id="schools-list" style="max-height:260px;overflow-y:auto;margin-bottom:1rem"></div>
+
+        <p style="font-size:0.78rem;color:var(--text-muted);text-align:center;margin-bottom:1rem">Don't see your school? Ask your school admin to register at <a href="school-signup.html" style="color:var(--primary)">school-signup.html</a></p>
+
+        <div style="display:flex;gap:0.75rem">
+          <button class="btn btn-ghost" onclick="backToStep1()" style="flex:0 0 auto">← Back</button>
+          <button class="btn btn-primary btn-full" id="step2-next" onclick="goToStep3()" disabled>Continue →</button>
+        </div>
+      </div>
+
+      <!-- STEP 3: Guild Selection (student only) / Confirm -->
+      <div id="step3" style="display:none">
+        <!-- Student guild -->
+        <div id="guild-section">
+          <h3 style="font-size:1rem;font-weight:800;margin-bottom:0.25rem">🏰 Choose Your Guild</h3>
+          <p style="color:var(--text-muted);font-size:0.82rem;margin-bottom:1rem">Your guild gives XP bonuses</p>
+          <div class="guild-mini-grid" id="guild-grid">
+            <div class="guild-mini selected" style="background:linear-gradient(135deg,#4C1D95,#7C3AED)" onclick="selectGuild(this,'shadow')"><div style="font-size:1.5rem">🌙</div><div style="font-size:0.72rem;font-weight:700;color:white">Shadow</div><div style="font-size:0.65rem;color:rgba(255,255,255,0.7)">+15% Math</div></div>
+            <div class="guild-mini" style="background:linear-gradient(135deg,#1E3A8A,#2563EB)" onclick="selectGuild(this,'azure')"><div style="font-size:1.5rem">💧</div><div style="font-size:0.72rem;font-weight:700;color:white">Azure</div><div style="font-size:0.65rem;color:rgba(255,255,255,0.7)">+15% Science</div></div>
+            <div class="guild-mini" style="background:linear-gradient(135deg,#7F1D1D,#DC2626)" onclick="selectGuild(this,'inferno')"><div style="font-size:1.5rem">🔥</div><div style="font-size:0.72rem;font-weight:700;color:white">Inferno</div><div style="font-size:0.65rem;color:rgba(255,255,255,0.7)">+20% Battle</div></div>
+            <div class="guild-mini" style="background:linear-gradient(135deg,#14532D,#16A34A)" onclick="selectGuild(this,'titan')"><div style="font-size:1.5rem">⚡</div><div style="font-size:0.72rem;font-weight:700;color:white">Titan</div><div style="font-size:0.65rem;color:rgba(255,255,255,0.7)">+15% English</div></div>
+            <div class="guild-mini" style="background:linear-gradient(135deg,#78350F,#D97706)" onclick="selectGuild(this,'zenith')"><div style="font-size:1.5rem">✨</div><div style="font-size:0.72rem;font-weight:700;color:white">Zenith</div><div style="font-size:0.65rem;color:rgba(255,255,255,0.7)">+10% All</div></div>
+          </div>
+          <p style="font-size:0.72rem;color:var(--text-muted);text-align:center;margin:0.75rem 0">You can change guild after 30 days</p>
+        </div>
+
+        <!-- Non-student confirmation -->
+        <div id="confirm-section" style="display:none">
+          <div style="background:rgba(0,209,178,0.08);border:1px solid rgba(0,209,178,0.25);border-radius:16px;padding:1.25rem;margin-bottom:1.5rem">
+            <p style="font-size:0.88rem;font-weight:700;color:var(--success);margin-bottom:0.5rem">📋 Almost Done!</p>
+            <p style="font-size:0.83rem;color:var(--text-muted);line-height:1.7">After signing up, your request will be sent to your school admin for approval. You'll be able to access all features once approved.</p>
+          </div>
+        </div>
+
+        <div style="display:flex;gap:0.75rem;margin-top:1rem">
+          <button class="btn btn-ghost" onclick="backToStep2()" style="flex:0 0 auto">← Back</button>
+          <button class="btn btn-primary btn-full" onclick="completeSignup()">🎮 Create Account!</button>
+        </div>
+      </div>
+
+      <div style="text-align:center;margin-top:1.5rem">
+        <a href="login.html" style="color:var(--text-muted);font-size:0.82rem">Already have an account? Login →</a>
+      </div>
+    </div>
+  </div>
+
+  <script src="js/popup.js"></script>
+  <script>
+    let selectedRole = 'student';
+    let selectedSchoolId = null;
+    let selectedSchool = null;
+    let selectedGuild = 'shadow';
+    let allVerifiedSchools = [];
+
+    function selectRole(role) {
+      selectedRole = role;
+      document.querySelectorAll('.role-card').forEach(c => c.classList.remove('selected'));
+      document.getElementById('role-' + role).classList.add('selected');
+      // Show/hide role fields
+      document.getElementById('fields-student').style.display = role === 'student' ? 'block' : 'none';
+      document.getElementById('fields-teacher').style.display = role === 'teacher' ? 'block' : 'none';
+      document.getElementById('fields-parent').style.display = role === 'parent' ? 'block' : 'none';
+    }
+
+    function selectGuild(el, guild) {
+      selectedGuild = guild;
+      document.querySelectorAll('.guild-mini').forEach(g => g.classList.remove('selected'));
+      el.classList.add('selected');
+    }
+
+    function getVerifiedSchools() {
+      const schools = JSON.parse(localStorage.getItem('lvlbase_schools') || '[]');
+      return schools.filter(s => s.status === 'verified');
+    }
+
+    function renderSchools(list) {
+      const container = document.getElementById('schools-list');
+      if (!list.length) {
+        container.innerHTML = '<div style="color:var(--text-muted);font-size:0.85rem;text-align:center;padding:1.5rem 0">No verified schools found yet.<br>Ask your school to register at <a href="school-signup.html" style="color:var(--primary)">school-signup.html</a></div>';
+        return;
+      }
+      container.innerHTML = list.map(s => `
+        <div class="school-option" id="school-opt-${s.id}" onclick="selectSchool('${s.id}')">
+          <div>
+            <div class="school-name-tag">🏫 ${s.name}</div>
+            <div class="school-meta">${s.city}, ${s.state}</div>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    function filterSchools(query) {
+      const q = query.toLowerCase();
+      const filtered = allVerifiedSchools.filter(s =>
+        s.name.toLowerCase().includes(q) || s.city.toLowerCase().includes(q) || s.state.toLowerCase().includes(q)
+      );
+      renderSchools(filtered);
+    }
+
+    function selectSchool(id) {
+      selectedSchoolId = id;
+      selectedSchool = allVerifiedSchools.find(s => s.id === id);
+      document.querySelectorAll('.school-option').forEach(o => o.classList.remove('selected'));
+      const el = document.getElementById('school-opt-' + id);
+      if (el) el.classList.add('selected');
+      document.getElementById('step2-next').disabled = false;
+    }
+
+    function goToStep2() {
+      const name = document.getElementById('full-name').value.trim();
+      const email = document.getElementById('email').value.trim();
+      const password = document.getElementById('password').value;
+
+      if (!name || !email || !password) { lvlPopup.toast('Please fill in all required fields', 'error'); return; }
+      if (password.length < 6) { lvlPopup.toast('Password must be at least 6 characters', 'error'); return; }
+
+      // Role-specific validation
+      if (selectedRole === 'student' && !document.getElementById('grade').value) {
+        lvlPopup.toast('Please select your grade', 'error'); return;
+      }
+      if (selectedRole === 'teacher' && !document.getElementById('subject').value) {
+        lvlPopup.toast('Please select your subject', 'error'); return;
+      }
+      if (selectedRole === 'parent') {
+        const se = document.getElementById('student-email').value.trim();
+        if (!se) { lvlPopup.toast("Please enter your child's email", 'error'); return; }
+        // Check if student is registered
+        const users = JSON.parse(localStorage.getItem('lvlbase_all_users') || '[]');
+        const child = users.find(u => u.email && u.email.toLowerCase() === se.toLowerCase() && u.role === 'student');
+        if (!child) {
+          document.getElementById('student-check-msg').innerHTML = '<span style="color:var(--danger)">❌ This student email is not registered yet. They must sign up first.</span>';
+          lvlPopup.toast('Student email not found. Ask your child to register first.', 'error');
+          return;
+        }
+        document.getElementById('student-check-msg').innerHTML = '<span style="color:var(--success)">✅ Student found: ' + child.displayName + '</span>';
+      }
+
+      // Load schools
+      allVerifiedSchools = getVerifiedSchools();
+      setStep(2);
+      renderSchools(allVerifiedSchools);
+    }
+
+    function backToStep1() { setStep(1); }
+    function backToStep2() { setStep(2); }
+
+    function goToStep3() {
+      if (!selectedSchoolId) { lvlPopup.toast('Please select your school', 'error'); return; }
+      setStep(3);
+      // Show guild selection only for students
+      document.getElementById('guild-section').style.display = selectedRole === 'student' ? 'block' : 'none';
+      document.getElementById('confirm-section').style.display = selectedRole !== 'student' ? 'block' : 'none';
+    }
+
+    function setStep(s) {
+      [1,2,3].forEach(i => document.getElementById('step' + i).style.display = 'none');
+      document.getElementById('step' + s).style.display = 'block';
+      document.querySelectorAll('.step-seg').forEach((seg, i) => {
+        seg.className = 'step-seg';
+        if (i + 1 < s) seg.classList.add('done');
+        else if (i + 1 === s) seg.classList.add('active');
+      });
+    }
+
+    function completeSignup() {
+      const name = document.getElementById('full-name').value.trim();
+      const email = document.getElementById('email').value.trim().toLowerCase();
+
+      // Build user object
+      const users = JSON.parse(localStorage.getItem('lvlbase_all_users') || '[]');
+      if (users.find(u => u.email === email)) {
+        lvlPopup.toast('This email is already registered. Please login.', 'error');
+        return;
+      }
+
+      const uid = 'user_' + Date.now() + '_' + Math.random().toString(36).slice(2,7);
+      const user = {
+        uid, email,
+        displayName: name,
+        role: selectedRole,
+        schoolId: selectedSchoolId,
+        status: 'pending',
+        grade: selectedRole === 'student' ? document.getElementById('grade').value : null,
+        guild: selectedRole === 'student' ? selectedGuild : null,
+        subject: selectedRole === 'teacher' ? document.getElementById('subject').value : null,
+        qualification: selectedRole === 'teacher' ? document.getElementById('qualification').value.trim() : null,
+        studentEmail: selectedRole === 'parent' ? document.getElementById('student-email').value.trim().toLowerCase() : null,
+        childUid: null,
+        totalXP: 20, streak: 1,
+        quizzesCompleted: 0, battlesWon: 0, battlesPlayed: 0,
+        goalsCompleted: 0, perfectScores: 0, achievements: [],
+        subjectProgress: { math: 0, science: 0, english: 0 },
+        createdAt: new Date().toISOString(), lastLogin: new Date().toISOString()
+      };
+
+      // Link parent to child
+      if (selectedRole === 'parent') {
+        const childEmail = document.getElementById('student-email').value.trim().toLowerCase();
+        const child = users.find(u => u.email === childEmail && u.role === 'student');
+        if (child) { user.childUid = child.uid; user.schoolId = child.schoolId; selectedSchoolId = child.schoolId; }
+      }
+
+      users.push(user);
+      localStorage.setItem('lvlbase_all_users', JSON.stringify(users));
+
+      // Add notification to school
+      const notifs = JSON.parse(localStorage.getItem('lvlbase_notifications') || '[]');
+      notifs.unshift({
+        id: 'notif_' + Date.now(),
+        type: 'new_user_pending',
+        schoolId: selectedSchoolId,
+        userId: uid,
+        message: `New ${selectedRole} signup: ${name} (${email}) is waiting for approval.`,
+        role: selectedRole,
+        userName: name,
+        userEmail: email,
+        read: false,
+        createdAt: new Date().toISOString()
+      });
+      localStorage.setItem('lvlbase_notifications', JSON.stringify(notifs));
+
+      // Log in the user
+      localStorage.setItem('lvlbase_current_user', JSON.stringify(user));
+      localStorage.setItem('lvlbase_user_profile', JSON.stringify(user));
+
+      lvlPopup.toast('Account created! ⚡ Waiting for school approval.', 'success');
+      setTimeout(() => {
+        lvlPopup.show({
+          type: 'success',
+          icon: '🎉',
+          title: 'Welcome to lvlBase!',
+          message: 'Your account has been created and sent to your school admin for approval. You can access your dashboard while you wait.',
+          buttons: [{ label: '→ Go to Dashboard', style: 'primary', action: 'go' }]
+        }).then(() => {
+          const dashMap = { student: 'dashboard.html', teacher: 'teacher-dashboard.html', parent: 'parent-dashboard.html' };
+          window.location.href = dashMap[selectedRole] || 'dashboard.html';
+        });
+      }, 400);
+    }
+  </script>
+</body>
+</html>

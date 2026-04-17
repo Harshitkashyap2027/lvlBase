@@ -1,0 +1,589 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>School Dashboard – lvlBase ⚡</title>
+  <link rel="manifest" href="manifest.json">
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/main.css">
+  <script>
+    // ── Role Guard (school_admin only) ──
+    (function() {
+      var u = JSON.parse(localStorage.getItem('lvlbase_current_user') || 'null');
+      if (!u) { window.location.replace('login.html'); throw ''; }
+      if (u.role !== 'school_admin') {
+        document.addEventListener('DOMContentLoaded', function() {
+          var map = { student:'dashboard.html', teacher:'teacher-dashboard.html', parent:'parent-dashboard.html', admin:'admin/index.html' };
+          var myUrl = map[u.role] || 'login.html';
+          document.body.innerHTML = '<div style="min-height:100vh;background:#0A0A1A;display:flex;align-items:center;justify-content:center;font-family:Poppins,system-ui;padding:2rem"><div style="background:#1A1A2E;border:2px solid #FF4444;border-radius:28px;padding:3rem 2rem;max-width:460px;width:100%;text-align:center;box-shadow:0 20px 60px rgba(0,0,0,0.4)"><div style="font-size:4rem;margin-bottom:1rem">🚫</div><h1 style="color:#FF4444;font-size:1.5rem;font-weight:800;margin-bottom:0.75rem">Access Denied</h1><p style="color:#8892A4;font-size:0.9rem;line-height:1.7;margin-bottom:2rem">This page is for <strong style=\'color:#E8E8FF\'>School Admins only</strong>.</p><a href="' + myUrl + '" style="display:block;padding:0.85rem;background:linear-gradient(135deg,#6C63FF,#8B85FF);color:white;border-radius:14px;font-weight:700;text-decoration:none;margin-bottom:0.75rem">📊 Go to My Dashboard</a><a href="login.html" style="display:block;padding:0.75rem;background:rgba(255,255,255,0.06);color:#8892A4;border-radius:14px;text-decoration:none;border:1px solid rgba(255,255,255,0.08)">← Back to Login</a></div></div>';
+        });
+        throw 'ACCESS_DENIED';
+      }
+    })();
+  </script>
+  <style>
+    :root {
+      --primary: #6C63FF; --secondary: #FF6B6B; --accent: #FFD700;
+      --success: #00D1B2; --warning: #FFA500; --danger: #FF4444;
+      --dark-bg: #0A0A1A; --card-bg: #1A1A2E; --border: rgba(108,99,255,0.2);
+      --text-light: #E8E8FF; --text-muted: #8892A4; --font: 'Poppins', sans-serif;
+      --sidebar-w: 260px;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body { background: var(--dark-bg); color: var(--text-light); font-family: var(--font); display: flex; min-height: 100vh; }
+
+    .sidebar { width: var(--sidebar-w); min-height: 100vh; background: var(--card-bg); border-right: 1px solid var(--border); display: flex; flex-direction: column; position: fixed; top: 0; left: 0; z-index: 200; transition: transform .3s; }
+    .sidebar-brand { padding: 22px 20px 16px; border-bottom: 1px solid var(--border); }
+    .sidebar-brand h2 { font-size: 1.3rem; color: var(--primary); font-weight: 800; }
+    .sidebar-brand span { font-size: .73rem; color: var(--text-muted); }
+    .sidebar-user { padding: 14px 20px; display: flex; align-items: center; gap: 10px; border-bottom: 1px solid var(--border); }
+    .sidebar-user .av { width: 38px; height: 38px; border-radius: 50%; background: var(--primary); display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: .9rem; flex-shrink: 0; }
+    .sidebar-user .info .name { font-size: .85rem; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .sidebar-user .info .role-tag { font-size: .7rem; color: var(--success); }
+    .sidebar-nav { flex: 1; padding: 10px 0; overflow-y: auto; }
+    .sidebar-nav a { display: flex; align-items: center; gap: 10px; padding: 11px 20px; color: var(--text-muted); text-decoration: none; font-size: .87rem; transition: all .2s; border-left: 3px solid transparent; cursor: pointer; }
+    .sidebar-nav a:hover { background: rgba(108,99,255,.1); color: var(--text-light); }
+    .sidebar-nav a.active { background: rgba(108,99,255,.15); color: var(--primary); border-left-color: var(--primary); font-weight: 600; }
+    .sidebar-nav a .icon { font-size: 1.1rem; width: 20px; text-align: center; }
+    .sidebar-bottom { padding: 14px 20px; border-top: 1px solid var(--border); }
+    .sidebar-bottom a { display: flex; align-items: center; gap: 10px; color: var(--danger); text-decoration: none; font-size: .87rem; cursor: pointer; }
+
+    .main-wrap { margin-left: var(--sidebar-w); flex: 1; display: flex; flex-direction: column; min-height: 100vh; }
+    .topbar { background: var(--card-bg); border-bottom: 1px solid var(--border); padding: 0 24px; height: 60px; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 100; }
+    .topbar-title { font-size: 1rem; font-weight: 700; }
+    .topbar-right { display: flex; align-items: center; gap: 14px; }
+    .notif-badge { background: var(--danger); color: white; border-radius: 50%; width: 20px; height: 20px; font-size: .7rem; display: flex; align-items: center; justify-content: center; font-weight: 700; }
+
+    .content { padding: 28px 24px; flex: 1; }
+    .section { display: none; }
+    .section.active { display: block; }
+
+    .stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1rem; margin-bottom: 1.5rem; }
+    @media (max-width: 900px) { .stats-grid { grid-template-columns: repeat(2, 1fr); } }
+    .stat-card { background: var(--card-bg); border: 1px solid var(--border); border-radius: 20px; padding: 1.25rem; display: flex; align-items: center; gap: 1rem; }
+    .stat-icon { font-size: 1.8rem; flex-shrink: 0; }
+    .stat-label { font-size: .78rem; color: var(--text-muted); }
+    .stat-val { font-size: 1.5rem; font-weight: 800; }
+
+    .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 1.25rem; }
+    @media (max-width: 700px) { .grid2 { grid-template-columns: 1fr; } }
+    .card { background: var(--card-bg); border: 1px solid var(--border); border-radius: 20px; padding: 1.25rem; margin-bottom: 1.25rem; }
+    .card-title { font-size: .95rem; font-weight: 700; margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem; justify-content: space-between; }
+
+    .user-row { display: flex; align-items: center; gap: .75rem; padding: .7rem 0; border-bottom: 1px solid var(--border); }
+    .user-row:last-child { border-bottom: none; }
+    .user-av { width: 34px; height: 34px; border-radius: 50%; background: var(--primary); display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: .8rem; flex-shrink: 0; }
+    .user-info { flex: 1; min-width: 0; }
+    .user-name { font-size: .87rem; font-weight: 600; }
+    .user-meta { font-size: .75rem; color: var(--text-muted); }
+    .badge { display: inline-flex; align-items: center; padding: .2rem .6rem; border-radius: 8px; font-size: .72rem; font-weight: 700; }
+    .badge-pending { background: rgba(255,165,0,.15); color: var(--warning); }
+    .badge-approved { background: rgba(0,209,178,.12); color: var(--success); }
+    .badge-rejected { background: rgba(255,68,68,.12); color: var(--danger); }
+
+    .action-btns { display: flex; gap: .4rem; }
+    .btn-xs { padding: .3rem .7rem; border: none; border-radius: 8px; font-size: .72rem; font-weight: 700; cursor: pointer; font-family: var(--font); transition: all .2s; }
+    .btn-approve { background: rgba(0,209,178,.2); color: var(--success); border: 1px solid rgba(0,209,178,.3); }
+    .btn-approve:hover { background: var(--success); color: #fff; }
+    .btn-reject { background: rgba(255,68,68,.15); color: var(--danger); border: 1px solid rgba(255,68,68,.3); }
+    .btn-reject:hover { background: var(--danger); color: #fff; }
+
+    /* Locked overlay */
+    .locked-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.7); backdrop-filter: blur(6px); z-index: 500; display: flex; align-items: center; justify-content: center; }
+
+    /* hamburger */
+    .hamburger { display: none; background: none; border: none; cursor: pointer; flex-direction: column; gap: 5px; }
+    .hamburger span { display: block; width: 24px; height: 2px; background: var(--text-light); border-radius: 2px; }
+    @media (max-width: 768px) {
+      .sidebar { transform: translateX(-100%); }
+      .sidebar.open { transform: translateX(0); }
+      .main-wrap { margin-left: 0; }
+      .hamburger { display: flex; }
+    }
+
+    .section-title { font-size: 1.1rem; font-weight: 800; margin-bottom: 0.25rem; }
+    .section-sub { color: var(--text-muted); font-size: .83rem; margin-bottom: 1.5rem; }
+    table { width: 100%; border-collapse: collapse; font-size: .85rem; }
+    th { text-align: left; padding: .6rem .75rem; color: var(--text-muted); font-weight: 600; border-bottom: 1px solid var(--border); }
+    td { padding: .65rem .75rem; border-bottom: 1px solid rgba(108,99,255,.08); vertical-align: middle; }
+    tr:hover td { background: rgba(108,99,255,.04); }
+  </style>
+</head>
+<body>
+  <!-- SIDEBAR -->
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-brand">
+      <h2>lvlBase ⚡</h2>
+      <span>School Dashboard</span>
+    </div>
+    <div class="sidebar-user">
+      <div class="av" id="sb-av">SA</div>
+      <div class="info">
+        <div class="name" id="sb-name">Loading…</div>
+        <div class="role-tag">🏫 School Admin</div>
+      </div>
+    </div>
+    <nav class="sidebar-nav">
+      <a class="active" onclick="showSection('overview',this)"><span class="icon">📊</span>Overview</a>
+      <a onclick="showSection('pending',this)"><span class="icon">⏳</span>Pending Approvals <span id="pending-count-badge" style="background:var(--danger);color:white;border-radius:8px;padding:1px 6px;font-size:.7rem;font-weight:700;margin-left:auto"></span></a>
+      <a onclick="showSection('students',this)"><span class="icon">🎓</span>Students</a>
+      <a onclick="showSection('teachers',this)"><span class="icon">👨‍🏫</span>Teachers</a>
+      <a onclick="showSection('parents',this)"><span class="icon">👨‍👩‍👧</span>Parents</a>
+      <a onclick="showSection('tests',this)"><span class="icon">📝</span>Tests & Exams</a>
+      <a onclick="showSection('cheat-reports',this)"><span class="icon">⚠️</span>Cheat Reports</a>
+      <a onclick="showSection('settings',this)"><span class="icon">⚙️</span>Settings</a>
+    </nav>
+    <div class="sidebar-bottom">
+      <a onclick="doLogout()"><span class="icon">🚪</span>Logout</a>
+    </div>
+  </aside>
+
+  <!-- MAIN -->
+  <div class="main-wrap">
+    <div class="topbar">
+      <div style="display:flex;align-items:center;gap:12px">
+        <button class="hamburger" id="hamburger"><span></span><span></span><span></span></button>
+        <div class="topbar-title" id="topbar-title">📊 Overview</div>
+      </div>
+      <div class="topbar-right">
+        <div id="school-status-badge" style="font-size:.8rem;font-weight:700;padding:.3rem .8rem;border-radius:10px"></div>
+        <a href="index.html" class="btn btn-ghost btn-sm" style="font-size:.82rem">View Site →</a>
+      </div>
+    </div>
+
+    <div class="content">
+      <!-- OVERVIEW -->
+      <div id="section-overview" class="section active">
+        <div class="stats-grid">
+          <div class="stat-card"><div class="stat-icon">🎓</div><div><div class="stat-label">Total Students</div><div class="stat-val" id="st-count" style="color:var(--primary)">0</div></div></div>
+          <div class="stat-card"><div class="stat-icon">👨‍🏫</div><div><div class="stat-label">Total Teachers</div><div class="stat-val" id="tc-count" style="color:var(--success)">0</div></div></div>
+          <div class="stat-card"><div class="stat-icon">👨‍👩‍👧</div><div><div class="stat-label">Total Parents</div><div class="stat-val" id="pa-count" style="color:var(--accent)">0</div></div></div>
+          <div class="stat-card"><div class="stat-icon">⏳</div><div><div class="stat-label">Pending Approvals</div><div class="stat-val" id="pend-count" style="color:var(--warning)">0</div></div></div>
+        </div>
+
+        <div class="grid2">
+          <div class="card">
+            <div class="card-title">⏳ Latest Pending Signups</div>
+            <div id="recent-pending-list"><div style="color:var(--text-muted);font-size:.84rem">No pending signups.</div></div>
+          </div>
+          <div class="card">
+            <div class="card-title">⚠️ Recent Cheat Reports</div>
+            <div id="recent-cheat-list"><div style="color:var(--text-muted);font-size:.84rem">No cheat reports.</div></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- PENDING APPROVALS -->
+      <div id="section-pending" class="section">
+        <div class="section-title">⏳ Pending Approvals</div>
+        <p class="section-sub">Approve or reject new student / teacher / parent signups for your school</p>
+        <div id="pending-table-wrap">
+          <table>
+            <thead><tr><th>Name</th><th>Email</th><th>Role</th><th>Date</th><th>Actions</th></tr></thead>
+            <tbody id="pending-tbody"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- STUDENTS -->
+      <div id="section-students" class="section">
+        <div class="section-title">🎓 Students</div>
+        <p class="section-sub">All approved students in your school</p>
+        <div class="card" style="margin-bottom:1rem">
+          <input type="text" id="student-search" class="form-control" placeholder="🔍 Search by name or email…" oninput="renderStudents(this.value)" style="max-width:300px">
+        </div>
+        <div class="card" style="overflow-x:auto">
+          <table>
+            <thead><tr><th>Name</th><th>Email</th><th>Grade</th><th>Guild</th><th>XP</th><th>Status</th><th>Joined</th></tr></thead>
+            <tbody id="students-tbody"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- TEACHERS -->
+      <div id="section-teachers" class="section">
+        <div class="section-title">👨‍🏫 Teachers</div>
+        <p class="section-sub">All approved teachers in your school</p>
+        <div class="card" style="overflow-x:auto">
+          <table>
+            <thead><tr><th>Name</th><th>Email</th><th>Subject</th><th>Qualification</th><th>Status</th><th>Joined</th><th>Actions</th></tr></thead>
+            <tbody id="teachers-tbody"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- PARENTS -->
+      <div id="section-parents" class="section">
+        <div class="section-title">👨‍👩‍👧 Parents</div>
+        <p class="section-sub">All approved parents in your school</p>
+        <div class="card" style="overflow-x:auto">
+          <table>
+            <thead><tr><th>Name</th><th>Email</th><th>Child Email</th><th>Status</th><th>Joined</th><th>Actions</th></tr></thead>
+            <tbody id="parents-tbody"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- TESTS -->
+      <div id="section-tests" class="section">
+        <div class="section-title">📝 Tests & Exams</div>
+        <p class="section-sub">Manage ongoing tests. Teachers can create; you can monitor.</p>
+        <div class="card">
+          <p style="color:var(--text-muted);font-size:.88rem">Test management feature coming soon. Teachers can assign tests from the Teacher Dashboard.</p>
+        </div>
+      </div>
+
+      <!-- CHEAT REPORTS -->
+      <div id="section-cheat-reports" class="section">
+        <div class="section-title">⚠️ Cheating Reports</div>
+        <p class="section-sub">Students flagged for cheating during exams</p>
+        <div class="card" style="overflow-x:auto">
+          <table>
+            <thead><tr><th>Student</th><th>Exam</th><th>Warnings</th><th>Terminated</th><th>Date</th><th>Actions</th></tr></thead>
+            <tbody id="cheat-tbody"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- SETTINGS -->
+      <div id="section-settings" class="section">
+        <div class="section-title">⚙️ School Settings</div>
+        <p class="section-sub">View and update your school information</p>
+        <div class="card" id="settings-card">Loading…</div>
+      </div>
+    </div>
+  </div>
+
+  <script src="js/popup.js"></script>
+  <script>
+    const user = JSON.parse(localStorage.getItem('lvlbase_current_user') || 'null');
+    if (!user) { window.location.replace('login.html'); }
+
+    let schoolData = null;
+
+    function getSchool() {
+      const schools = JSON.parse(localStorage.getItem('lvlbase_schools') || '[]');
+      return schools.find(s => s.id === user.schoolId) || null;
+    }
+
+    function getSchoolUsers() {
+      const users = JSON.parse(localStorage.getItem('lvlbase_all_users') || '[]');
+      return users.filter(u => u.schoolId === user.schoolId);
+    }
+
+    function getSchoolCheatReports() {
+      const reports = JSON.parse(localStorage.getItem('lvlbase_cheat_reports') || '[]');
+      return reports.filter(r => r.schoolId === user.schoolId);
+    }
+
+    function init() {
+      schoolData = getSchool();
+      if (!schoolData) {
+        lvlPopup.toast('School data not found. Please contact admin.', 'error');
+        return;
+      }
+
+      // Update sidebar
+      document.getElementById('sb-name').textContent = user.displayName || schoolData.adminName;
+      document.getElementById('sb-av').textContent = (user.displayName || 'SA').charAt(0).toUpperCase();
+
+      // Update status badge
+      const statusBadge = document.getElementById('school-status-badge');
+      if (schoolData.status === 'verified') {
+        statusBadge.textContent = '✅ Verified';
+        statusBadge.style.cssText = 'background:rgba(0,209,178,.15);color:#00D1B2;font-size:.8rem;font-weight:700;padding:.3rem .8rem;border-radius:10px';
+      } else {
+        statusBadge.textContent = '⏳ Pending Verification';
+        statusBadge.style.cssText = 'background:rgba(255,165,0,.15);color:#FFA500;font-size:.8rem;font-weight:700;padding:.3rem .8rem;border-radius:10px';
+        // Show locked popup
+        setTimeout(showPendingPopup, 500);
+      }
+
+      loadStats();
+      renderPending();
+      renderStudents();
+      renderTeachers();
+      renderParents();
+      renderCheatReports();
+      renderSettings();
+    }
+
+    function showPendingPopup() {
+      if (!schoolData) return;
+      const waMsg = `Hello Admin,\n\n*School Verification Request – lvlBase* 🏫\n\n🏫 School: ${schoolData.name}\n👤 Principal: ${schoolData.principal}\n👨‍💼 Admin: ${schoolData.adminName}\n📍 ${schoolData.address}, ${schoolData.city}, ${schoolData.state} - ${schoolData.pincode}\n📞 ${schoolData.phone}\n📧 ${schoolData.email}\n\nPlease verify this school in the admin panel.\nThank you!`;
+      const waLink = `https://wa.me/919258837596?text=${encodeURIComponent(waMsg)}`;
+
+      lvlPopup.show({
+        type: 'warning',
+        icon: '⏳',
+        title: 'Pending Admin Verification',
+        message: `Your school <strong style="color:#E8E8FF">${schoolData.name}</strong> is awaiting verification by the platform admin.<br><br>All dashboard actions are locked until verified. Tap WhatsApp to contact the admin and speed up the process.`,
+        dismissable: true,
+        buttons: [
+          { label: '💬 Message Admin on WhatsApp', style: 'whatsapp', href: waLink, target: '_blank' },
+          { label: 'Dismiss', style: 'ghost', action: 'close' }
+        ]
+      });
+    }
+
+    function isLocked() {
+      const s = getSchool();
+      return !s || s.status !== 'verified';
+    }
+
+    function requireUnlocked(fn) {
+      if (isLocked()) { showPendingPopup(); return; }
+      fn();
+    }
+
+    function loadStats() {
+      const su = getSchoolUsers();
+      document.getElementById('st-count').textContent = su.filter(u => u.role === 'student').length;
+      document.getElementById('tc-count').textContent = su.filter(u => u.role === 'teacher').length;
+      document.getElementById('pa-count').textContent = su.filter(u => u.role === 'parent').length;
+      const pending = su.filter(u => u.status === 'pending').length;
+      document.getElementById('pend-count').textContent = pending;
+      const pb = document.getElementById('pending-count-badge');
+      pb.textContent = pending > 0 ? pending : '';
+
+      // Recent pending
+      const recentPending = su.filter(u => u.status === 'pending').slice(0, 5);
+      const rpl = document.getElementById('recent-pending-list');
+      if (recentPending.length === 0) {
+        rpl.innerHTML = '<div style="color:var(--text-muted);font-size:.84rem">No pending signups.</div>';
+      } else {
+        rpl.innerHTML = recentPending.map(u => `
+          <div class="user-row">
+            <div class="user-av">${u.displayName.charAt(0)}</div>
+            <div class="user-info">
+              <div class="user-name">${u.displayName}</div>
+              <div class="user-meta">${u.role} • ${u.email}</div>
+            </div>
+            <div class="action-btns">
+              <button class="btn-xs btn-approve" onclick="approveUser('${u.uid}')">✓</button>
+              <button class="btn-xs btn-reject" onclick="rejectUser('${u.uid}')">✗</button>
+            </div>
+          </div>
+        `).join('');
+      }
+
+      // Cheat reports
+      const reports = getSchoolCheatReports();
+      const rcl = document.getElementById('recent-cheat-list');
+      if (reports.length === 0) {
+        rcl.innerHTML = '<div style="color:var(--text-muted);font-size:.84rem">No cheat reports.</div>';
+      } else {
+        rcl.innerHTML = reports.slice(0, 5).map(r => `
+          <div class="user-row">
+            <div style="font-size:1.2rem">⚠️</div>
+            <div class="user-info">
+              <div class="user-name">${r.studentName}</div>
+              <div class="user-meta">${r.examName || 'Exam'} • ${r.warnings} warning(s)</div>
+            </div>
+            <span class="badge ${r.terminated ? 'badge-rejected' : 'badge-pending'}">${r.terminated ? 'Terminated' : 'Warning'}</span>
+          </div>
+        `).join('');
+      }
+    }
+
+    function renderPending() {
+      const su = getSchoolUsers().filter(u => u.status === 'pending');
+      const tbody = document.getElementById('pending-tbody');
+      if (su.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;color:var(--text-muted);padding:1.5rem">No pending users.</td></tr>';
+        return;
+      }
+      tbody.innerHTML = su.map(u => `
+        <tr>
+          <td><strong>${u.displayName}</strong></td>
+          <td style="color:var(--text-muted)">${u.email}</td>
+          <td><span class="badge badge-pending">${u.role}</span></td>
+          <td style="color:var(--text-muted);font-size:.78rem">${new Date(u.createdAt).toLocaleDateString('en-IN')}</td>
+          <td>
+            <div class="action-btns">
+              <button class="btn-xs btn-approve" onclick="approveUser('${u.uid}')">✓ Approve</button>
+              <button class="btn-xs btn-reject" onclick="rejectUser('${u.uid}')">✗ Reject</button>
+            </div>
+          </td>
+        </tr>
+      `).join('');
+    }
+
+    function renderStudents(search = '') {
+      const su = getSchoolUsers().filter(u => u.role === 'student' && u.status === 'approved');
+      const filtered = search ? su.filter(u => (u.displayName + u.email).toLowerCase().includes(search.toLowerCase())) : su;
+      const tbody = document.getElementById('students-tbody');
+      if (filtered.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;color:var(--text-muted);padding:1.5rem">No students found.</td></tr>';
+        return;
+      }
+      tbody.innerHTML = filtered.map(u => `
+        <tr>
+          <td><strong>${u.displayName}</strong></td>
+          <td style="color:var(--text-muted)">${u.email}</td>
+          <td>Grade ${u.grade || '-'}</td>
+          <td>${u.guild ? u.guild.charAt(0).toUpperCase() + u.guild.slice(1) : '-'}</td>
+          <td style="color:var(--accent)">⚡ ${u.totalXP || 0}</td>
+          <td><span class="badge badge-approved">Active</span></td>
+          <td style="color:var(--text-muted);font-size:.78rem">${new Date(u.createdAt).toLocaleDateString('en-IN')}</td>
+        </tr>
+      `).join('');
+    }
+
+    function renderTeachers() {
+      const su = getSchoolUsers().filter(u => u.role === 'teacher');
+      const tbody = document.getElementById('teachers-tbody');
+      if (su.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;color:var(--text-muted);padding:1.5rem">No teachers yet.</td></tr>';
+        return;
+      }
+      tbody.innerHTML = su.map(u => `
+        <tr>
+          <td><strong>${u.displayName}</strong></td>
+          <td style="color:var(--text-muted)">${u.email}</td>
+          <td>${u.subject || '-'}</td>
+          <td style="color:var(--text-muted)">${u.qualification || '-'}</td>
+          <td><span class="badge ${u.status === 'approved' ? 'badge-approved' : 'badge-pending'}">${u.status}</span></td>
+          <td style="color:var(--text-muted);font-size:.78rem">${new Date(u.createdAt).toLocaleDateString('en-IN')}</td>
+          <td>
+            ${u.status === 'pending' ? `<div class="action-btns"><button class="btn-xs btn-approve" onclick="approveUser('${u.uid}')">✓</button><button class="btn-xs btn-reject" onclick="rejectUser('${u.uid}')">✗</button></div>` : ''}
+          </td>
+        </tr>
+      `).join('');
+    }
+
+    function renderParents() {
+      const su = getSchoolUsers().filter(u => u.role === 'parent');
+      const tbody = document.getElementById('parents-tbody');
+      if (su.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;color:var(--text-muted);padding:1.5rem">No parents yet.</td></tr>';
+        return;
+      }
+      tbody.innerHTML = su.map(u => `
+        <tr>
+          <td><strong>${u.displayName}</strong></td>
+          <td style="color:var(--text-muted)">${u.email}</td>
+          <td style="color:var(--text-muted)">${u.studentEmail || '-'}</td>
+          <td><span class="badge ${u.status === 'approved' ? 'badge-approved' : 'badge-pending'}">${u.status}</span></td>
+          <td style="color:var(--text-muted);font-size:.78rem">${new Date(u.createdAt).toLocaleDateString('en-IN')}</td>
+          <td>
+            ${u.status === 'pending' ? `<div class="action-btns"><button class="btn-xs btn-approve" onclick="approveUser('${u.uid}')">✓</button><button class="btn-xs btn-reject" onclick="rejectUser('${u.uid}')">✗</button></div>` : ''}
+          </td>
+        </tr>
+      `).join('');
+    }
+
+    function renderCheatReports() {
+      const reports = getSchoolCheatReports();
+      const tbody = document.getElementById('cheat-tbody');
+      if (reports.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;color:var(--text-muted);padding:1.5rem">No cheat reports.</td></tr>';
+        return;
+      }
+      tbody.innerHTML = reports.map(r => `
+        <tr>
+          <td><strong>${r.studentName}</strong><div style="font-size:.75rem;color:var(--text-muted)">${r.studentEmail}</div></td>
+          <td>${r.examName || 'General Quiz'}</td>
+          <td style="color:var(--warning)">${r.warnings}/2</td>
+          <td><span class="badge ${r.terminated ? 'badge-rejected' : 'badge-pending'}">${r.terminated ? 'Yes – Exam Over' : 'No'}</span></td>
+          <td style="color:var(--text-muted);font-size:.78rem">${new Date(r.date).toLocaleDateString('en-IN')}</td>
+          <td>
+            <button class="btn-xs btn-approve" onclick="allowRetake('${r.id}')">Allow Retake</button>
+          </td>
+        </tr>
+      `).join('');
+    }
+
+    function renderSettings() {
+      if (!schoolData) return;
+      const s = schoolData;
+      document.getElementById('settings-card').innerHTML = `
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;font-size:.88rem">
+          <div><div style="color:var(--text-muted);margin-bottom:.2rem">School Name</div><strong>${s.name}</strong></div>
+          <div><div style="color:var(--text-muted);margin-bottom:.2rem">Principal</div><strong>${s.principal}</strong></div>
+          <div><div style="color:var(--text-muted);margin-bottom:.2rem">City</div><strong>${s.city}</strong></div>
+          <div><div style="color:var(--text-muted);margin-bottom:.2rem">State</div><strong>${s.state}</strong></div>
+          <div><div style="color:var(--text-muted);margin-bottom:.2rem">Phone</div><strong>${s.phone}</strong></div>
+          <div><div style="color:var(--text-muted);margin-bottom:.2rem">Email</div><strong>${s.email}</strong></div>
+          ${s.website ? `<div><div style="color:var(--text-muted);margin-bottom:.2rem">Website</div><strong>${s.website}</strong></div>` : ''}
+          <div><div style="color:var(--text-muted);margin-bottom:.2rem">Status</div><span class="badge ${s.status === 'verified' ? 'badge-approved' : 'badge-pending'}">${s.status}</span></div>
+          <div><div style="color:var(--text-muted);margin-bottom:.2rem">Registered</div><strong>${new Date(s.createdAt).toLocaleDateString('en-IN')}</strong></div>
+        </div>
+      `;
+    }
+
+    function approveUser(uid) {
+      requireUnlocked(() => {
+        lvlPopup.confirm('Approve User', 'Are you sure you want to approve this user? They will gain access to their dashboard immediately.', { confirmLabel: '✓ Approve', confirmStyle: 'success' }).then(confirmed => {
+          if (!confirmed) return;
+          updateUserStatus(uid, 'approved');
+          lvlPopup.toast('User approved! ✅', 'success');
+          refresh();
+        });
+      });
+    }
+
+    function rejectUser(uid) {
+      requireUnlocked(() => {
+        lvlPopup.confirm('Reject User', 'Are you sure you want to reject this user? They will not be able to access the platform.', { confirmLabel: '✗ Reject', confirmStyle: 'danger', type: 'error' }).then(confirmed => {
+          if (!confirmed) return;
+          updateUserStatus(uid, 'rejected');
+          lvlPopup.toast('User rejected.', 'warning');
+          refresh();
+        });
+      });
+    }
+
+    function allowRetake(reportId) {
+      requireUnlocked(() => {
+        lvlPopup.confirm('Allow Retake', 'Allow this student to retake the exam?', { confirmLabel: 'Allow Retake', confirmStyle: 'success' }).then(confirmed => {
+          if (!confirmed) return;
+          const reports = JSON.parse(localStorage.getItem('lvlbase_cheat_reports') || '[]');
+          const idx = reports.findIndex(r => r.id === reportId);
+          if (idx !== -1) { reports[idx].retakeAllowed = true; reports[idx].terminated = false; reports[idx].warnings = 0; localStorage.setItem('lvlbase_cheat_reports', JSON.stringify(reports)); }
+          lvlPopup.toast('Retake allowed! ✅', 'success');
+          refresh();
+        });
+      });
+    }
+
+    function updateUserStatus(uid, status) {
+      const users = JSON.parse(localStorage.getItem('lvlbase_all_users') || '[]');
+      const idx = users.findIndex(u => u.uid === uid);
+      if (idx !== -1) { users[idx].status = status; localStorage.setItem('lvlbase_all_users', JSON.stringify(users)); }
+    }
+
+    function refresh() {
+      loadStats();
+      renderPending();
+      renderStudents();
+      renderTeachers();
+      renderParents();
+      renderCheatReports();
+    }
+
+    function showSection(id, el) {
+      document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+      document.getElementById('section-' + id).classList.add('active');
+      document.querySelectorAll('.sidebar-nav a').forEach(a => a.classList.remove('active'));
+      if (el) el.classList.add('active');
+      const titles = { overview:'📊 Overview', pending:'⏳ Pending Approvals', students:'🎓 Students', teachers:'👨‍🏫 Teachers', parents:'👨‍👩‍👧 Parents', tests:'📝 Tests & Exams', 'cheat-reports':'⚠️ Cheat Reports', settings:'⚙️ Settings' };
+      document.getElementById('topbar-title').textContent = titles[id] || id;
+    }
+
+    function doLogout() {
+      lvlPopup.confirm('Logout', 'Are you sure you want to logout?', { confirmLabel: 'Logout', confirmStyle: 'danger' }).then(c => {
+        if (c) { localStorage.removeItem('lvlbase_current_user'); localStorage.removeItem('lvlbase_user_profile'); window.location.href = 'login.html'; }
+      });
+    }
+
+    // Hamburger
+    document.getElementById('hamburger').addEventListener('click', () => {
+      document.getElementById('sidebar').classList.toggle('open');
+    });
+
+    init();
+  </script>
+</body>
+</html>
