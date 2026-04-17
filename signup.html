@@ -207,21 +207,20 @@
 
     if (_googleMode && _googleUid) {
       // Pre-fill name and email, hide password and Google button
-      document.addEventListener('DOMContentLoaded', function() {
-        const nameEl = document.getElementById('full-name');
-        const emailEl = document.getElementById('email');
-        if (nameEl) nameEl.value = _googleName || '';
-        if (emailEl) { emailEl.value = _googleEmail || ''; emailEl.disabled = true; }
-        // Hide password field since Google handles auth
-        const pwdEl = document.getElementById('password');
-        if (pwdEl) {
-          pwdEl.closest('.form-group').style.display = 'none';
-          pwdEl.value = 'google_auth_placeholder'; // prevents "required" block
-        }
-        // Hide Google signup button since already signed in with Google
-        const gBtn = document.getElementById('google-signup-section');
-        if (gBtn) gBtn.style.display = 'none';
-      });
+      // (Script is at end of body — DOM is already loaded, run immediately)
+      const nameEl = document.getElementById('full-name');
+      const emailEl = document.getElementById('email');
+      if (nameEl) nameEl.value = _googleName || '';
+      if (emailEl) { emailEl.value = _googleEmail || ''; emailEl.disabled = true; }
+      // Hide password field since Google handles auth
+      const pwdEl = document.getElementById('password');
+      if (pwdEl) {
+        pwdEl.closest('.form-group').style.display = 'none';
+        pwdEl.value = 'google_auth_placeholder'; // prevents "required" block
+      }
+      // Hide Google signup button since already signed in with Google
+      const gBtn = document.getElementById('google-signup-section');
+      if (gBtn) gBtn.style.display = 'none';
     }
 
     function selectRole(role) {
