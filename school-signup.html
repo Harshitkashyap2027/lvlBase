@@ -229,7 +229,9 @@
         formData.phone = document.getElementById('school-phone').value.trim();
         formData.email = document.getElementById('school-email').value.trim();
         formData.adminEmail = document.getElementById('admin-email').value.trim();
-        formData.adminPassword = document.getElementById('admin-password').value;
+        // Password is validated but NOT stored - only used for login hash
+        const rawPw = document.getElementById('admin-password').value;
+        formData._pwLen = rawPw.length; // store only length for validation reference
       }
     }
 
@@ -274,7 +276,6 @@
             website: formData.website || '',
             totalStudents: formData.totalStudents || '',
             adminEmail: formData.adminEmail,
-            adminPassword: formData.adminPassword,
             adminName: formData.adminName,
             status: 'pending',
             createdAt: new Date().toISOString(),

@@ -378,17 +378,17 @@
       }
       tbody.innerHTML = filtered.map(s => `
         <tr>
-          <td><div style="font-weight:600">${s.name}</div><div style="font-size:.75rem;color:var(--text-muted)">${s.totalStudents ? s.totalStudents+' students' : ''}</div></td>
-          <td>${s.principal}</td>
-          <td style="font-size:.82rem;color:var(--text-muted)">${s.city}, ${s.state}</td>
-          <td style="font-size:.82rem">${s.phone}</td>
-          <td style="font-size:.8rem;color:var(--text-muted)">${s.adminEmail}</td>
+          <td><div style="font-weight:600">${esc(s.name)}</div><div style="font-size:.75rem;color:var(--text-muted)">${s.totalStudents ? esc(s.totalStudents)+' students' : ''}</div></td>
+          <td>${esc(s.principal)}</td>
+          <td style="font-size:.82rem;color:var(--text-muted)">${esc(s.city)}, ${esc(s.state)}</td>
+          <td style="font-size:.82rem">${esc(s.phone)}</td>
+          <td style="font-size:.8rem;color:var(--text-muted)">${esc(s.adminEmail)}</td>
           <td><span style="display:inline-flex;align-items:center;padding:.25rem .6rem;border-radius:8px;font-size:.72rem;font-weight:700;background:${s.status==='verified'?'rgba(0,209,178,.15)':s.status==='rejected'?'rgba(255,68,68,.12)':'rgba(255,165,0,.15)'};color:${s.status==='verified'?'var(--success)':s.status==='rejected'?'var(--danger)':'var(--warning)'}">${s.status==='verified'?'✅ Verified':s.status==='rejected'?'❌ Rejected':'⏳ Pending'}</span></td>
           <td style="font-size:.78rem;color:var(--text-muted)">${new Date(s.createdAt).toLocaleDateString('en-IN')}</td>
           <td>
             <div class="action-btn-group">
-              ${s.status !== 'verified' ? `<button class="admin-action-btn action-view" onclick="verifySchool('${s.id}')" style="color:var(--success)">✓ Verify</button>` : ''}
-              ${s.status !== 'rejected' ? `<button class="admin-action-btn action-ban" onclick="rejectSchool('${s.id}')">✗ Reject</button>` : ''}
+              ${s.status !== 'verified' ? `<button class="admin-action-btn action-view" onclick="verifySchool('${esc(s.id)}')" style="color:var(--success)">✓ Verify</button>` : ''}
+              ${s.status !== 'rejected' ? `<button class="admin-action-btn action-ban" onclick="rejectSchool('${esc(s.id)}')">✗ Reject</button>` : ''}
             </div>
           </td>
         </tr>
@@ -403,7 +403,13 @@
     function doVerifySchool(id) {
       const schools = JSON.parse(localStorage.getItem('lvlbase_schools') || '[]');
       const idx = schools.findIndex(s => s.id === id);
-      if (idx !== -1) { schools[idx].status = 'verified'; schools[idx].verifiedAt = new Date().toISOString(); localStorage.setItem('lvlbase_schools', JSON.stringify(schools)); }
+      if (idx !== -1) {
+        schools[idx].status = 'verified';
+        schools[idx].verifiedAt = new Date().toISOString();
+        // Ensure no plaintext password is stored
+        delete schools[idx].adminPassword;
+        localStorage.setItem('lvlbase_schools', JSON.stringify(schools));
+      }
       showToast('School verified! ✅', 'success');
       addTimelineAction('School verified: ' + (schools[idx] ? schools[idx].name : id));
       renderSchoolsTable();
@@ -418,7 +424,12 @@
     function doRejectSchool(id) {
       const schools = JSON.parse(localStorage.getItem('lvlbase_schools') || '[]');
       const idx = schools.findIndex(s => s.id === id);
-      if (idx !== -1) { schools[idx].status = 'rejected'; localStorage.setItem('lvlbase_schools', JSON.stringify(schools)); }
+      if (idx !== -1) {
+        schools[idx].status = 'rejected';
+        // Ensure no plaintext password is stored
+        delete schools[idx].adminPassword;
+        localStorage.setItem('lvlbase_schools', JSON.stringify(schools));
+      }
       showToast('School rejected.', 'warning');
       renderSchoolsTable();
       updatePendingBadges();
@@ -431,11 +442,17 @@
       sel.innerHTML = '<option value="">All Schools</option>' + schools.map(s => `<option value="${s.id}">${s.name}</option>`).join('');
     }
 
+    // HTML escape helper to prevent XSS
+    function esc(str) {
+      if (str == null) return '';
+      return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+    }
+
     function renderUserApprovals() {
       const schoolFilter = document.getElementById('ua-school-filter') ? document.getElementById('ua-school-filter').value : '';
       const roleFilter = document.getElementById('ua-role-filter') ? document.getElementById('ua-role-filter').value : '';
       const schools = JSON.parse(localStorage.getItem('lvlbase_schools') || '[]');
-      const getSchoolName = id => { const s = schools.find(s => s.id === id); return s ? s.name : (id ? id.slice(0,12)+'…' : '–'); };
+      const getSchoolName = id => { const s = schools.find(s => s.id === id); return s ? esc(s.name) : (id ? esc(id.slice(0,12))+'…' : '–'); };
       let users = JSON.parse(localStorage.getItem('lvlbase_all_users') || '[]');
       if (schoolFilter) users = users.filter(u => u.schoolId === schoolFilter);
       if (roleFilter) users = users.filter(u => u.role === roleFilter);
@@ -447,14 +464,14 @@
       }
       tbody.innerHTML = users.map(u => `
         <tr>
-          <td><strong>${u.displayName}</strong></td>
-          <td style="font-size:.82rem;color:var(--text-muted)">${u.email}</td>
-          <td><span style="display:inline-flex;align-items:center;padding:.2rem .55rem;border-radius:8px;font-size:.72rem;font-weight:700;background:rgba(108,99,255,.15);color:var(--primary)">${u.role}</span></td>
+          <td><strong>${esc(u.displayName)}</strong></td>
+          <td style="font-size:.82rem;color:var(--text-muted)">${esc(u.email)}</td>
+          <td><span style="display:inline-flex;align-items:center;padding:.2rem .55rem;border-radius:8px;font-size:.72rem;font-weight:700;background:rgba(108,99,255,.15);color:var(--primary)">${esc(u.role)}</span></td>
           <td style="font-size:.82rem">${getSchoolName(u.schoolId)}</td>
-          <td><span style="display:inline-flex;align-items:center;padding:.2rem .55rem;border-radius:8px;font-size:.72rem;font-weight:700;background:${u.status==='approved'?'rgba(0,209,178,.12)':u.status==='rejected'?'rgba(255,68,68,.12)':'rgba(255,165,0,.15)'};color:${u.status==='approved'?'var(--success)':u.status==='rejected'?'var(--danger)':'var(--warning)'}">${u.status}</span></td>
+          <td><span style="display:inline-flex;align-items:center;padding:.2rem .55rem;border-radius:8px;font-size:.72rem;font-weight:700;background:${u.status==='approved'?'rgba(0,209,178,.12)':u.status==='rejected'?'rgba(255,68,68,.12)':'rgba(255,165,0,.15)'};color:${u.status==='approved'?'var(--success)':u.status==='rejected'?'var(--danger)':'var(--warning)'}">${esc(u.status)}</span></td>
           <td style="font-size:.78rem;color:var(--text-muted)">${new Date(u.createdAt).toLocaleDateString('en-IN')}</td>
           <td><div class="action-btn-group">
-            ${u.status === 'pending' ? `<button class="admin-action-btn action-view" onclick="adminApproveUser('${u.uid}')" style="color:var(--success)">✓ Approve</button><button class="admin-action-btn action-ban" onclick="adminRejectUser('${u.uid}')">✗ Reject</button>` : ''}
+            ${u.status === 'pending' ? `<button class="admin-action-btn action-view" onclick="adminApproveUser('${esc(u.uid)}')" style="color:var(--success)">✓ Approve</button><button class="admin-action-btn action-ban" onclick="adminRejectUser('${esc(u.uid)}')">✗ Reject</button>` : ''}
           </div></td>
         </tr>
       `).join('');

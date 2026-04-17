@@ -262,6 +262,12 @@
 
     let schoolData = null;
 
+    // HTML escape to prevent XSS when rendering user-supplied data via innerHTML
+    function esc(str) {
+      if (str == null) return '';
+      return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+    }
+
     function getSchool() {
       const schools = JSON.parse(localStorage.getItem('lvlbase_schools') || '[]');
       return schools.find(s => s.id === user.schoolId) || null;
@@ -355,14 +361,14 @@
       } else {
         rpl.innerHTML = recentPending.map(u => `
           <div class="user-row">
-            <div class="user-av">${u.displayName.charAt(0)}</div>
+            <div class="user-av">${esc(u.displayName.charAt(0))}</div>
             <div class="user-info">
-              <div class="user-name">${u.displayName}</div>
-              <div class="user-meta">${u.role} • ${u.email}</div>
+              <div class="user-name">${esc(u.displayName)}</div>
+              <div class="user-meta">${esc(u.role)} • ${esc(u.email)}</div>
             </div>
             <div class="action-btns">
-              <button class="btn-xs btn-approve" onclick="approveUser('${u.uid}')">✓</button>
-              <button class="btn-xs btn-reject" onclick="rejectUser('${u.uid}')">✗</button>
+              <button class="btn-xs btn-approve" onclick="approveUser('${esc(u.uid)}')">✓</button>
+              <button class="btn-xs btn-reject" onclick="rejectUser('${esc(u.uid)}')">✗</button>
             </div>
           </div>
         `).join('');
@@ -378,8 +384,8 @@
           <div class="user-row">
             <div style="font-size:1.2rem">⚠️</div>
             <div class="user-info">
-              <div class="user-name">${r.studentName}</div>
-              <div class="user-meta">${r.examName || 'Exam'} • ${r.warnings} warning(s)</div>
+              <div class="user-name">${esc(r.studentName)}</div>
+              <div class="user-meta">${esc(r.examName || 'Exam')} • ${esc(String(r.warnings))} warning(s)</div>
             </div>
             <span class="badge ${r.terminated ? 'badge-rejected' : 'badge-pending'}">${r.terminated ? 'Terminated' : 'Warning'}</span>
           </div>
@@ -396,14 +402,14 @@
       }
       tbody.innerHTML = su.map(u => `
         <tr>
-          <td><strong>${u.displayName}</strong></td>
-          <td style="color:var(--text-muted)">${u.email}</td>
-          <td><span class="badge badge-pending">${u.role}</span></td>
+          <td><strong>${esc(u.displayName)}</strong></td>
+          <td style="color:var(--text-muted)">${esc(u.email)}</td>
+          <td><span class="badge badge-pending">${esc(u.role)}</span></td>
           <td style="color:var(--text-muted);font-size:.78rem">${new Date(u.createdAt).toLocaleDateString('en-IN')}</td>
           <td>
             <div class="action-btns">
-              <button class="btn-xs btn-approve" onclick="approveUser('${u.uid}')">✓ Approve</button>
-              <button class="btn-xs btn-reject" onclick="rejectUser('${u.uid}')">✗ Reject</button>
+              <button class="btn-xs btn-approve" onclick="approveUser('${esc(u.uid)}')">✓ Approve</button>
+              <button class="btn-xs btn-reject" onclick="rejectUser('${esc(u.uid)}')">✗ Reject</button>
             </div>
           </td>
         </tr>
@@ -420,11 +426,11 @@
       }
       tbody.innerHTML = filtered.map(u => `
         <tr>
-          <td><strong>${u.displayName}</strong></td>
-          <td style="color:var(--text-muted)">${u.email}</td>
-          <td>Grade ${u.grade || '-'}</td>
-          <td>${u.guild ? u.guild.charAt(0).toUpperCase() + u.guild.slice(1) : '-'}</td>
-          <td style="color:var(--accent)">⚡ ${u.totalXP || 0}</td>
+          <td><strong>${esc(u.displayName)}</strong></td>
+          <td style="color:var(--text-muted)">${esc(u.email)}</td>
+          <td>Grade ${esc(u.grade || '-')}</td>
+          <td>${u.guild ? esc(u.guild.charAt(0).toUpperCase() + u.guild.slice(1)) : '-'}</td>
+          <td style="color:var(--accent)">⚡ ${esc(String(u.totalXP || 0))}</td>
           <td><span class="badge badge-approved">Active</span></td>
           <td style="color:var(--text-muted);font-size:.78rem">${new Date(u.createdAt).toLocaleDateString('en-IN')}</td>
         </tr>
@@ -440,14 +446,14 @@
       }
       tbody.innerHTML = su.map(u => `
         <tr>
-          <td><strong>${u.displayName}</strong></td>
-          <td style="color:var(--text-muted)">${u.email}</td>
-          <td>${u.subject || '-'}</td>
-          <td style="color:var(--text-muted)">${u.qualification || '-'}</td>
-          <td><span class="badge ${u.status === 'approved' ? 'badge-approved' : 'badge-pending'}">${u.status}</span></td>
+          <td><strong>${esc(u.displayName)}</strong></td>
+          <td style="color:var(--text-muted)">${esc(u.email)}</td>
+          <td>${esc(u.subject || '-')}</td>
+          <td style="color:var(--text-muted)">${esc(u.qualification || '-')}</td>
+          <td><span class="badge ${u.status === 'approved' ? 'badge-approved' : 'badge-pending'}">${esc(u.status)}</span></td>
           <td style="color:var(--text-muted);font-size:.78rem">${new Date(u.createdAt).toLocaleDateString('en-IN')}</td>
           <td>
-            ${u.status === 'pending' ? `<div class="action-btns"><button class="btn-xs btn-approve" onclick="approveUser('${u.uid}')">✓</button><button class="btn-xs btn-reject" onclick="rejectUser('${u.uid}')">✗</button></div>` : ''}
+            ${u.status === 'pending' ? `<div class="action-btns"><button class="btn-xs btn-approve" onclick="approveUser('${esc(u.uid)}')">✓</button><button class="btn-xs btn-reject" onclick="rejectUser('${esc(u.uid)}')">✗</button></div>` : ''}
           </td>
         </tr>
       `).join('');
@@ -462,13 +468,13 @@
       }
       tbody.innerHTML = su.map(u => `
         <tr>
-          <td><strong>${u.displayName}</strong></td>
-          <td style="color:var(--text-muted)">${u.email}</td>
-          <td style="color:var(--text-muted)">${u.studentEmail || '-'}</td>
-          <td><span class="badge ${u.status === 'approved' ? 'badge-approved' : 'badge-pending'}">${u.status}</span></td>
+          <td><strong>${esc(u.displayName)}</strong></td>
+          <td style="color:var(--text-muted)">${esc(u.email)}</td>
+          <td style="color:var(--text-muted)">${esc(u.studentEmail || '-')}</td>
+          <td><span class="badge ${u.status === 'approved' ? 'badge-approved' : 'badge-pending'}">${esc(u.status)}</span></td>
           <td style="color:var(--text-muted);font-size:.78rem">${new Date(u.createdAt).toLocaleDateString('en-IN')}</td>
           <td>
-            ${u.status === 'pending' ? `<div class="action-btns"><button class="btn-xs btn-approve" onclick="approveUser('${u.uid}')">✓</button><button class="btn-xs btn-reject" onclick="rejectUser('${u.uid}')">✗</button></div>` : ''}
+            ${u.status === 'pending' ? `<div class="action-btns"><button class="btn-xs btn-approve" onclick="approveUser('${esc(u.uid)}')">✓</button><button class="btn-xs btn-reject" onclick="rejectUser('${esc(u.uid)}')">✗</button></div>` : ''}
           </td>
         </tr>
       `).join('');
@@ -483,13 +489,13 @@
       }
       tbody.innerHTML = reports.map(r => `
         <tr>
-          <td><strong>${r.studentName}</strong><div style="font-size:.75rem;color:var(--text-muted)">${r.studentEmail}</div></td>
-          <td>${r.examName || 'General Quiz'}</td>
-          <td style="color:var(--warning)">${r.warnings}/2</td>
+          <td><strong>${esc(r.studentName)}</strong><div style="font-size:.75rem;color:var(--text-muted)">${esc(r.studentEmail)}</div></td>
+          <td>${esc(r.examName || 'General Quiz')}</td>
+          <td style="color:var(--warning)">${esc(String(r.warnings))}/2</td>
           <td><span class="badge ${r.terminated ? 'badge-rejected' : 'badge-pending'}">${r.terminated ? 'Yes – Exam Over' : 'No'}</span></td>
           <td style="color:var(--text-muted);font-size:.78rem">${new Date(r.date).toLocaleDateString('en-IN')}</td>
           <td>
-            <button class="btn-xs btn-approve" onclick="allowRetake('${r.id}')">Allow Retake</button>
+            <button class="btn-xs btn-approve" onclick="allowRetake('${esc(r.id)}')">Allow Retake</button>
           </td>
         </tr>
       `).join('');
@@ -500,14 +506,14 @@
       const s = schoolData;
       document.getElementById('settings-card').innerHTML = `
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;font-size:.88rem">
-          <div><div style="color:var(--text-muted);margin-bottom:.2rem">School Name</div><strong>${s.name}</strong></div>
-          <div><div style="color:var(--text-muted);margin-bottom:.2rem">Principal</div><strong>${s.principal}</strong></div>
-          <div><div style="color:var(--text-muted);margin-bottom:.2rem">City</div><strong>${s.city}</strong></div>
-          <div><div style="color:var(--text-muted);margin-bottom:.2rem">State</div><strong>${s.state}</strong></div>
-          <div><div style="color:var(--text-muted);margin-bottom:.2rem">Phone</div><strong>${s.phone}</strong></div>
-          <div><div style="color:var(--text-muted);margin-bottom:.2rem">Email</div><strong>${s.email}</strong></div>
-          ${s.website ? `<div><div style="color:var(--text-muted);margin-bottom:.2rem">Website</div><strong>${s.website}</strong></div>` : ''}
-          <div><div style="color:var(--text-muted);margin-bottom:.2rem">Status</div><span class="badge ${s.status === 'verified' ? 'badge-approved' : 'badge-pending'}">${s.status}</span></div>
+          <div><div style="color:var(--text-muted);margin-bottom:.2rem">School Name</div><strong>${esc(s.name)}</strong></div>
+          <div><div style="color:var(--text-muted);margin-bottom:.2rem">Principal</div><strong>${esc(s.principal)}</strong></div>
+          <div><div style="color:var(--text-muted);margin-bottom:.2rem">City</div><strong>${esc(s.city)}</strong></div>
+          <div><div style="color:var(--text-muted);margin-bottom:.2rem">State</div><strong>${esc(s.state)}</strong></div>
+          <div><div style="color:var(--text-muted);margin-bottom:.2rem">Phone</div><strong>${esc(s.phone)}</strong></div>
+          <div><div style="color:var(--text-muted);margin-bottom:.2rem">Email</div><strong>${esc(s.email)}</strong></div>
+          ${s.website ? `<div><div style="color:var(--text-muted);margin-bottom:.2rem">Website</div><strong>${esc(s.website)}</strong></div>` : ''}
+          <div><div style="color:var(--text-muted);margin-bottom:.2rem">Status</div><span class="badge ${s.status === 'verified' ? 'badge-approved' : 'badge-pending'}">${esc(s.status)}</span></div>
           <div><div style="color:var(--text-muted);margin-bottom:.2rem">Registered</div><strong>${new Date(s.createdAt).toLocaleDateString('en-IN')}</strong></div>
         </div>
       `;

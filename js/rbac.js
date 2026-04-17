@@ -25,9 +25,8 @@ const KEYS = {
   LEGACY_PROFILE: 'lvlbase_user_profile'
 };
 
-// ── ADMIN credentials (platform super admin) ──
+// ── Admin contact (platform super admin) ──
 const ADMIN_EMAIL = 'admin@lvlbase.com';
-const ADMIN_PASSWORD = 'admin123';
 const ADMIN_WHATSAPP = '919258837596';
 
 // ── Helpers ──
@@ -138,7 +137,7 @@ export function registerUser(data) {
   if (existing) throw new Error('Email already registered');
 
   const user = {
-    uid: 'user_' + Date.now() + '_' + Math.random().toString(36).slice(2, 7),
+    uid: 'user_' + Date.now() + '_' + (typeof crypto !== 'undefined' && crypto.randomUUID ? crypto.randomUUID().slice(0, 8) : Date.now().toString(36)),
     email: data.email.toLowerCase().trim(),
     displayName: data.displayName,
     role: data.role,
