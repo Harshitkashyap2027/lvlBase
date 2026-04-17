@@ -908,7 +908,7 @@
       getAllSchools().forEach(function(s){var o=document.createElement('option');o.value=s.id;o.textContent=s.name;sel.appendChild(o);});
     }
     if(schoolF)students=students.filter(function(u){return u.schoolId===schoolF;});
-    if(_lbSearch)students=students.filter(function(u){return (u.displayName+u.email).toLowerCase().includes(_lbSearch.toLowerCase());});
+    if(_lbSearch){var lbQ=_lbSearch.toLowerCase();students=students.filter(function(u){return (u.displayName+u.email).toLowerCase().includes(lbQ);});}
     students.sort(function(a,b){return (b.totalXP||0)-(a.totalXP||0);});
     document.getElementById('lb-total').textContent=students.length;
     document.getElementById('lb-topxp').textContent=students.length?(students[0].totalXP||0).toLocaleString():0;
