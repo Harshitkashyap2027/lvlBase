@@ -1,0 +1,385 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Assign Tasks – lvlBase</title>
+  <link rel="stylesheet" href="css/main.css" />
+  <link rel="stylesheet" href="css/dashboard.css" />
+  <style>
+    :root {
+      --primary: #6C63FF;
+      --card-bg: #1A1A2E;
+      --dark-bg: #0A0A1A;
+      --text-light: #E8E8FF;
+      --text-muted: #8892A4;
+      --success: #00D1B2;
+      --secondary: #FF6B6B;
+      --accent: #FFD700;
+      --danger: #FF4444;
+      --warning: #FFA500;
+      --border: rgba(108,99,255,0.18);
+      --sidebar-w: 260px;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body { background: var(--dark-bg); color: var(--text-light); font-family: 'Segoe UI', system-ui, sans-serif; display: flex; min-height: 100vh; }
+
+    /* ── Sidebar ── */
+    .sidebar { width: var(--sidebar-w); min-height: 100vh; background: var(--card-bg); border-right: 1px solid var(--border); display: flex; flex-direction: column; position: fixed; top: 0; left: 0; z-index: 200; transition: transform .3s; }
+    .sidebar-brand { padding: 22px 20px 16px; border-bottom: 1px solid var(--border); }
+    .sidebar-brand h2 { font-size: 1.4rem; color: var(--primary); letter-spacing: 1px; }
+    .sidebar-brand span { font-size: .75rem; color: var(--text-muted); }
+    .sidebar-user { padding: 16px 20px; display: flex; align-items: center; gap: 10px; border-bottom: 1px solid var(--border); }
+    .sidebar-user .avatar { width: 38px; height: 38px; border-radius: 50%; background: var(--primary); display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: .9rem; flex-shrink: 0; }
+    .sidebar-user .info .name { font-size: .85rem; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .sidebar-user .info .role { font-size: .72rem; color: var(--success); }
+    .sidebar-nav { flex: 1; padding: 12px 0; overflow-y: auto; }
+    .sidebar-nav a { display: flex; align-items: center; gap: 10px; padding: 11px 20px; color: var(--text-muted); text-decoration: none; font-size: .88rem; transition: background .2s, color .2s; border-left: 3px solid transparent; }
+    .sidebar-nav a:hover { background: rgba(108,99,255,.1); color: var(--text-light); }
+    .sidebar-nav a.active { background: rgba(108,99,255,.15); color: var(--primary); border-left-color: var(--primary); font-weight: 600; }
+    .sidebar-nav a .icon { font-size: 1.1rem; width: 20px; text-align: center; }
+    .sidebar-bottom { padding: 14px 20px; border-top: 1px solid var(--border); }
+    .sidebar-bottom a { display: flex; align-items: center; gap: 10px; color: var(--danger); text-decoration: none; font-size: .88rem; cursor: pointer; }
+
+    /* ── Layout ── */
+    .main-wrap { margin-left: var(--sidebar-w); flex: 1; display: flex; flex-direction: column; min-height: 100vh; }
+    .navbar { background: var(--card-bg); border-bottom: 1px solid var(--border); padding: 0 24px; height: 60px; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 100; }
+    .navbar-brand { font-size: 1.2rem; font-weight: 700; color: var(--primary); display: none; }
+    .hamburger { display: none; background: none; border: none; cursor: pointer; flex-direction: column; gap: 5px; padding: 4px; }
+    .hamburger span { display: block; width: 24px; height: 2px; background: var(--text-light); border-radius: 2px; }
+    .content { padding: 28px; flex: 1; }
+    .page-title { font-size: 1.6rem; font-weight: 700; margin-bottom: 24px; }
+
+    /* ── Card ── */
+    .card { background: var(--card-bg); border: 1px solid var(--border); border-radius: 16px; padding: 24px; margin-bottom: 24px; }
+    .card h3 { font-size: 1.05rem; margin-bottom: 18px; color: var(--text-light); }
+
+    /* ── Form ── */
+    .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+    .form-group { display: flex; flex-direction: column; gap: 6px; }
+    .form-group.full { grid-column: 1 / -1; }
+    .form-group label { font-size: .82rem; color: var(--text-muted); font-weight: 600; }
+    .form-group input, .form-group select, .form-group textarea {
+      background: rgba(255,255,255,.04); border: 1px solid var(--border); border-radius: 10px;
+      padding: 10px 14px; color: var(--text-light); font-size: .88rem; outline: none;
+      transition: border-color .2s; font-family: inherit;
+    }
+    .form-group input:focus, .form-group select:focus, .form-group textarea:focus { border-color: var(--primary); }
+    .form-group textarea { resize: vertical; min-height: 80px; }
+    .form-group select option { background: var(--card-bg); }
+    .radio-group { display: flex; gap: 20px; align-items: center; padding: 8px 0; }
+    .radio-group label { display: flex; align-items: center; gap: 8px; font-size: .88rem; color: var(--text-light); cursor: pointer; }
+    .btn { padding: 10px 22px; border-radius: 10px; font-size: .88rem; font-weight: 600; cursor: pointer; border: none; transition: opacity .2s, transform .1s; }
+    .btn:active { transform: scale(.97); }
+    .btn-primary { background: var(--primary); color: #fff; }
+    .btn-primary:hover { opacity: .88; }
+    .btn-danger { background: var(--danger); color: #fff; }
+    .btn-danger:hover { opacity: .85; }
+    .btn-sm { padding: 5px 12px; font-size: .78rem; }
+
+    /* ── Filter pills ── */
+    .filter-pills { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 16px; }
+    .pill { padding: 6px 16px; border-radius: 20px; font-size: .8rem; font-weight: 600; cursor: pointer; border: 1px solid var(--border); background: transparent; color: var(--text-muted); transition: all .2s; }
+    .pill.active, .pill:hover { background: var(--primary); color: #fff; border-color: var(--primary); }
+
+    /* ── Task list ── */
+    .task-item { background: rgba(255,255,255,.03); border: 1px solid var(--border); border-radius: 12px; padding: 16px; margin-bottom: 12px; cursor: pointer; transition: border-color .2s; }
+    .task-item:hover { border-color: var(--primary); }
+    .task-header { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+    .task-title { font-size: .95rem; font-weight: 600; flex: 1; min-width: 0; }
+    .badge { padding: 3px 10px; border-radius: 10px; font-size: .73rem; font-weight: 700; }
+    .badge-subject { background: rgba(108,99,255,.15); color: var(--primary); border: 1px solid var(--border); }
+    .badge-points { background: rgba(255,215,0,.12); color: var(--accent); border: 1px solid rgba(255,215,0,.25); }
+    .badge-active { background: rgba(0,209,178,.12); color: var(--success); border: 1px solid rgba(0,209,178,.25); }
+    .badge-expired { background: rgba(255,68,68,.12); color: var(--danger); border: 1px solid rgba(255,68,68,.25); }
+    .badge-completed { background: rgba(108,99,255,.12); color: var(--primary); border: 1px solid var(--border); }
+    .task-meta { display: flex; gap: 14px; align-items: center; margin-top: 10px; flex-wrap: wrap; }
+    .task-meta span { font-size: .78rem; color: var(--text-muted); }
+    .progress-wrap { flex: 1; min-width: 120px; }
+    .progress-label { display: flex; justify-content: space-between; font-size: .75rem; color: var(--text-muted); margin-bottom: 4px; }
+    .prog-bg { height: 6px; background: rgba(255,255,255,.06); border-radius: 4px; overflow: hidden; }
+    .prog-fill { height: 100%; background: var(--success); border-radius: 4px; transition: width .6s; }
+    .task-expand { display: none; margin-top: 14px; padding-top: 14px; border-top: 1px solid var(--border); }
+    .task-expand.open { display: block; }
+    .completion-list { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px; }
+    .completion-chip { background: rgba(0,209,178,.1); color: var(--success); border: 1px solid rgba(0,209,178,.2); padding: 3px 10px; border-radius: 10px; font-size: .78rem; }
+    .task-actions { display: flex; gap: 8px; margin-top: 10px; justify-content: flex-end; }
+    .empty-state { text-align: center; padding: 40px; color: var(--text-muted); font-size: .9rem; }
+
+    /* ── Toast ── */
+    .toast-container { position: fixed; bottom: 24px; right: 24px; z-index: 9999; display: flex; flex-direction: column; gap: 10px; }
+    .toast { background: var(--card-bg); border: 1px solid var(--border); border-radius: 10px; padding: 12px 20px; font-size: .85rem; color: var(--text-light); box-shadow: 0 4px 20px rgba(0,0,0,.4); display: flex; align-items: center; gap: 10px; animation: slideIn .3s ease; min-width: 220px; }
+    .toast.success { border-left: 4px solid var(--success); }
+    .toast.error { border-left: 4px solid var(--danger); }
+    @keyframes slideIn { from { transform: translateX(60px); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+    .sidebar-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,.55); z-index: 190; }
+
+    @media (max-width: 768px) {
+      .sidebar { transform: translateX(-100%); }
+      .sidebar.open { transform: translateX(0); }
+      .sidebar-overlay.visible { display: block; }
+      .main-wrap { margin-left: 0; }
+      .navbar-brand { display: block; }
+      .hamburger { display: flex; }
+      .content { padding: 14px; }
+      .form-grid { grid-template-columns: 1fr; }
+      .task-header { gap: 6px; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="sidebar-overlay" id="sidebarOverlay" onclick="closeSidebar()"></div>
+
+<aside class="sidebar" id="sidebar">
+  <div class="sidebar-brand">
+    <h2>lvlBase ⚡</h2>
+    <span>Teacher Portal</span>
+  </div>
+  <div class="sidebar-user">
+    <div class="avatar" id="sidebarAvatar">T</div>
+    <div class="info">
+      <div class="name" id="sidebarName">Teacher</div>
+      <div class="role">Teacher</div>
+    </div>
+  </div>
+  <nav class="sidebar-nav">
+    <a href="teacher-dashboard.html"><span class="icon">📊</span> Overview</a>
+    <a href="teacher-dashboard.html#students"><span class="icon">👥</span> My Students</a>
+    <a href="teacher-tasks.html" class="active"><span class="icon">📋</span> Assign Tasks</a>
+    <a href="teacher-tests.html"><span class="icon">📝</span> Tests</a>
+    <a href="teacher-reports.html"><span class="icon">📈</span> Reports</a>
+    <a href="communication.html"><span class="icon">💬</span> Chat</a>
+    <a href="settings.html"><span class="icon">⚙️</span> Settings</a>
+  </nav>
+  <div class="sidebar-bottom">
+    <a onclick="logout()"><span class="icon">🚪</span> Logout</a>
+  </div>
+</aside>
+
+<div class="main-wrap">
+  <nav class="navbar">
+    <div style="display:flex;align-items:center;gap:12px;">
+      <button class="hamburger" onclick="toggleSidebar()"><span></span><span></span><span></span></button>
+      <span class="navbar-brand">lvlBase ⚡</span>
+    </div>
+    <div style="display:flex;align-items:center;gap:14px;">
+      <span style="background:rgba(108,99,255,.15);color:var(--primary);border:1px solid var(--border);border-radius:20px;padding:4px 12px;font-size:.8rem;font-weight:600;">🏫 Teacher</span>
+    </div>
+  </nav>
+
+  <div class="content">
+    <div class="page-title">📋 Task Management</div>
+
+    <!-- Create Task -->
+    <div class="card">
+      <h3>➕ Create New Task</h3>
+      <form id="taskForm" onsubmit="saveTask(event)">
+        <div class="form-grid">
+          <div class="form-group">
+            <label>Task Title *</label>
+            <input type="text" id="taskTitle" placeholder="e.g. Algebra Chapter 3 Practice" required />
+          </div>
+          <div class="form-group">
+            <label>Subject *</label>
+            <select id="taskSubject" required>
+              <option value="">Select subject…</option>
+              <option value="Mathematics">Mathematics</option>
+              <option value="Science">Science</option>
+              <option value="English">English</option>
+              <option value="Mixed">Mixed</option>
+            </select>
+          </div>
+          <div class="form-group full">
+            <label>Description</label>
+            <textarea id="taskDesc" placeholder="Describe the task, instructions, resources…"></textarea>
+          </div>
+          <div class="form-group">
+            <label>Due Date *</label>
+            <input type="date" id="taskDue" required />
+          </div>
+          <div class="form-group">
+            <label>Points / XP Reward</label>
+            <input type="number" id="taskPoints" placeholder="100" min="0" max="9999" />
+          </div>
+          <div class="form-group full">
+            <label>Assign To</label>
+            <div class="radio-group">
+              <label><input type="radio" name="assignTo" value="all" checked /> All Students</label>
+              <label><input type="radio" name="assignTo" value="selected" /> Selected Students</label>
+            </div>
+          </div>
+        </div>
+        <div style="margin-top:18px;">
+          <button type="submit" class="btn btn-primary">📤 Assign Task</button>
+        </div>
+      </form>
+    </div>
+
+    <!-- Active Tasks -->
+    <div class="card">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
+        <h3 style="margin:0;">📌 Active Tasks</h3>
+        <span id="taskCount" style="font-size:.8rem;color:var(--text-muted);"></span>
+      </div>
+      <div class="filter-pills">
+        <button class="pill active" onclick="filterTasks('all',this)">All</button>
+        <button class="pill" onclick="filterTasks('active',this)">Active</button>
+        <button class="pill" onclick="filterTasks('completed',this)">Completed</button>
+        <button class="pill" onclick="filterTasks('expired',this)">Expired</button>
+      </div>
+      <div id="taskList"></div>
+    </div>
+  </div>
+</div>
+
+<div class="toast-container" id="toastContainer"></div>
+
+<script>
+  // ── Auth Guard ──
+  (function() {
+    const u = JSON.parse(localStorage.getItem('lvlbase_role_user') || 'null');
+    if (!u || u.role !== 'teacher') window.location.href = 'portal-login.html';
+  })();
+
+  const user = JSON.parse(localStorage.getItem('lvlbase_role_user') || '{}');
+  const teacherName = user.name || user.username || 'Teacher';
+  document.getElementById('sidebarName').textContent = teacherName;
+  document.getElementById('sidebarAvatar').textContent = teacherName.charAt(0).toUpperCase();
+
+  const MOCK_TASKS = [
+    { id: 1001, title: 'Algebra Basics – Chapter 3', subject: 'Mathematics', description: 'Complete exercises 3.1 to 3.5 from the textbook.', dueDate: '2025-02-20', points: 150, assignTo: 'all', createdAt: '2025-01-15', completions: ['Alex Johnson','Maya Patel','Nina Walsh'], status: 'active' },
+    { id: 1002, title: 'Photosynthesis Lab Report', subject: 'Science', description: 'Write a 2-page lab report summarising the photosynthesis experiment.', dueDate: '2025-02-10', points: 200, assignTo: 'all', createdAt: '2025-01-18', completions: ['Nina Walsh','Sara Kim','Chris Lee','Maya Patel'], status: 'active' },
+    { id: 1003, title: 'Creative Writing: Short Story', subject: 'English', description: 'Write a 500-word short story on the theme of "adventure".', dueDate: '2025-01-30', points: 120, assignTo: 'all', createdAt: '2025-01-10', completions: ['Alex Johnson','Tom Rivera','Maya Patel','Sara Kim','Chris Lee','Nina Walsh'], status: 'expired' }
+  ];
+
+  let currentFilter = 'all';
+
+  function getTasks() {
+    let t = JSON.parse(localStorage.getItem('lvlbase_teacher_tasks') || '[]');
+    if (t.length === 0) {
+      t = MOCK_TASKS;
+      localStorage.setItem('lvlbase_teacher_tasks', JSON.stringify(t));
+    }
+    return t;
+  }
+
+  function saveTasks(arr) {
+    localStorage.setItem('lvlbase_teacher_tasks', JSON.stringify(arr));
+  }
+
+  function getStatus(task) {
+    if (task.status === 'completed') return 'completed';
+    const due = new Date(task.dueDate);
+    return due < new Date() ? 'expired' : 'active';
+  }
+
+  function renderTasks() {
+    const tasks = getTasks();
+    const filtered = currentFilter === 'all' ? tasks : tasks.filter(t => getStatus(t) === currentFilter);
+    document.getElementById('taskCount').textContent = `${filtered.length} task${filtered.length !== 1 ? 's' : ''}`;
+    const list = document.getElementById('taskList');
+    if (filtered.length === 0) {
+      list.innerHTML = `<div class="empty-state">No ${currentFilter === 'all' ? '' : currentFilter} tasks found.</div>`;
+      return;
+    }
+    list.innerHTML = filtered.map(task => {
+      const st = getStatus(task);
+      const total = 45;
+      const done = task.completions ? task.completions.length : 0;
+      const pct = Math.round((done / total) * 100);
+      const badgeClass = st === 'active' ? 'badge-active' : st === 'expired' ? 'badge-expired' : 'badge-completed';
+      const completionHtml = task.completions && task.completions.length
+        ? task.completions.map(n => `<span class="completion-chip">✅ ${n}</span>`).join('')
+        : '<span style="color:var(--text-muted);font-size:.82rem;">No completions yet.</span>';
+      return `
+        <div class="task-item" onclick="toggleExpand(${task.id})">
+          <div class="task-header">
+            <span class="task-title">${task.title}</span>
+            <span class="badge badge-subject">${task.subject}</span>
+            <span class="badge badge-points">⭐ ${task.points || 0} XP</span>
+            <span class="badge ${badgeClass}">${st.charAt(0).toUpperCase()+st.slice(1)}</span>
+          </div>
+          <div class="task-meta">
+            <span>📅 Due: ${task.dueDate}</span>
+            <span>👥 Assign: ${task.assignTo === 'all' ? 'All Students' : 'Selected'}</span>
+            <div class="progress-wrap">
+              <div class="progress-label"><span>Completions</span><span>${done}/${total}</span></div>
+              <div class="prog-bg"><div class="prog-fill" style="width:${pct}%"></div></div>
+            </div>
+          </div>
+          <div class="task-expand" id="expand-${task.id}">
+            <div style="font-size:.82rem;color:var(--text-muted);margin-bottom:6px;">${task.description || 'No description provided.'}</div>
+            <div style="font-size:.82rem;font-weight:600;margin-bottom:6px;">Students who completed:</div>
+            <div class="completion-list">${completionHtml}</div>
+            <div class="task-actions">
+              <button class="btn btn-danger btn-sm" onclick="deleteTask(event,${task.id})">🗑️ Delete</button>
+            </div>
+          </div>
+        </div>`;
+    }).join('');
+  }
+
+  function toggleExpand(id) {
+    const el = document.getElementById(`expand-${id}`);
+    if (el) el.classList.toggle('open');
+  }
+
+  function filterTasks(filter, btn) {
+    currentFilter = filter;
+    document.querySelectorAll('.pill').forEach(p => p.classList.remove('active'));
+    btn.classList.add('active');
+    renderTasks();
+  }
+
+  function saveTask(e) {
+    e.preventDefault();
+    const title = document.getElementById('taskTitle').value.trim();
+    const subject = document.getElementById('taskSubject').value;
+    const desc = document.getElementById('taskDesc').value.trim();
+    const dueDate = document.getElementById('taskDue').value;
+    const points = parseInt(document.getElementById('taskPoints').value) || 100;
+    const assignTo = document.querySelector('input[name="assignTo"]:checked').value;
+    const task = { id: Date.now(), title, subject, description: desc, dueDate, points, assignTo, createdAt: new Date().toISOString().split('T')[0], completions: [], status: 'active' };
+    const tasks = getTasks();
+    tasks.unshift(task);
+    saveTasks(tasks);
+    document.getElementById('taskForm').reset();
+    renderTasks();
+    showToast('Task assigned successfully! 🎉');
+  }
+
+  function deleteTask(e, id) {
+    e.stopPropagation();
+    if (!confirm('Delete this task?')) return;
+    const tasks = getTasks().filter(t => t.id !== id);
+    saveTasks(tasks);
+    renderTasks();
+    showToast('Task deleted.', 'error');
+  }
+
+  function toggleSidebar() {
+    document.getElementById('sidebar').classList.toggle('open');
+    document.getElementById('sidebarOverlay').classList.toggle('visible');
+  }
+  function closeSidebar() {
+    document.getElementById('sidebar').classList.remove('open');
+    document.getElementById('sidebarOverlay').classList.remove('visible');
+  }
+  function logout() {
+    localStorage.removeItem('lvlbase_role_user');
+    window.location.href = 'portal-login.html';
+  }
+  function showToast(msg, type = 'success') {
+    const c = document.getElementById('toastContainer');
+    const t = document.createElement('div');
+    t.className = `toast ${type}`;
+    t.innerHTML = `<span>${type === 'success' ? '✅' : '❌'}</span>${msg}`;
+    c.appendChild(t);
+    setTimeout(() => t.remove(), 3500);
+  }
+
+  renderTasks();
+</script>
+</body>
+</html>

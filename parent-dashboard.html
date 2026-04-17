@@ -6,189 +6,444 @@
   <title>Parent Dashboard – lvlBase ⚡</title>
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="css/main.css">
+  <link rel="stylesheet" href="css/dashboard.css">
+  <style>
+    .parent-sidebar .sidebar-link.active { color: var(--success); background: rgba(0,209,178,0.12); }
+    .child-profile-card {
+      background: linear-gradient(135deg, rgba(108,99,255,0.15), rgba(0,209,178,0.08));
+      border: 1px solid rgba(108,99,255,0.25);
+      border-radius: var(--radius-xl);
+      padding: 1.75rem;
+      margin-bottom: 1.5rem;
+      display: flex; align-items: center; gap: 1.5rem; flex-wrap: wrap;
+    }
+    .child-avatar {
+      width: 80px; height: 80px; border-radius: 50%;
+      background: linear-gradient(135deg, var(--primary), var(--secondary));
+      display: flex; align-items: center; justify-content: center;
+      font-size: 2rem; font-weight: 800; flex-shrink: 0;
+      border: 3px solid rgba(108,99,255,0.4);
+    }
+    .child-info { flex: 1; min-width: 200px; }
+    .child-name { font-size: 1.4rem; font-weight: 800; margin-bottom: 0.25rem; }
+    .child-meta { color: var(--text-muted); font-size: 0.85rem; margin-bottom: 0.75rem; }
+    .subject-progress-card {
+      background: var(--card-bg);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-lg);
+      padding: 1.25rem;
+      transition: var(--transition);
+    }
+    .subject-progress-card:hover { transform: translateY(-3px); box-shadow: var(--shadow); }
+    .subj-header { display: flex; align-items: center; gap: 0.6rem; margin-bottom: 0.75rem; }
+    .subj-icon { font-size: 1.5rem; }
+    .subj-name { font-weight: 700; font-size: 0.95rem; }
+    .subj-pct { font-size: 1.4rem; font-weight: 800; color: var(--primary); margin-bottom: 0.4rem; }
+    .activity-feed-item {
+      display: flex; align-items: center; gap: 0.85rem;
+      padding: 0.7rem 0; border-bottom: 1px solid var(--border-color);
+    }
+    .activity-feed-item:last-child { border-bottom: none; }
+    .act-icon { width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1rem; flex-shrink: 0; }
+    .act-text { flex: 1; font-size: 0.85rem; }
+    .act-time { font-size: 0.75rem; color: var(--text-muted); }
+    .ach-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(90px,1fr)); gap: 1rem; }
+    .ach-item { text-align: center; }
+    .ach-icon { font-size: 2rem; display: block; margin-bottom: 0.3rem; }
+    .ach-label { font-size: 0.72rem; color: var(--text-muted); }
+    .task-item {
+      display: flex; align-items: flex-start; gap: 0.85rem;
+      padding: 0.85rem; border-radius: var(--radius);
+      background: rgba(255,255,255,0.03); margin-bottom: 0.5rem;
+      border: 1px solid var(--border-color);
+    }
+    .task-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; margin-top: 0.3rem; }
+    .quick-actions-bar {
+      display: grid;
+      grid-template-columns: repeat(4,1fr);
+      gap: 0.75rem;
+      margin-bottom: 2rem;
+    }
+    .qa-btn {
+      display: flex; flex-direction: column; align-items: center; gap: 0.4rem;
+      padding: 1rem 0.5rem;
+      background: var(--card-bg); border: 1px solid var(--border-color);
+      border-radius: var(--radius-lg); cursor: pointer; transition: var(--transition);
+      color: var(--text-light); font-size: 0.8rem; font-weight: 600; text-align: center;
+      text-decoration: none;
+    }
+    .qa-btn:hover { transform: translateY(-3px); box-shadow: var(--shadow); border-color: var(--primary); color: var(--primary); }
+    .qa-btn span { font-size: 1.5rem; }
+    @media(max-width:768px){
+      .main-content { margin-left: 0 !important; }
+      .sidebar { transform: translateX(-100%); }
+      .sidebar.open { transform: translateX(0); }
+      .stats-grid { grid-template-columns: 1fr 1fr; }
+      .subjects-grid { grid-template-columns: 1fr !important; }
+      .quick-actions-bar { grid-template-columns: 1fr 1fr; }
+      .child-profile-card { flex-direction: column; text-align: center; }
+    }
+  </style>
 </head>
 <body>
+  <!-- NAVBAR -->
   <nav class="navbar">
     <a href="index.html" class="navbar-brand">lvlBase ⚡</a>
-    <div class="navbar-nav">
-      <a href="dashboard.html" class="nav-link">Student Dashboard</a>
-      <a href="parent-dashboard.html" class="nav-link active">Parent View</a>
-    </div>
     <div class="navbar-actions">
-      <a href="dashboard.html" class="btn btn-ghost btn-sm">← Back</a>
+      <span id="nav-parent-name" style="color:var(--success);font-weight:600;font-size:0.9rem">👨‍👩‍👧 Parent</span>
+      <button onclick="handleParentLogout()" class="btn btn-sm" style="background:rgba(255,68,68,0.15);color:var(--danger)">Logout</button>
     </div>
     <div class="hamburger" id="hamburger"><span></span><span></span><span></span></div>
   </nav>
 
-  <div class="page-wrapper">
-    <div class="container" style="padding-top:3rem;padding-bottom:3rem">
-      <div class="page-header">
-        <h1 class="page-title">👨‍👩‍👧 Parent Dashboard</h1>
-        <p class="page-subtitle">Monitor your child's learning journey</p>
+  <!-- MOBILE MENU -->
+  <div class="mobile-menu" id="mobile-menu">
+    <a href="parent-dashboard.html" class="nav-link active">Overview</a>
+    <a href="parent-analytics.html" class="nav-link">Analytics</a>
+    <a href="parent-complaints.html" class="nav-link">Complaints</a>
+    <a href="communication.html" class="nav-link">Messages</a>
+    <button onclick="handleParentLogout()" class="btn btn-danger btn-sm btn-full" style="margin-top:1rem">Logout</button>
+  </div>
+
+  <div class="dashboard-wrapper">
+    <!-- SIDEBAR -->
+    <aside class="sidebar parent-sidebar" id="sidebar">
+      <div class="sidebar-user">
+        <div style="display:flex;align-items:center;gap:0.75rem;margin-bottom:0.5rem">
+          <div class="avatar" id="parent-avatar" style="background:linear-gradient(135deg,#00D1B2,#00B89C)">P</div>
+          <div>
+            <div class="sidebar-user-name" id="parent-sidebar-name">Parent</div>
+            <div style="font-size:0.75rem;color:var(--success)">Parent Account</div>
+          </div>
+        </div>
       </div>
 
-      <!-- Child Profile -->
-      <div class="card mb-4" style="background:linear-gradient(135deg,rgba(108,99,255,0.1),var(--card-bg));border:1px solid var(--primary)">
-        <div style="display:flex;align-items:center;gap:1.5rem;flex-wrap:wrap">
-          <div class="avatar avatar-xl" id="child-avatar">??</div>
-          <div style="flex:1">
-            <h2 style="font-size:1.4rem;font-weight:800" id="child-name">Loading...</h2>
-            <div style="display:flex;align-items:center;gap:1rem;flex-wrap:wrap;margin-top:0.5rem">
-              <span id="child-rank"></span>
-              <span id="child-guild" style="font-size:0.85rem;color:var(--text-muted)"></span>
-              <span id="child-streak" style="font-size:0.85rem;color:var(--accent)"></span>
+      <nav class="sidebar-nav">
+        <div class="sidebar-label">Monitoring</div>
+        <a href="parent-dashboard.html" class="sidebar-link active"><span class="icon">🏠</span> Overview</a>
+        <a href="parent-analytics.html" class="sidebar-link"><span class="icon">📊</span> Analytics</a>
+        <a href="parent-analytics.html" class="sidebar-link"><span class="icon">📈</span> Reports</a>
+
+        <div class="sidebar-label">Communication</div>
+        <a href="parent-complaints.html" class="sidebar-link"><span class="icon">📋</span> Complaints</a>
+        <a href="communication.html" class="sidebar-link"><span class="icon">💬</span> Messages</a>
+
+        <div class="sidebar-label">Account</div>
+        <a href="settings.html" class="sidebar-link"><span class="icon">⚙️</span> Settings</a>
+        <a href="#" onclick="handleParentLogout()" class="sidebar-link" style="color:var(--danger)"><span class="icon">🚪</span> Logout</a>
+      </nav>
+    </aside>
+
+    <!-- MAIN CONTENT -->
+    <main class="main-content" id="main-content">
+
+      <!-- WELCOME CARD -->
+      <div class="welcome-card" style="background:linear-gradient(135deg,#00D1B2,#00B89C,#00957D);margin-bottom:2rem">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:1rem">
+          <div>
+            <h1 class="welcome-title" id="parent-welcome">👋 Welcome, Parent!</h1>
+            <p class="welcome-subtitle" id="parent-welcome-sub">Monitoring your child's learning journey</p>
+          </div>
+          <div style="display:flex;gap:0.75rem;flex-wrap:wrap">
+            <a href="parent-analytics.html" class="btn btn-sm" style="background:rgba(255,255,255,0.2);color:white">📊 Analytics</a>
+            <a href="parent-complaints.html" class="btn btn-sm" style="background:rgba(255,255,255,0.2);color:white">📋 Complaints</a>
+          </div>
+        </div>
+      </div>
+
+      <!-- STATS -->
+      <div class="stats-grid mb-3">
+        <div class="stat-card-dash">
+          <div class="stat-icon" style="background:rgba(108,99,255,0.15)">⚡</div>
+          <div class="stat-info">
+            <div class="value" id="stat-total-xp">0</div>
+            <div class="label">Total XP</div>
+            <div class="change change-up">↑ Keep going!</div>
+          </div>
+        </div>
+        <div class="stat-card-dash">
+          <div class="stat-icon" style="background:rgba(255,215,0,0.15)">🏆</div>
+          <div class="stat-info">
+            <div class="value" id="stat-rank">E</div>
+            <div class="label">Current Rank</div>
+            <div class="change" id="stat-rank-label" style="color:var(--accent)">E-Rank</div>
+          </div>
+        </div>
+        <div class="stat-card-dash">
+          <div class="stat-icon" style="background:rgba(255,107,107,0.15)">🔥</div>
+          <div class="stat-info">
+            <div class="value" id="stat-streak">0</div>
+            <div class="label">Day Streak</div>
+            <div class="change change-up">↑ Days active</div>
+          </div>
+        </div>
+        <div class="stat-card-dash">
+          <div class="stat-icon" style="background:rgba(0,209,178,0.15)">🎯</div>
+          <div class="stat-info">
+            <div class="value" id="stat-quizzes">0</div>
+            <div class="label">Quizzes Done</div>
+            <div class="change change-up">↑ Tests taken</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- CHILD PROFILE -->
+      <div class="child-profile-card">
+        <div class="child-avatar" id="child-avatar-el">?</div>
+        <div class="child-info">
+          <div class="child-name" id="child-name-el">Loading...</div>
+          <div class="child-meta" id="child-meta-el">Level • Guild • School</div>
+          <div style="display:flex;align-items:center;gap:0.75rem;flex-wrap:wrap;margin-bottom:0.5rem">
+            <span class="rank-badge rank-e" id="child-rank-badge">E-Rank</span>
+            <span class="badge badge-primary" id="child-guild-badge">No Guild</span>
+          </div>
+          <div style="margin-top:0.5rem">
+            <div style="display:flex;justify-content:space-between;font-size:0.8rem;color:var(--text-muted);margin-bottom:0.3rem">
+              <span>XP Progress</span>
+              <span id="child-xp-pct">0%</span>
             </div>
-            <div style="margin-top:0.75rem;max-width:300px">
-              <div style="display:flex;justify-content:space-between;font-size:0.8rem;margin-bottom:0.3rem">
-                <span>XP Progress</span>
-                <span id="child-xp-pct" style="color:var(--primary)">0%</span>
-              </div>
-              <div class="xp-bar-container"><div class="xp-bar" id="child-xp-bar" style="width:0%"></div></div>
+            <div class="xp-bar-container">
+              <div class="xp-bar" id="child-xp-bar" style="width:0%"></div>
+            </div>
+            <div style="display:flex;justify-content:space-between;font-size:0.75rem;color:var(--text-muted);margin-top:0.3rem">
+              <span id="child-xp-current">0 XP</span>
+              <span id="child-xp-next">Next rank</span>
             </div>
           </div>
-          <div style="display:flex;gap:1.5rem;flex-wrap:wrap;text-align:center">
-            <div><div style="font-size:1.8rem;font-weight:800;color:var(--primary)" id="p-totalXP">0</div><div style="font-size:0.75rem;color:var(--text-muted)">Total XP</div></div>
-            <div><div style="font-size:1.8rem;font-weight:800;color:var(--success)" id="p-quizzes">0</div><div style="font-size:0.75rem;color:var(--text-muted)">Quizzes Done</div></div>
-            <div><div style="font-size:1.8rem;font-weight:800;color:var(--accent)" id="p-streak">0</div><div style="font-size:0.75rem;color:var(--text-muted)">Day Streak</div></div>
-          </div>
         </div>
       </div>
 
-      <!-- Subject Progress -->
-      <div class="grid grid-3 mb-4">
-        <div class="card">
-          <h3 style="font-size:1rem;font-weight:700;margin-bottom:1rem;color:var(--primary)">📐 Mathematics</h3>
-          <div style="font-size:2rem;font-weight:800;margin-bottom:0.5rem" id="math-pct">0%</div>
-          <div class="progress-bar-bg"><div class="progress-bar" id="math-bar" style="background:#6C63FF;width:0%"></div></div>
-          <div style="font-size:0.8rem;color:var(--text-muted);margin-top:0.5rem" id="math-chapters">0 of 12 chapters</div>
-        </div>
-        <div class="card">
-          <h3 style="font-size:1rem;font-weight:700;margin-bottom:1rem;color:var(--success)">🔬 Science</h3>
-          <div style="font-size:2rem;font-weight:800;margin-bottom:0.5rem" id="sci-pct">0%</div>
-          <div class="progress-bar-bg"><div class="progress-bar" id="sci-bar" style="background:#00D1B2;width:0%"></div></div>
-          <div style="font-size:0.8rem;color:var(--text-muted);margin-top:0.5rem" id="sci-chapters">0 of 15 chapters</div>
-        </div>
-        <div class="card">
-          <h3 style="font-size:1rem;font-weight:700;margin-bottom:1rem;color:var(--secondary)">📚 English</h3>
-          <div style="font-size:2rem;font-weight:800;margin-bottom:0.5rem" id="eng-pct">0%</div>
-          <div class="progress-bar-bg"><div class="progress-bar" id="eng-bar" style="background:#FF6B6B;width:0%"></div></div>
-          <div style="font-size:0.8rem;color:var(--text-muted);margin-top:0.5rem" id="eng-chapters">0 of 10 chapters</div>
-        </div>
+      <!-- QUICK ACTIONS -->
+      <div class="quick-actions-bar mb-3">
+        <a href="parent-analytics.html" class="qa-btn"><span>📊</span>View Analytics</a>
+        <a href="parent-complaints.html" class="qa-btn"><span>📝</span>File Complaint</a>
+        <a href="communication.html" class="qa-btn"><span>💬</span>Send Message</a>
+        <a href="parent-analytics.html" class="qa-btn"><span>📋</span>Full Report</a>
       </div>
 
-      <!-- Activity & Achievements -->
-      <div class="grid grid-2 mb-4">
-        <!-- Recent Activity -->
-        <div class="card">
-          <h3 style="font-size:1rem;font-weight:700;margin-bottom:1rem">📋 Recent Activity</h3>
-          <div id="parent-activity"></div>
-        </div>
-        <!-- Achievements -->
-        <div class="card">
-          <h3 style="font-size:1rem;font-weight:700;margin-bottom:1rem">🏅 Achievements Unlocked</h3>
-          <div id="parent-achievements" style="display:flex;flex-wrap:wrap;gap:0.75rem"></div>
-          <div id="no-achievements" style="color:var(--text-muted);font-size:0.85rem;display:none">No achievements yet. Encourage them to complete quizzes!</div>
-        </div>
-      </div>
+      <!-- SUBJECT PROGRESS + ACTIVITY -->
+      <div class="dashboard-grid mb-3">
+        <div>
+          <div class="flex-between mb-2">
+            <h2 style="font-size:1.1rem;font-weight:700">📚 Subject Progress</h2>
+          </div>
+          <div class="subjects-grid" style="display:grid;grid-template-columns:repeat(3,1fr);gap:1rem">
+            <div class="subject-progress-card">
+              <div class="subj-header"><span class="subj-icon">🔢</span><span class="subj-name">Mathematics</span></div>
+              <div class="subj-pct" id="math-pct">72%</div>
+              <div class="progress-bar-bg"><div class="progress-bar progress-primary" id="math-bar" style="width:72%"></div></div>
+              <div style="font-size:0.78rem;color:var(--text-muted);margin-top:0.5rem">Algebra, Geometry, Calculus</div>
+            </div>
+            <div class="subject-progress-card">
+              <div class="subj-header"><span class="subj-icon">🔬</span><span class="subj-name">Science</span></div>
+              <div class="subj-pct" id="sci-pct">65%</div>
+              <div class="progress-bar-bg"><div class="progress-bar progress-success" id="sci-bar" style="width:65%"></div></div>
+              <div style="font-size:0.78rem;color:var(--text-muted);margin-top:0.5rem">Physics, Chemistry, Biology</div>
+            </div>
+            <div class="subject-progress-card">
+              <div class="subj-header"><span class="subj-icon">📝</span><span class="subj-name">English</span></div>
+              <div class="subj-pct" id="eng-pct">80%</div>
+              <div class="progress-bar-bg"><div class="progress-bar progress-warning" id="eng-bar" style="width:80%"></div></div>
+              <div style="font-size:0.78rem;color:var(--text-muted);margin-top:0.5rem">Grammar, Literature, Writing</div>
+            </div>
+          </div>
 
-      <!-- Tips for Parents -->
-      <div class="card" style="background:linear-gradient(135deg,rgba(0,209,178,0.08),rgba(108,99,255,0.08));border:1px solid rgba(0,209,178,0.2)">
-        <h3 style="font-size:1rem;font-weight:700;margin-bottom:1rem">💡 How to Support Your Child</h3>
-        <div class="grid grid-3">
-          <div>
-            <div style="font-size:1.5rem;margin-bottom:0.5rem">🎯</div>
-            <div style="font-weight:600;margin-bottom:0.3rem">Encourage Streaks</div>
-            <p style="font-size:0.85rem;color:var(--text-muted)">Celebrate daily login streaks. Consistent study beats cramming!</p>
+          <!-- Upcoming Tasks -->
+          <div class="card mt-3">
+            <div class="flex-between mb-2">
+              <h3 style="font-size:1rem;font-weight:700">📌 Upcoming Tasks</h3>
+              <span class="badge badge-warning" id="tasks-count">0 tasks</span>
+            </div>
+            <div id="tasks-list"></div>
           </div>
-          <div>
-            <div style="font-size:1.5rem;margin-bottom:0.5rem">🏆</div>
-            <div style="font-weight:600;margin-bottom:0.3rem">Celebrate Milestones</div>
-            <p style="font-size:0.85rem;color:var(--text-muted)">When they rank up or earn achievements, acknowledge their hard work!</p>
+        </div>
+
+        <!-- RIGHT COLUMN -->
+        <div>
+          <!-- Activity Feed -->
+          <div class="card mb-3">
+            <div class="flex-between mb-2">
+              <h3 style="font-size:1rem;font-weight:700">📋 Recent Activity</h3>
+            </div>
+            <div id="activity-feed-parent"></div>
           </div>
-          <div>
-            <div style="font-size:1.5rem;margin-bottom:0.5rem">📅</div>
-            <div style="font-weight:600;margin-bottom:0.3rem">Set Study Goals Together</div>
-            <p style="font-size:0.85rem;color:var(--text-muted)">Visit the Goals page together and set weekly learning targets.</p>
+
+          <!-- Achievements -->
+          <div class="card">
+            <div class="flex-between mb-2">
+              <h3 style="font-size:1rem;font-weight:700">🏅 Achievements</h3>
+              <span class="badge badge-primary" id="ach-count-parent">0</span>
+            </div>
+            <div class="ach-grid" id="ach-grid-parent"></div>
           </div>
         </div>
       </div>
-    </div>
+    </main>
   </div>
 
   <div id="toast-container" class="toast-container"></div>
 
   <script>
-    const RANKS = [
-      { id: 'E', label: 'E-Rank', minXP: 0 }, { id: 'D', label: 'D-Rank', minXP: 500 },
-      { id: 'C', label: 'C-Rank', minXP: 1500 }, { id: 'B', label: 'B-Rank', minXP: 3500 },
-      { id: 'A', label: 'A-Rank', minXP: 7000 }, { id: 'S', label: 'S-Rank', minXP: 15000 },
-      { id: 'SS', label: 'SS-Rank', minXP: 30000 }
-    ];
-    const GUILDS = { shadow:{name:'Shadow Guild',emoji:'🌙'}, azure:{name:'Azure Order',emoji:'💧'}, inferno:{name:'Inferno Legion',emoji:'🔥'}, titan:{name:'Titan Brotherhood',emoji:'⚡'}, zenith:{name:'Zenith Circle',emoji:'✨'} };
-    const ACHIEVEMENTS = [
-      { id:'first_quiz',emoji:'🎯',name:'First Quiz' }, { id:'streak_3',emoji:'🔥',name:'3-Day Streak' },
-      { id:'streak_7',emoji:'🌟',name:'Week Warrior' }, { id:'perfect_score',emoji:'💯',name:'Perfectionist' },
-      { id:'rank_up_d',emoji:'📈',name:'Rising Star' }, { id:'quiz_10',emoji:'📚',name:'Bookworm' },
-      { id:'battle_win',emoji:'⚔️',name:'Warrior' }, { id:'goal_complete',emoji:'🎯',name:'Goal Setter' },
-      { id:'xp_1000',emoji:'💫',name:'XP Hunter' }
-    ];
-
-    const profile = JSON.parse(localStorage.getItem('lvlbase_user_profile') || 'null');
-    if (!profile) {
-      document.getElementById('child-name').textContent = 'No student data found';
-    } else {
-      const rank = RANKS.slice().reverse().find(r => profile.totalXP >= r.minXP) || RANKS[0];
-      const nextRank = RANKS.find(r => r.minXP > profile.totalXP);
-      const progress = nextRank ? Math.round(((profile.totalXP - rank.minXP) / (nextRank.minXP - rank.minXP)) * 100) : 100;
-      const sp = profile.subjectProgress || { math: 0, science: 0, english: 0 };
-      const guild = GUILDS[profile.guild];
-
-      document.getElementById('child-avatar').textContent = (profile.displayName||'P').substring(0,2).toUpperCase();
-      document.getElementById('child-name').textContent = profile.displayName || 'Student';
-      document.getElementById('child-rank').innerHTML = `<span class="rank-badge rank-${rank.id.toLowerCase()}">${rank.label}</span>`;
-      document.getElementById('child-guild').textContent = guild ? `${guild.emoji} ${guild.name}` : 'No Guild';
-      document.getElementById('child-streak').textContent = `🔥 ${profile.streak || 0} Day Streak`;
-      document.getElementById('child-xp-bar').style.width = progress + '%';
-      document.getElementById('child-xp-pct').textContent = progress + '%';
-      document.getElementById('p-totalXP').textContent = profile.totalXP || 0;
-      document.getElementById('p-quizzes').textContent = profile.quizzesCompleted || 0;
-      document.getElementById('p-streak').textContent = profile.streak || 0;
-
-      // Subject progress
-      ['math','sci','eng'].forEach((id, i) => {
-        const keys = ['math','science','english'];
-        const totals = [12, 15, 10];
-        const pct = Math.round(sp[keys[i]] || 0);
-        document.getElementById(`${id}-pct`).textContent = pct + '%';
-        document.getElementById(`${id}-bar`).style.width = pct + '%';
-        document.getElementById(`${id}-chapters`).textContent = `${Math.floor(pct/100*totals[i])} of ${totals[i]} chapters`;
-      });
-
-      // Activity
-      const actEl = document.getElementById('parent-activity');
-      const quizH = JSON.parse(localStorage.getItem('lvlbase_quiz_history') || '[]');
-      const battleH = JSON.parse(localStorage.getItem('lvlbase_battle_history') || '[]');
-      const activities = [
-        ...quizH.slice(0,3).map(h => `<div class="activity-item"><div class="activity-icon" style="background:rgba(0,209,178,0.15)">🎯</div><div style="flex:1"><div style="font-size:0.85rem">Quiz: ${h.subject} – <strong style="color:${h.score>=80?'var(--success)':'var(--warning)'}">Score ${h.score}%</strong></div><div style="font-size:0.75rem;color:var(--text-muted)">${new Date(h.date).toLocaleDateString()}</div></div><span class="badge badge-success">+${h.xpEarned} XP</span></div>`),
-        ...battleH.slice(0,2).map(b => `<div class="activity-item"><div class="activity-icon" style="background:rgba(255,107,107,0.15)">⚔️</div><div style="flex:1"><div style="font-size:0.85rem">Battle: <strong style="color:${b.outcome==='win'?'var(--success)':'var(--danger)'}">${b.outcome.toUpperCase()}</strong> vs ${b.opponent}</div><div style="font-size:0.75rem;color:var(--text-muted)">${new Date(b.date).toLocaleDateString()}</div></div><span class="badge badge-success">+${b.xpEarned} XP</span></div>`)
-      ];
-      actEl.innerHTML = activities.length ? activities.join('') : '<div style="color:var(--text-muted);font-size:0.85rem">No activity recorded yet. Encourage them to start a quiz!</div>';
-
-      // Achievements
-      const unlocked = profile.achievements || [];
-      const achEl = document.getElementById('parent-achievements');
-      const displayed = ACHIEVEMENTS.filter(a => unlocked.includes(a.id));
-      if (displayed.length) {
-        achEl.innerHTML = displayed.map(a => `<div title="${a.name}" style="text-align:center;cursor:default"><div style="font-size:2rem">${a.emoji}</div><div style="font-size:0.7rem;color:var(--text-muted)">${a.name}</div></div>`).join('');
-      } else {
-        document.getElementById('no-achievements').style.display = 'block';
-        achEl.style.display = 'none';
-      }
+    // Auth guard
+    const roleUser = JSON.parse(localStorage.getItem('lvlbase_role_user') || 'null');
+    if (roleUser && roleUser.role !== 'parent') {
+      window.location.href = 'portal-login.html';
     }
 
-    document.getElementById('hamburger').addEventListener('click', () => {
-      document.getElementById('mobile-menu')?.classList.toggle('open');
+    const RANKS = [
+      { id:'E', label:'E-Rank', minXP:0, maxXP:500 },
+      { id:'D', label:'D-Rank', minXP:500, maxXP:1500 },
+      { id:'C', label:'C-Rank', minXP:1500, maxXP:3500 },
+      { id:'B', label:'B-Rank', minXP:3500, maxXP:7000 },
+      { id:'A', label:'A-Rank', minXP:7000, maxXP:15000 },
+      { id:'S', label:'S-Rank', minXP:15000, maxXP:30000 },
+      { id:'SS', label:'SS-Rank', minXP:30000, maxXP:Infinity }
+    ];
+
+    function getRank(xp) {
+      return RANKS.slice().reverse().find(r => xp >= r.minXP) || RANKS[0];
+    }
+
+    function init() {
+      const profile = JSON.parse(localStorage.getItem('lvlbase_user_profile') || 'null');
+      const parentName = roleUser ? roleUser.name : 'Parent';
+
+      // Update navbar
+      document.getElementById('nav-parent-name').textContent = '👨‍👩‍�� ' + parentName;
+      document.getElementById('parent-avatar').textContent = parentName.charAt(0).toUpperCase();
+      document.getElementById('parent-sidebar-name').textContent = parentName;
+      document.getElementById('parent-welcome').textContent = '👋 Welcome, ' + parentName + '!';
+
+      if (profile) {
+        const xp = profile.xp || 0;
+        const rank = getRank(xp);
+        const nextRank = RANKS[RANKS.indexOf(rank) + 1];
+        const pct = nextRank ? Math.round(((xp - rank.minXP) / (nextRank.minXP - rank.minXP)) * 100) : 100;
+
+        document.getElementById('parent-welcome-sub').textContent = 'Monitoring ' + profile.name + '\'s learning journey';
+        document.getElementById('stat-total-xp').textContent = xp.toLocaleString();
+        document.getElementById('stat-rank').textContent = rank.id;
+        document.getElementById('stat-rank-label').textContent = rank.label;
+        document.getElementById('stat-streak').textContent = profile.streak || 0;
+
+        // Quiz count
+        const qHistory = JSON.parse(localStorage.getItem('lvlbase_quiz_history') || '[]');
+        document.getElementById('stat-quizzes').textContent = qHistory.length;
+
+        // Child profile
+        const initials = profile.name.split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase();
+        document.getElementById('child-avatar-el').textContent = initials;
+        document.getElementById('child-name-el').textContent = profile.name;
+        document.getElementById('child-meta-el').textContent = 'Level ' + (profile.level||1) + ' • ' + (profile.guild||'No Guild') + ' • School';
+        document.getElementById('child-xp-current').textContent = xp.toLocaleString() + ' XP';
+        document.getElementById('child-xp-next').textContent = nextRank ? nextRank.minXP.toLocaleString() + ' XP' : 'Max!';
+        document.getElementById('child-xp-bar').style.width = pct + '%';
+        document.getElementById('child-xp-pct').textContent = pct + '%';
+
+        const rankBadge = document.getElementById('child-rank-badge');
+        rankBadge.textContent = rank.label;
+        rankBadge.className = 'rank-badge rank-' + rank.id.toLowerCase();
+
+        if (profile.guild) {
+          document.getElementById('child-guild-badge').textContent = '🏛️ ' + profile.guild;
+        }
+
+        // Subject progress from profile
+        const subjects = profile.subjects || {};
+        if (subjects.math !== undefined) {
+          document.getElementById('math-pct').textContent = subjects.math + '%';
+          document.getElementById('math-bar').style.width = subjects.math + '%';
+        }
+        if (subjects.science !== undefined) {
+          document.getElementById('sci-pct').textContent = subjects.science + '%';
+          document.getElementById('sci-bar').style.width = subjects.science + '%';
+        }
+        if (subjects.english !== undefined) {
+          document.getElementById('eng-pct').textContent = subjects.english + '%';
+          document.getElementById('eng-bar').style.width = subjects.english + '%';
+        }
+
+        // Achievements
+        const achievements = profile.achievements || [];
+        const achGrid = document.getElementById('ach-grid-parent');
+        const allAch = [
+          {icon:'🏆',name:'First Win'},{icon:'🔥',name:'Streak 7'},{icon:'⚡',name:'Speed Run'},
+          {icon:'🎯',name:'Perfect Score'},{icon:'📚',name:'Bookworm'},{icon:'⚔️',name:'Battler'}
+        ];
+        document.getElementById('ach-count-parent').textContent = achievements.length;
+        achGrid.innerHTML = allAch.map((a,i) => `
+          <div class="ach-item">
+            <span class="ach-icon" style="${i >= achievements.length ? 'filter:grayscale(1);opacity:0.35' : ''}">${a.icon}</span>
+            <div class="ach-label">${a.name}</div>
+          </div>
+        `).join('');
+      } else {
+        document.getElementById('child-name-el').textContent = 'No student linked';
+        document.getElementById('child-meta-el').textContent = 'Ask your child to log in first';
+      }
+
+      // Activity feed
+      const qHist = JSON.parse(localStorage.getItem('lvlbase_quiz_history') || '[]');
+      const bHist = JSON.parse(localStorage.getItem('lvlbase_battle_history') || '[]');
+      const activities = [
+        ...qHist.slice(-3).map(q => ({ icon:'🎯', bg:'rgba(108,99,255,0.15)', text: 'Completed quiz: ' + (q.subject||'Unknown'), time: q.date||'Recently' })),
+        ...bHist.slice(-2).map(b => ({ icon:'⚔️', bg:'rgba(255,107,107,0.15)', text: 'Battle ' + (b.result||'played'), time: b.date||'Recently' })),
+        { icon:'📚', bg:'rgba(0,209,178,0.15)', text: 'Studied Mathematics – Chapter 3', time: 'Today' },
+        { icon:'🏆', bg:'rgba(255,215,0,0.15)', text: 'Earned 50 XP for daily login', time: 'Today' },
+      ];
+      const feed = document.getElementById('activity-feed-parent');
+      feed.innerHTML = activities.slice(0,6).map(a => `
+        <div class="activity-feed-item">
+          <div class="act-icon" style="background:${a.bg}">${a.icon}</div>
+          <div class="act-text">${a.text}<div class="act-time">${a.time}</div></div>
+        </div>
+      `).join('') || '<p style="color:var(--text-muted);font-size:0.85rem;padding:0.5rem 0">No recent activity</p>';
+
+      // Tasks
+      const tasks = JSON.parse(localStorage.getItem('lvlbase_teacher_tasks') || '[]');
+      const mockTasks = [
+        { title: 'Complete Chapter 4 exercises', subject: 'Math', due: 'Tomorrow', priority: 'high' },
+        { title: 'Read pages 45–60', subject: 'English', due: 'This week', priority: 'medium' },
+        { title: 'Lab report submission', subject: 'Science', due: 'Friday', priority: 'low' },
+      ];
+      const allTasks = [...tasks, ...mockTasks].slice(0, 5);
+      document.getElementById('tasks-count').textContent = allTasks.length + ' tasks';
+      const colorMap = { high: 'var(--danger)', medium: 'var(--warning)', low: 'var(--success)' };
+      document.getElementById('tasks-list').innerHTML = allTasks.map(t => `
+        <div class="task-item">
+          <div class="task-dot" style="background:${colorMap[t.priority]||'var(--primary)'}"></div>
+          <div>
+            <div style="font-size:0.85rem;font-weight:600">${t.title}</div>
+            <div style="font-size:0.75rem;color:var(--text-muted)">${t.subject} • Due: ${t.due}</div>
+          </div>
+        </div>
+      `).join('') || '<p style="color:var(--text-muted);font-size:0.85rem">No tasks assigned</p>';
+    }
+
+    function handleParentLogout() {
+      localStorage.removeItem('lvlbase_role_user');
+      window.location.href = 'portal-login.html';
+    }
+
+    function showToast(msg, type='info') {
+      const tc = document.getElementById('toast-container');
+      const t = document.createElement('div');
+      t.className = `toast ${type}`;
+      t.textContent = msg;
+      tc.appendChild(t);
+      setTimeout(() => { t.classList.add('toast-hide'); setTimeout(() => t.remove(), 300); }, 3000);
+    }
+
+    // Hamburger
+    const hamburger = document.getElementById('hamburger');
+    const mobileMenu = document.getElementById('mobile-menu');
+    const sidebar = document.getElementById('sidebar');
+    hamburger.addEventListener('click', () => {
+      mobileMenu.classList.toggle('open');
+      sidebar.classList.toggle('open');
     });
+
+    init();
   </script>
 </body>
 </html>
