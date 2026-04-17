@@ -1,0 +1,373 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Portal Login – lvlBase ⚡</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/main.css">
+  <style>
+    .portal-hero {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-start;
+      padding: 2rem 1.5rem 4rem;
+      background: radial-gradient(ellipse at top, rgba(108,99,255,0.15) 0%, transparent 60%),
+                  var(--dark-bg);
+    }
+    .portal-brand {
+      font-size: 2.2rem;
+      font-weight: 900;
+      background: linear-gradient(135deg, var(--primary), var(--secondary));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      margin-bottom: 0.5rem;
+    }
+    .portal-tagline {
+      color: var(--text-muted);
+      font-size: 1rem;
+      margin-bottom: 0.75rem;
+    }
+    .portal-back {
+      color: var(--text-muted);
+      font-size: 0.85rem;
+      margin-bottom: 2.5rem;
+      transition: var(--transition);
+    }
+    .portal-back:hover { color: var(--primary); }
+    .portal-heading {
+      font-size: 1.8rem;
+      font-weight: 800;
+      text-align: center;
+      margin-bottom: 0.5rem;
+    }
+    .portal-sub {
+      color: var(--text-muted);
+      text-align: center;
+      margin-bottom: 2.5rem;
+      font-size: 0.95rem;
+    }
+    .roles-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 1.25rem;
+      width: 100%;
+      max-width: 900px;
+      margin-bottom: 1.25rem;
+    }
+    .roles-grid-row2 {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 1.25rem;
+      width: 100%;
+      max-width: 600px;
+    }
+    .role-card {
+      background: var(--card-bg);
+      border: 2px solid var(--border-color);
+      border-radius: var(--radius-xl);
+      padding: 2rem 1.5rem;
+      text-align: center;
+      cursor: pointer;
+      transition: var(--transition);
+      position: relative;
+      overflow: hidden;
+    }
+    .role-card::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      opacity: 0;
+      transition: opacity 0.3s ease;
+      border-radius: inherit;
+    }
+    .role-card:hover { transform: translateY(-6px); box-shadow: 0 20px 60px rgba(0,0,0,0.3); }
+    .role-card.selected {
+      transform: translateY(-6px);
+    }
+    /* Per-role gradients */
+    .role-student::before { background: linear-gradient(135deg, rgba(108,99,255,0.15), rgba(108,99,255,0.05)); }
+    .role-parent::before  { background: linear-gradient(135deg, rgba(0,209,178,0.15), rgba(0,209,178,0.05)); }
+    .role-teacher::before { background: linear-gradient(135deg, rgba(255,215,0,0.15), rgba(255,215,0,0.05)); }
+    .role-school::before  { background: linear-gradient(135deg, rgba(255,107,107,0.15), rgba(255,107,107,0.05)); }
+    .role-super::before   { background: linear-gradient(135deg, rgba(168,85,247,0.15), rgba(168,85,247,0.05)); }
+
+    .role-card.selected.role-student { border-color: var(--primary); box-shadow: 0 0 30px rgba(108,99,255,0.4); }
+    .role-card.selected.role-parent  { border-color: var(--success); box-shadow: 0 0 30px rgba(0,209,178,0.4); }
+    .role-card.selected.role-teacher { border-color: var(--accent);  box-shadow: 0 0 30px rgba(255,215,0,0.4); }
+    .role-card.selected.role-school  { border-color: var(--secondary); box-shadow: 0 0 30px rgba(255,107,107,0.4); }
+    .role-card.selected.role-super   { border-color: #A855F7; box-shadow: 0 0 30px rgba(168,85,247,0.4); }
+
+    .role-card::before, .role-card.selected::before { opacity: 1; }
+
+    .role-icon {
+      font-size: 3.5rem;
+      margin-bottom: 1rem;
+      display: block;
+      position: relative;
+      z-index: 1;
+    }
+    .role-name {
+      font-size: 1.2rem;
+      font-weight: 700;
+      margin-bottom: 0.4rem;
+      position: relative;
+      z-index: 1;
+    }
+    .role-desc {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      line-height: 1.5;
+      position: relative;
+      z-index: 1;
+    }
+    .role-arrow {
+      display: inline-block;
+      margin-top: 0.75rem;
+      font-size: 0.8rem;
+      font-weight: 600;
+      padding: 0.3rem 0.8rem;
+      border-radius: 20px;
+      position: relative;
+      z-index: 1;
+    }
+    .role-student .role-arrow { background: rgba(108,99,255,0.2); color: var(--primary); }
+    .role-parent .role-arrow  { background: rgba(0,209,178,0.2);   color: var(--success); }
+    .role-teacher .role-arrow { background: rgba(255,215,0,0.2);   color: var(--accent); }
+    .role-school .role-arrow  { background: rgba(255,107,107,0.2); color: var(--secondary); }
+    .role-super .role-arrow   { background: rgba(168,85,247,0.2);  color: #A855F7; }
+
+    /* Auth form slide-down */
+    .auth-form-wrapper {
+      width: 100%;
+      max-width: 480px;
+      overflow: hidden;
+      max-height: 0;
+      opacity: 0;
+      transition: max-height 0.4s ease, opacity 0.4s ease, margin 0.4s ease;
+      margin-top: 0;
+    }
+    .auth-form-wrapper.open {
+      max-height: 600px;
+      opacity: 1;
+      margin-top: 2rem;
+    }
+    .auth-form-card {
+      background: var(--card-bg);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-xl);
+      padding: 2rem;
+    }
+    .auth-form-title {
+      font-size: 1.2rem;
+      font-weight: 700;
+      margin-bottom: 1.5rem;
+      text-align: center;
+    }
+    .auth-form-group { margin-bottom: 1rem; }
+    .auth-form-label { display: block; font-size: 0.85rem; font-weight: 500; color: var(--text-muted); margin-bottom: 0.4rem; }
+    .auth-form-input {
+      width: 100%;
+      padding: 0.7rem 1rem;
+      background: rgba(255,255,255,0.05);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius);
+      color: var(--text-light);
+      font-size: 0.9rem;
+      font-family: var(--font);
+      transition: var(--transition);
+    }
+    .auth-form-input:focus {
+      outline: none;
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(108,99,255,0.2);
+    }
+    .auth-form-input::placeholder { color: var(--text-muted); }
+    .auth-btn {
+      width: 100%;
+      padding: 0.85rem;
+      border: none;
+      border-radius: var(--radius);
+      font-family: var(--font);
+      font-size: 1rem;
+      font-weight: 700;
+      cursor: pointer;
+      margin-top: 0.5rem;
+      transition: var(--transition);
+    }
+    .auth-btn:hover { transform: translateY(-2px); }
+
+    @media (max-width: 768px) {
+      .roles-grid { grid-template-columns: 1fr 1fr; }
+      .roles-grid-row2 { grid-template-columns: 1fr 1fr; max-width: 100%; }
+      .portal-heading { font-size: 1.4rem; }
+    }
+    @media (max-width: 480px) {
+      .roles-grid { grid-template-columns: 1fr; }
+      .roles-grid-row2 { grid-template-columns: 1fr; }
+      .role-card { padding: 1.5rem 1rem; }
+      .role-icon { font-size: 2.5rem; }
+    }
+  </style>
+</head>
+<body>
+  <div class="portal-hero">
+    <div class="portal-brand">lvlBase ⚡</div>
+    <div class="portal-tagline">Gamified Learning for Every Role</div>
+    <a href="index.html" class="portal-back">← Back to Home</a>
+
+    <h1 class="portal-heading">Who are you?</h1>
+    <p class="portal-sub">Select your role to get started with lvlBase</p>
+
+    <!-- ROW 1: 3 cards -->
+    <div class="roles-grid">
+      <div class="role-card role-student" onclick="selectRole('student')">
+        <span class="role-icon">🎓</span>
+        <div class="role-name">Student</div>
+        <div class="role-desc">Access your learning dashboard, quizzes, battles & more</div>
+        <span class="role-arrow">Enter Portal →</span>
+      </div>
+      <div class="role-card role-parent" onclick="selectRole('parent')">
+        <span class="role-icon">👨‍👩‍👧</span>
+        <div class="role-name">Parent</div>
+        <div class="role-desc">Monitor your child's progress, view analytics & communicate</div>
+        <span class="role-arrow">Sign In →</span>
+      </div>
+      <div class="role-card role-teacher" onclick="selectRole('teacher')">
+        <span class="role-icon">👨‍🏫</span>
+        <div class="role-name">Teacher</div>
+        <div class="role-desc">Manage classes, assign tasks & track student performance</div>
+        <span class="role-arrow">Sign In →</span>
+      </div>
+    </div>
+
+    <!-- ROW 2: 2 cards -->
+    <div class="roles-grid-row2">
+      <div class="role-card role-school" onclick="selectRole('school_admin')">
+        <span class="role-icon">🏫</span>
+        <div class="role-name">School Admin</div>
+        <div class="role-desc">Oversee school-wide metrics, teachers & students</div>
+        <span class="role-arrow">Sign In →</span>
+      </div>
+      <div class="role-card role-super" onclick="selectRole('super_admin')">
+        <span class="role-icon">👑</span>
+        <div class="role-name">Super Admin</div>
+        <div class="role-desc">Full platform control — manage schools, users & content</div>
+        <span class="role-arrow">Sign In →</span>
+      </div>
+    </div>
+
+    <!-- Auth Form (slides down for non-student roles) -->
+    <div class="auth-form-wrapper" id="auth-form-wrapper">
+      <div class="auth-form-card">
+        <div class="auth-form-title" id="auth-form-title">Sign In</div>
+        <div class="auth-form-group">
+          <label class="auth-form-label">Your Name</label>
+          <input type="text" class="auth-form-input" id="auth-name" placeholder="Enter your name">
+        </div>
+        <div class="auth-form-group">
+          <label class="auth-form-label">Email Address</label>
+          <input type="email" class="auth-form-input" id="auth-email" placeholder="your@email.com">
+        </div>
+        <div class="auth-form-group">
+          <label class="auth-form-label">Password</label>
+          <input type="password" class="auth-form-input" id="auth-password" placeholder="Enter your password">
+        </div>
+        <button class="auth-btn" id="auth-login-btn" onclick="handleLogin()">Login →</button>
+        <p style="text-align:center;color:var(--text-muted);font-size:0.78rem;margin-top:0.75rem">Demo mode: any credentials work ✓</p>
+      </div>
+    </div>
+  </div>
+
+  <div id="toast-container" class="toast-container"></div>
+
+  <script>
+    const ROLE_CONFIG = {
+      parent:      { label: 'Parent',       redirect: 'parent-dashboard.html',  btnColor: 'linear-gradient(135deg,#00D1B2,#00B89C)' },
+      teacher:     { label: 'Teacher',      redirect: 'teacher-dashboard.html', btnColor: 'linear-gradient(135deg,#FFD700,#FFA500)' },
+      school_admin:{ label: 'School Admin', redirect: 'school-dashboard.html',  btnColor: 'linear-gradient(135deg,#FF6B6B,#FF4444)' },
+      super_admin: { label: 'Super Admin',  redirect: 'admin/index.html',       btnColor: 'linear-gradient(135deg,#A855F7,#7C3AED)' },
+    };
+
+    let currentRole = null;
+
+    function selectRole(role) {
+      // Deselect all
+      document.querySelectorAll('.role-card').forEach(c => c.classList.remove('selected'));
+
+      if (role === 'student') {
+        currentRole = null;
+        closeAuthForm();
+        window.location.href = 'login.html';
+        return;
+      }
+
+      currentRole = role;
+      // Mark selected
+      const map = { parent: 'role-parent', teacher: 'role-teacher', school_admin: 'role-school', super_admin: 'role-super' };
+      const cards = document.querySelectorAll('.role-card');
+      cards.forEach(c => { if (c.classList.contains(map[role])) c.classList.add('selected'); });
+
+      // Update form
+      const cfg = ROLE_CONFIG[role];
+      document.getElementById('auth-form-title').textContent = `Sign in as ${cfg.label}`;
+      const btn = document.getElementById('auth-login-btn');
+      btn.style.background = cfg.btnColor;
+      btn.style.color = '#fff';
+      openAuthForm();
+    }
+
+    function openAuthForm() {
+      document.getElementById('auth-form-wrapper').classList.add('open');
+      setTimeout(() => {
+        document.getElementById('auth-form-wrapper').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+      }, 100);
+    }
+
+    function closeAuthForm() {
+      document.getElementById('auth-form-wrapper').classList.remove('open');
+    }
+
+    function handleLogin() {
+      if (!currentRole) return;
+      const name  = document.getElementById('auth-name').value.trim()     || 'Demo User';
+      const email = document.getElementById('auth-email').value.trim()    || 'demo@lvlbase.com';
+      const pass  = document.getElementById('auth-password').value.trim();
+
+      const roleUser = {
+        role: currentRole,
+        name,
+        email,
+        uid: currentRole + '_' + Date.now(),
+        schoolId: 'school_001'
+      };
+
+      localStorage.setItem('lvlbase_role_user', JSON.stringify(roleUser));
+      showToast('✅ Welcome, ' + name + '!', 'success');
+
+      setTimeout(() => {
+        window.location.href = ROLE_CONFIG[currentRole].redirect;
+      }, 800);
+    }
+
+    function showToast(msg, type = 'info') {
+      const tc = document.getElementById('toast-container');
+      const t = document.createElement('div');
+      t.className = `toast ${type}`;
+      t.textContent = msg;
+      tc.appendChild(t);
+      setTimeout(() => { t.classList.add('toast-hide'); setTimeout(() => t.remove(), 300); }, 3000);
+    }
+
+    // Allow Enter key in password field
+    document.addEventListener('DOMContentLoaded', () => {
+      document.getElementById('auth-password').addEventListener('keydown', e => {
+        if (e.key === 'Enter') handleLogin();
+      });
+    });
+  </script>
+</body>
+</html>
