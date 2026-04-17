@@ -276,7 +276,7 @@
             totalStudents: formData.totalStudents || '',
             adminEmail: formData.adminEmail.toLowerCase(),
             adminName: formData.adminName,
-            adminPassword: formData.adminPassword,  // required for localStorage login
+            // adminPassword is NOT stored locally — Firebase Auth handles authentication securely
             status: 'pending',
             createdAt: new Date().toISOString(),
             verifiedAt: null

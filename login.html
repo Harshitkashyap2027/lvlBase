@@ -181,15 +181,13 @@
         }
       }
 
-      // Fallback: localStorage-based login
-      // School admin
+      // Fallback: localStorage-based login (school admin login requires Firebase Auth)
+      // School admin — only email match, since passwords are NOT stored in localStorage
       const schools = JSON.parse(localStorage.getItem('lvlbase_schools') || '[]');
-      const school = schools.find(s => s.adminEmail && s.adminEmail.toLowerCase() === lower && s.adminPassword === password);
+      const school = schools.find(s => s.adminEmail && s.adminEmail.toLowerCase() === lower);
       if (school) {
-        const p = { uid: 'school_admin_' + school.id, email: lower, displayName: school.adminName || school.principal, role: 'school_admin', status: school.status === 'verified' ? 'approved' : 'pending', schoolId: school.id, schoolStatus: school.status };
-        localStorage.setItem('lvlbase_current_user', JSON.stringify(p));
-        localStorage.setItem('lvlbase_user_profile', JSON.stringify(p));
-        return p;
+        // Without Firebase Auth, we cannot verify the password — reject with a helpful message
+        throw new Error('School admin login requires an internet connection to verify your identity. Please check your connection and try again.');
       }
       // Regular users
       const users = JSON.parse(localStorage.getItem('lvlbase_all_users') || '[]');
