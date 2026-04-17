@@ -19,15 +19,10 @@
   </script>
 </head>
 <body>
-  <div id="page-loader" style="position:fixed;inset:0;background:#0A0A14;display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:9999;gap:1rem;transition:opacity 0.3s ease">
-    <div style="font-size:2.5rem">⚡</div>
-    <div style="color:#6C63FF;font-weight:700;font-size:0.95rem;letter-spacing:0.05em">lvlBase Admin</div>
-    <div class="admin-loader-bar"></div>
-  </div>
 
   <div id="sa-sidebar-root"></div>
 
-  <main class="sa-main" id="sa-main" style="opacity:0;transition:opacity 0.25s ease">
+  <main class="sa-main" id="sa-main">
     <div class="sa-topbar">
       <div style="display:flex;align-items:center;gap:0.75rem">
         <button id="hamburger-btn" onclick="document.getElementById('sa-sidebar').classList.toggle('open')" style="background:none;border:none;cursor:pointer;color:#F5F5FF;font-size:1.2rem;display:none">&#x2630;</button>
