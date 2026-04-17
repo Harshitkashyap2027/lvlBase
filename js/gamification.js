@@ -102,22 +102,25 @@ export function getRankProgress(xp) {
   return Math.min(Math.round((progress / range) * 100), 100);
 }
 
-// Award XP with multipliers
-export function awardXP(baseXP, profile) {
+// Award XP with multipliers (profile first, then amount, then context)
+export function awardXP(profile, amount, context = 'general') {
+  if (!profile || !amount) return { finalXP: 0, bonus: 1 };
   let multiplier = 1;
   const guild = profile.guild ? GUILDS[profile.guild] : null;
 
   // Apply guild bonus
   if (guild) {
-    if (guild.xpBonus.all) multiplier *= guild.xpBonus.all;
+    if (guild.xpBonus.all) multiplier += guild.xpBonus.all;
+    else if (guild.xpBonus[context]) multiplier += guild.xpBonus[context];
   }
 
   // Apply streak bonus
   const streakBonus = getStreakBonus(profile.streak || 0);
-  multiplier *= (1 + streakBonus);
+  multiplier += streakBonus;
 
-  const earned = Math.round(baseXP * multiplier);
-  return earned;
+  const finalXP = Math.round(amount * multiplier);
+  profile.totalXP = (profile.totalXP || 0) + finalXP;
+  return { finalXP, bonus: multiplier };
 }
 
 // Calculate streak bonus multiplier
