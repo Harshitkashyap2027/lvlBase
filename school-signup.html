@@ -285,30 +285,50 @@
           localStorage.setItem('lvlbase_schools', JSON.stringify(schools));
 
           // Create Firebase Auth account for school admin + save school to Firestore
-          if (window.fb && window.fb.live) {
+          async function saveToFirebase(schoolData) {
             try {
-              // Create Firebase Auth account for admin (password handled by Firebase Auth)
               const cred = await window.fb.signUp(formData.adminEmail, formData.adminPassword);
               const uid = cred.user.uid;
-
-              // Save school data to Firestore (password NOT stored in Firestore — Firebase Auth handles it)
-              const firestoreSchool = { ...school, adminUid: uid };
+              const firestoreSchool = { ...schoolData, adminUid: uid };
               delete firestoreSchool.adminPassword;
               await window.fb.saveSchool(firestoreSchool);
-
-              // Save admin user profile to Firestore
               await window.fb.saveUser(uid, {
                 uid,
                 email: formData.adminEmail.toLowerCase(),
                 displayName: formData.adminName,
                 role: 'school_admin',
-                schoolId: school.id,
+                schoolId: schoolData.id,
                 status: 'pending',
                 createdAt: new Date().toISOString()
               });
+              return true;
             } catch (fbErr) {
-              // Log Firebase error but don't block the flow — localStorage save already succeeded
               console.warn('Firebase save warning:', fbErr.message);
+              return false;
+            }
+          }
+
+          let fbSaved = false;
+          if (window.fb && window.fb.live) {
+            fbSaved = await saveToFirebase(school);
+          }
+
+          if (!fbSaved) {
+            // Firebase wasn't ready or save failed — schedule a retry once the
+            // bridge fires its ready event (covers cases where the module loads
+            // after the user submits the form).
+            window.addEventListener('fb:ready', async function retryFb() {
+              window.removeEventListener('fb:ready', retryFb);
+              if (window.fb && window.fb.live) {
+                const ok = await saveToFirebase(school);
+                if (!ok) {
+                  lvlPopup.toast('⚠️ Registration saved locally but could not sync to the server. Please contact admin directly via WhatsApp.', 'warning');
+                }
+              }
+            });
+            // If Firebase is already loaded but just failed, show the warning now
+            if (window.fb && window.fb.live) {
+              lvlPopup.toast('⚠️ Registration saved locally but server sync failed. Contact admin via WhatsApp to confirm receipt.', 'warning');
             }
           }
 
