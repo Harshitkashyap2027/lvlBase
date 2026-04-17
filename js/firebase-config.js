@@ -13,6 +13,8 @@ import { getAuth, GoogleAuthProvider,
 import { getFirestore, doc, getDoc, setDoc, updateDoc, onSnapshot, collection, query,
          orderBy, limit, where, getDocs, serverTimestamp }
   from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+import { getDatabase, ref as dbRef, set as dbSet, get as dbGet, push as dbPush }
+  from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
 import { getMessaging, getToken, onMessage } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-messaging.js";
 import { getStorage } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-storage.js";
 
@@ -20,6 +22,7 @@ import { getStorage } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-s
 const firebaseConfig = {
   apiKey: "AIzaSyAO6FNdpr87WPGjXEdfEs5bjB_4T2ZpzZg",
   authDomain: "lvlbase.firebaseapp.com",
+  databaseURL: "https://lvlbase-default-rtdb.asia-southeast1.firebasedatabase.app",
   projectId: "lvlbase",
   storageBucket: "lvlbase.firebasestorage.app",
   messagingSenderId: "493311771136",
@@ -34,12 +37,13 @@ export const FCM_VAPID_KEY = "YOUR_VAPID_KEY";
 export const FIREBASE_LIVE = true;
 
 // ─── Initialise ───────────────────────────────────────────────────────────────
-let app, auth, db, googleProvider, messaging, storage;
+let app, auth, db, rtdb, googleProvider, messaging, storage;
 
 if (FIREBASE_LIVE) {
   app           = initializeApp(firebaseConfig);
   auth          = getAuth(app);
   db            = getFirestore(app);
+  rtdb          = getDatabase(app);
   googleProvider = new GoogleAuthProvider();
   storage       = getStorage(app);
   try { messaging = getMessaging(app); } catch (_) { /* browser without push support */ }
@@ -115,6 +119,7 @@ export function onForegroundMessage(callback) {
   return onMessage(messaging, callback);
 }
 
-export { app, auth, db, googleProvider, messaging, storage,
+export { app, auth, db, rtdb, googleProvider, messaging, storage,
          doc, getDoc, setDoc, updateDoc, onSnapshot, collection, query, orderBy, limit, serverTimestamp,
-         where, getDocs, signInWithEmailAndPassword, createUserWithEmailAndPassword, firebaseSignOut, signInWithPopup };
+         where, getDocs, signInWithEmailAndPassword, createUserWithEmailAndPassword, firebaseSignOut, signInWithPopup,
+         dbRef, dbSet, dbGet, dbPush };

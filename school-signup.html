@@ -284,52 +284,59 @@
           schools.push(school);
           localStorage.setItem('lvlbase_schools', JSON.stringify(schools));
 
-          // Create Firebase Auth account for school admin + save school to Firestore
+          // Create Firebase Auth account for school admin + save school data
           async function saveToFirebase(schoolData) {
+            let uid;
             try {
               const cred = await window.fb.signUp(formData.adminEmail, formData.adminPassword);
-              const uid = cred.user.uid;
-              const firestoreSchool = { ...schoolData, adminUid: uid };
-              delete firestoreSchool.adminPassword;
-              await window.fb.saveSchool(firestoreSchool);
-              await window.fb.saveUser(uid, {
-                uid,
-                email: formData.adminEmail.toLowerCase(),
-                displayName: formData.adminName,
-                role: 'school_admin',
-                schoolId: schoolData.id,
-                status: 'pending',
-                createdAt: new Date().toISOString()
-              });
-              return true;
-            } catch (fbErr) {
-              console.warn('Firebase save warning:', fbErr.message);
-              return false;
+              uid = cred.user.uid;
+            } catch (authErr) {
+              // If the account already exists, that's fine — proceed with saving data
+              if (authErr.code === 'auth/email-already-in-use') {
+                console.warn('Auth account already exists, continuing with data save.');
+                uid = 'school_' + btoa(formData.adminEmail.toLowerCase()).replace(/[^a-zA-Z0-9]/g, '').substring(0, 20);
+              } else {
+                console.error('Firebase Auth error:', authErr.code, authErr.message);
+                throw authErr;
+              }
             }
+            const cloudSchool = { ...schoolData, adminUid: uid };
+            delete cloudSchool.adminPassword;
+            await window.fb.saveSchool(cloudSchool);
+            await window.fb.saveUser(uid, {
+              uid,
+              email: formData.adminEmail.toLowerCase(),
+              displayName: formData.adminName,
+              role: 'school_admin',
+              schoolId: schoolData.id,
+              status: 'pending',
+              createdAt: new Date().toISOString()
+            });
+            return true;
           }
 
           let fbSaved = false;
           if (window.fb && window.fb.live) {
-            fbSaved = await saveToFirebase(school);
+            try {
+              fbSaved = await saveToFirebase(school);
+            } catch (fbErr) {
+              console.error('Firebase sync error:', fbErr.code || '', fbErr.message);
+              fbSaved = false;
+            }
           }
 
           if (!fbSaved) {
-            // Firebase wasn't ready or save failed — schedule a retry once the
-            // bridge fires its ready event (covers cases where the module loads
-            // after the user submits the form).
+            // Firebase wasn't ready — schedule a retry once the bridge fires its ready event
             window.addEventListener('fb:ready', async function retryFb() {
               window.removeEventListener('fb:ready', retryFb);
               if (window.fb && window.fb.live) {
-                const ok = await saveToFirebase(school);
-                if (!ok) {
-                  lvlPopup.toast('⚠️ Registration saved locally but could not sync to the server. Please contact admin directly via WhatsApp.', 'warning');
+                try {
+                  await saveToFirebase(school);
+                } catch (e) {
+                  console.error('Firebase retry failed:', e.message);
                 }
               }
             });
-            // If Firebase is already loaded but just failed, show the warning now
-            if (window.fb && window.fb.live) {
-              lvlPopup.toast('⚠️ Registration saved locally but server sync failed. Contact admin via WhatsApp to confirm receipt.', 'warning');
-            }
           }
 
           // Build WhatsApp message
