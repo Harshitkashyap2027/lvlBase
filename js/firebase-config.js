@@ -8,7 +8,7 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
 import { getAuth, GoogleAuthProvider,
          signInWithEmailAndPassword, createUserWithEmailAndPassword,
-         signOut as firebaseSignOut }
+         signOut as firebaseSignOut, signInWithPopup }
   from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 import { getFirestore, doc, getDoc, setDoc, updateDoc, onSnapshot, collection, query,
          orderBy, limit, where, getDocs, serverTimestamp }
@@ -117,4 +117,4 @@ export function onForegroundMessage(callback) {
 
 export { app, auth, db, googleProvider, messaging, storage,
          doc, getDoc, setDoc, updateDoc, onSnapshot, collection, query, orderBy, limit, serverTimestamp,
-         where, getDocs, signInWithEmailAndPassword, createUserWithEmailAndPassword, firebaseSignOut };
+         where, getDocs, signInWithEmailAndPassword, createUserWithEmailAndPassword, firebaseSignOut, signInWithPopup };

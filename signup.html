@@ -122,6 +122,15 @@
         </div>
 
         <button class="btn btn-primary btn-full" onclick="goToStep2()">Continue →</button>
+
+        <div id="google-signup-section">
+          <div class="divider" style="display:flex;align-items:center;gap:1rem;margin:1rem 0;color:var(--text-muted);font-size:0.85rem"><span style="flex:1;height:1px;background:var(--border-color)"></span>or<span style="flex:1;height:1px;background:var(--border-color)"></span></div>
+          <button class="google-btn" onclick="handleGoogleSignup()" id="google-signup-btn" style="width:100%;padding:0.85rem;background:rgba(255,255,255,0.08);border:1px solid var(--border-color);border-radius:var(--radius);color:var(--text-light);font-size:0.95rem;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:0.75rem;transition:var(--transition);font-family:var(--font);margin-bottom:0.5rem">
+            <svg width="18" height="18" viewBox="0 0 48 48"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.08 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.18 1.48-4.97 2.31-8.16 2.31-6.26 0-11.57-3.59-13.46-8.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/></svg>
+            Sign up with Google
+          </button>
+        </div>
+
         <p style="text-align:center;margin-top:1rem;font-size:0.8rem;color:var(--text-muted)">Are you a school? <a href="school-signup.html" style="color:var(--primary)">Register your school →</a></p>
       </div>
 
@@ -189,6 +198,31 @@
     let selectedGuild = 'shadow';
     let allVerifiedSchools = [];
 
+    // ── Google mode: user came from login.html after Google sign-in ──
+    const _urlParams = new URLSearchParams(window.location.search);
+    const _googleMode = _urlParams.get('google') === '1';
+    const _googleUid   = sessionStorage.getItem('lvlbase_google_uid');
+    const _googleEmail = sessionStorage.getItem('lvlbase_google_email');
+    const _googleName  = sessionStorage.getItem('lvlbase_google_name');
+
+    if (_googleMode && _googleUid) {
+      // Pre-fill name and email, hide password and Google button
+      // (Script is at end of body — DOM is already loaded, run immediately)
+      const nameEl = document.getElementById('full-name');
+      const emailEl = document.getElementById('email');
+      if (nameEl) nameEl.value = _googleName || '';
+      if (emailEl) { emailEl.value = _googleEmail || ''; emailEl.disabled = true; }
+      // Hide password field since Google handles auth
+      const pwdEl = document.getElementById('password');
+      if (pwdEl) {
+        pwdEl.closest('.form-group').style.display = 'none';
+        pwdEl.value = 'google_auth_placeholder'; // prevents "required" block
+      }
+      // Hide Google signup button since already signed in with Google
+      const gBtn = document.getElementById('google-signup-section');
+      if (gBtn) gBtn.style.display = 'none';
+    }
+
     function selectRole(role) {
       selectedRole = role;
       document.querySelectorAll('.role-card').forEach(c => c.classList.remove('selected'));
@@ -205,7 +239,25 @@
       el.classList.add('selected');
     }
 
-    function getVerifiedSchools() {
+    async function getVerifiedSchools() {
+      // Try Firestore first (when Firebase is live)
+      if (window.fb && window.fb.live) {
+        try {
+          const firestoreSchools = await window.fb.getSchools();
+          if (firestoreSchools && firestoreSchools.length > 0) {
+            // Cache into localStorage so offline use still works
+            const localSchools = JSON.parse(localStorage.getItem('lvlbase_schools') || '[]');
+            for (const fs of firestoreSchools) {
+              const idx = localSchools.findIndex(s => s.id === fs.id);
+              if (idx !== -1) localSchools[idx] = fs;
+              else localSchools.push(fs);
+            }
+            localStorage.setItem('lvlbase_schools', JSON.stringify(localSchools));
+            return firestoreSchools;
+          }
+        } catch (e) { console.warn('Firestore school fetch failed:', e.message); }
+      }
+      // Fallback: localStorage
       const schools = JSON.parse(localStorage.getItem('lvlbase_schools') || '[]');
       return schools.filter(s => s.status === 'verified');
     }
@@ -243,13 +295,15 @@
       document.getElementById('step2-next').disabled = false;
     }
 
-    function goToStep2() {
+    async function goToStep2() {
       const name = document.getElementById('full-name').value.trim();
       const email = document.getElementById('email').value.trim();
       const password = document.getElementById('password').value;
 
       if (!name || !email || !password) { lvlPopup.toast('Please fill in all required fields', 'error'); return; }
-      if (password.length < 6) { lvlPopup.toast('Password must be at least 6 characters', 'error'); return; }
+      // In Google mode the password field is hidden — skip the length check for the placeholder value
+      const isGoogleMode = _googleMode && _googleUid && password === 'google_auth_placeholder';
+      if (!isGoogleMode && password.length < 6) { lvlPopup.toast('Password must be at least 6 characters', 'error'); return; }
 
       // Role-specific validation
       if (selectedRole === 'student' && !document.getElementById('grade').value) {
@@ -272,9 +326,10 @@
         document.getElementById('student-check-msg').innerHTML = '<span style="color:var(--success)">✅ Student found: ' + child.displayName.replace(/</g,'&lt;').replace(/>/g,'&gt;') + '</span>';
       }
 
-      // Load schools
-      allVerifiedSchools = getVerifiedSchools();
+      // Load schools (async — also checks Firestore)
+      document.getElementById('schools-list').innerHTML = '<div style="text-align:center;color:var(--text-muted);padding:1rem">Loading schools…</div>';
       setStep(2);
+      allVerifiedSchools = await getVerifiedSchools();
       renderSchools(allVerifiedSchools);
     }
 
@@ -299,22 +354,74 @@
       });
     }
 
+    async function handleGoogleSignup() {
+      if (!window.fb || !window.fb.live) {
+        lvlPopup.toast('Google sign-up requires Firebase. Please use email signup.', 'warning');
+        return;
+      }
+      const btn = document.getElementById('google-signup-btn');
+      btn.disabled = true;
+      btn.textContent = 'Signing in with Google…';
+      try {
+        const cred = await window.fb.signInWithGoogle();
+        if (!cred) { btn.disabled = false; btn.textContent = 'Sign up with Google'; return; }
+        const uid = cred.user.uid;
+        const email = cred.user.email;
+        const displayName = cred.user.displayName || email.split('@')[0];
+
+        // Check if they already have a complete profile
+        const existingProfile = await window.fb.getUser(uid);
+        if (existingProfile && existingProfile.schoolId) {
+          // Already registered — just log them in
+          existingProfile.lastLogin = new Date().toISOString();
+          localStorage.setItem('lvlbase_current_user', JSON.stringify(existingProfile));
+          localStorage.setItem('lvlbase_user_profile', JSON.stringify(existingProfile));
+          lvlPopup.toast('Welcome back, ' + displayName + '! 🎮', 'success');
+          const dashMap = { student: 'dashboard.html', teacher: 'teacher-dashboard.html', parent: 'parent-dashboard.html' };
+          setTimeout(() => window.location.href = dashMap[existingProfile.role] || 'dashboard.html', 700);
+          return;
+        }
+
+        // New user — pre-fill form and continue to school/guild steps
+        sessionStorage.setItem('lvlbase_google_uid', uid);
+        sessionStorage.setItem('lvlbase_google_email', email);
+        sessionStorage.setItem('lvlbase_google_name', displayName);
+
+        const nameEl = document.getElementById('full-name');
+        const emailEl = document.getElementById('email');
+        const pwdEl = document.getElementById('password');
+        if (nameEl) nameEl.value = displayName;
+        if (emailEl) { emailEl.value = email; emailEl.disabled = true; }
+        if (pwdEl) { pwdEl.closest('.form-group').style.display = 'none'; pwdEl.value = 'google_auth_placeholder'; }
+        document.getElementById('google-signup-section').style.display = 'none';
+
+        // Auto-proceed to school selection (validate role-specific fields first)
+        await goToStep2();
+      } catch (e) {
+        lvlPopup.toast('Google sign-up failed: ' + (e.message || 'Unknown error'), 'error');
+        btn.disabled = false;
+        btn.textContent = 'Sign up with Google';
+      }
+    }
+
     async function completeSignup() {
       const name = document.getElementById('full-name').value.trim();
       const email = document.getElementById('email').value.trim().toLowerCase();
       const password = document.getElementById('password').value;
+      const isGoogleMode = _googleMode && _googleUid;
 
       // Build user object
       const users = JSON.parse(localStorage.getItem('lvlbase_all_users') || '[]');
-      if (users.find(u => u.email === email)) {
+      if (!isGoogleMode && users.find(u => u.email === email)) {
         lvlPopup.toast('This email is already registered. Please login.', 'error');
         return;
       }
 
-      let uid = 'user_' + Date.now() + '_' + (typeof crypto !== 'undefined' && crypto.randomUUID ? crypto.randomUUID().slice(0,8) : Date.now().toString(36));
+      // Use existing Google UID if available, otherwise generate/register
+      let uid = isGoogleMode ? _googleUid : ('user_' + Date.now() + '_' + (typeof crypto !== 'undefined' && crypto.randomUUID ? crypto.randomUUID().slice(0,8) : Date.now().toString(36)));
 
-      // Try Firebase Auth registration
-      if (window.fb && window.fb.live) {
+      // Try Firebase Auth registration (only for non-Google signups)
+      if (!isGoogleMode && window.fb && window.fb.live) {
         try {
           const cred = await window.fb.signUp(email, password);
           uid = cred.user.uid;
@@ -381,6 +488,11 @@
       // Log in the user
       localStorage.setItem('lvlbase_current_user', JSON.stringify(user));
       localStorage.setItem('lvlbase_user_profile', JSON.stringify(user));
+
+      // Clear Google session data
+      sessionStorage.removeItem('lvlbase_google_uid');
+      sessionStorage.removeItem('lvlbase_google_email');
+      sessionStorage.removeItem('lvlbase_google_name');
 
       lvlPopup.toast('Account created! ⚡ Waiting for school approval.', 'success');
       setTimeout(() => {

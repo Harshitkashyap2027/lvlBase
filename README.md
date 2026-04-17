@@ -342,18 +342,38 @@ export const googleProvider = new GoogleAuthProvider();
 export { app };
 ```
 
-### Step 5 — Switch from Demo Mode to Live Firebase
+### Step 5 — Point the App to Your Firebase Project
 
-The app runs in **demo mode** by default (data is stored in `localStorage` — no Firebase calls are made). To switch to your real Firebase backend, open `js/auth.js` and change line 4:
+The app already has `FIREBASE_LIVE = true` in `js/firebase-config.js`, which means it will use Firebase when live credentials are present. All you need to do is replace the placeholder config values with your own (from Step 2).
+
+Open `js/firebase-config.js` and replace **only** the values inside the `firebaseConfig` object:
 
 ```javascript
-// js/auth.js — line 4
-export const DEMO_MODE = false;  // ← change from true to false
+// js/firebase-config.js  (change only the values — keep everything else)
+const firebaseConfig = {
+  apiKey: "AIzaSyXXXXXXXXXXXXXXXXXXXXXXXXXXXXX",         // ← your API key
+  authDomain: "your-project.firebaseapp.com",             // ← your auth domain
+  projectId: "your-project",                              // ← your project ID
+  storageBucket: "your-project.appspot.com",              // ← your storage bucket
+  messagingSenderId: "123456789012",                      // ← your sender ID
+  appId: "1:123456789012:web:abcdef1234567890",           // ← your app ID
+  measurementId: "G-XXXXXXXXXX"  // remove if Analytics not enabled
+};
 ```
 
-Once `DEMO_MODE` is `false`, all sign-in, sign-up, and data operations go through Firebase Auth + Firestore.
+> **No other code changes needed.** The app auto-detects live credentials and enables all Firebase features.
 
-### Step 6 — Set Firestore Security Rules
+### Step 6 — Enable Google Sign-In (Authorized Domain)
+
+Google Sign-In uses a browser popup. For the popup to work, your app's domain must be whitelisted in Firebase:
+
+1. Go to **Firebase Console → Authentication → Settings → Authorized domains**
+2. Add your domain (e.g. `yourdomain.com`, `lvlbase.vercel.app`, or `localhost` for local dev)
+3. Click **Add domain**
+
+> **New users** who sign in with Google for the first time are automatically redirected to `signup.html` to complete their profile (grade, school, and guild). After that, they land on their dashboard.
+
+### Step 7 — Set Firestore Security Rules
 
 In the Firebase console go to **Firestore → Rules** and replace the default rules with:
 
@@ -364,6 +384,12 @@ service cloud.firestore {
     // Users can only read/write their own data
     match /users/{userId} {
       allow read, write: if request.auth != null && request.auth.uid == userId;
+    }
+    // Schools are readable by any authenticated user (for signup school selection)
+    match /schools/{schoolId} {
+      allow read: if request.auth != null;
+      allow write: if request.auth != null &&
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'school_admin';
     }
     // Leaderboard is publicly readable
     match /leaderboard/{document=**} {
@@ -385,9 +411,9 @@ Click **Publish** to save the rules.
 
 Before going live, confirm:
 
-- [ ] Config values in `js/firebase-config.js` are from **your** project (not the placeholder)
-- [ ] `DEMO_MODE = false` in `js/auth.js`
+- [ ] Config values in `js/firebase-config.js` are from **your** project (not the original placeholder)
 - [ ] Email/Password and Google sign-in are enabled in Firebase Auth
+- [ ] Your app domain is added to **Authorized domains** in Firebase Auth settings
 - [ ] Firestore database has been created and security rules are published
 - [ ] You're serving the files over **HTTP/HTTPS** (not `file://`) — use a local server or Firebase Hosting
 
@@ -643,7 +669,8 @@ vercel --prod
 - [x] 45+ quiz questions
 
 ### v1.1 — Coming Soon 🚧
-- [ ] Real Firebase integration (live data sync)
+- [x] Real Firebase integration (live data sync)
+- [x] Google Sign-In (new users complete profile after Google login)
 - [ ] Push notifications (FCM)
 - [ ] Offline mode with Service Worker
 

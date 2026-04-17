@@ -92,26 +92,39 @@
     const profile = JSON.parse(localStorage.getItem('lvlbase_user_profile') || 'null');
     if (profile?.totalXP) document.getElementById('nav-xp').textContent = `⚡ ${profile.totalXP} XP`;
 
-    const DEMO_INDIVIDUAL = [
-      { name:'Arjun Sharma', xp:28500, rankId:'SS', guild:'shadow', avatar:'AS', streak:45 },
-      { name:'Priya Patel', xp:24200, rankId:'S', guild:'azure', avatar:'PP', streak:32 },
-      { name:'Rohan Mehta', xp:21800, rankId:'S', guild:'inferno', avatar:'RM', streak:28 },
-      { name:'Anika Singh', xp:19500, rankId:'S', guild:'titan', avatar:'AS', streak:21 },
-      { name:'Dev Kapoor', xp:17300, rankId:'A', guild:'zenith', avatar:'DK', streak:18 },
-      { name:'Sneha Iyer', xp:15100, rankId:'A', guild:'shadow', avatar:'SI', streak:15 },
-      { name:'Karan Malhotra', xp:13400, rankId:'A', guild:'azure', avatar:'KM', streak:12 },
-      { name:'Ritika Gupta', xp:11200, rankId:'B', guild:'inferno', avatar:'RG', streak:9 },
-      { name:'Vikram Rao', xp:9800, rankId:'B', guild:'titan', avatar:'VR', streak:7 },
-      { name:'Meera Nair', xp:8600, rankId:'B', guild:'zenith', avatar:'MN', streak:6 }
-    ];
-
     function getIndividualBoard() {
-      const board = [...DEMO_INDIVIDUAL];
+      // Build board from real registered users in localStorage
+      const allUsers = JSON.parse(localStorage.getItem('lvlbase_all_users') || '[]');
+      const board = allUsers
+        .filter(u => u.role === 'student' && u.totalXP > 0)
+        .map(u => ({
+          name: u.displayName || u.email,
+          xp: u.totalXP || 0,
+          rankId: getRankId(u.totalXP || 0),
+          guild: u.guild || 'none',
+          avatar: (u.displayName || u.email || 'P').substring(0, 2).toUpperCase(),
+          streak: u.streak || 0,
+          isCurrentUser: profile && u.uid === profile.uid
+        }));
+
+      // Add current user if not already present
       if (profile && profile.totalXP > 0) {
-        const exists = board.find(u => u.name === profile.displayName);
-        if (!exists) board.push({ name: profile.displayName || 'You', xp: profile.totalXP, rankId: getRankId(profile.totalXP), guild: profile.guild || 'none', avatar: (profile.displayName||'P').substring(0,2).toUpperCase(), streak: profile.streak || 0, isCurrentUser: true });
+        const exists = board.find(u => u.isCurrentUser);
+        if (!exists) {
+          board.push({
+            name: profile.displayName || 'You',
+            xp: profile.totalXP,
+            rankId: getRankId(profile.totalXP),
+            guild: profile.guild || 'none',
+            avatar: (profile.displayName || 'P').substring(0, 2).toUpperCase(),
+            streak: profile.streak || 0,
+            isCurrentUser: true
+          });
+        }
       }
-      return board.sort((a,b) => b.xp - a.xp).map((u,i) => ({ ...u, rank: i+1 }));
+
+      if (board.length === 0) return [];
+      return board.sort((a, b) => b.xp - a.xp).map((u, i) => ({ ...u, rank: i + 1 }));
     }
 
     function getRankId(xp) {
@@ -150,7 +163,10 @@
 
     function renderBoard(data) {
       const list = document.getElementById('board-list');
-      if (data.length === 0) { list.innerHTML = '<div style="text-align:center;color:var(--text-muted);padding:2rem">No results found</div>'; return; }
+      if (data.length === 0) {
+        list.innerHTML = '<div style="text-align:center;color:var(--text-muted);padding:2.5rem 1rem"><div style="font-size:2.5rem;margin-bottom:0.75rem">🏆</div><div style="font-weight:700;margin-bottom:0.4rem">No players yet</div><div style="font-size:0.85rem">Complete quizzes to earn XP and appear here!</div></div>';
+        return;
+      }
       list.innerHTML = data.map((item, i) => {
         const colors = ['#FFD700','#C0C0C0','#CD7F32'];
         const emojis = ['🥇','🥈','🥉'];
@@ -175,13 +191,37 @@
     }
 
     function renderGuildBoard() {
-      allData = [
-        { rank:1, name:'Shadow Guild', emoji:'🌙', guild:'shadow', members:234, avgXP:12500, totalXP:2925000, wins:89 },
-        { rank:2, name:'Inferno Legion', emoji:'🔥', guild:'inferno', members:198, avgXP:11800, totalXP:2336400, wins:76 },
-        { rank:3, name:'Azure Order', emoji:'💧', guild:'azure', members:215, avgXP:10900, totalXP:2343500, wins:71 },
-        { rank:4, name:'Titan Brotherhood', emoji:'⚡', guild:'titan', members:178, avgXP:9800, totalXP:1744400, wins:63 },
-        { rank:5, name:'Zenith Circle', emoji:'✨', guild:'zenith', members:156, avgXP:8900, totalXP:1388400, wins:55 }
-      ];
+      // Compute guild stats from real users in localStorage
+      const allUsers = JSON.parse(localStorage.getItem('lvlbase_all_users') || '[]');
+      const guildStats = {};
+      const GUILD_KEYS = ['shadow', 'azure', 'inferno', 'titan', 'zenith'];
+      GUILD_KEYS.forEach(g => { guildStats[g] = { totalXP: 0, members: 0, wins: 0 }; });
+      allUsers.forEach(u => {
+        if (u.guild && guildStats[u.guild]) {
+          guildStats[u.guild].totalXP += (u.totalXP || 0);
+          guildStats[u.guild].members += 1;
+          guildStats[u.guild].wins += (u.battlesWon || 0);
+        }
+      });
+      // Also count current user if not in allUsers
+      if (profile && profile.guild && guildStats[profile.guild]) {
+        const alreadyCounted = allUsers.find(u => profile.uid && u.uid === profile.uid);
+        if (!alreadyCounted) {
+          guildStats[profile.guild].totalXP += (profile.totalXP || 0);
+          guildStats[profile.guild].members += 1;
+          guildStats[profile.guild].wins += (profile.battlesWon || 0);
+        }
+      }
+
+      allData = GUILD_KEYS.map(g => ({
+        guild: g,
+        name: GUILDS[g].name,
+        emoji: GUILDS[g].emoji,
+        members: guildStats[g].members,
+        totalXP: guildStats[g].totalXP,
+        avgXP: guildStats[g].members > 0 ? Math.round(guildStats[g].totalXP / guildStats[g].members) : 0,
+        wins: guildStats[g].wins
+      })).sort((a, b) => b.totalXP - a.totalXP).map((item, i) => ({ ...item, rank: i + 1 }));
       const list = document.getElementById('board-list');
       const colors = ['#FFD700','#C0C0C0','#CD7F32'];
       const emojis = ['🥇','🥈','🥉'];
@@ -205,33 +245,60 @@
     }
 
     function renderNationalBoard() {
-      allData = [
-        { rank:1, name:'Arjun Sharma', school:'DPS Delhi', xp:48500, subject:'Math', rankId:'SS' },
-        { rank:2, name:'Priya Patel', school:'Ryan International', xp:45200, subject:'Science', rankId:'SS' },
-        { rank:3, name:'Rohan Mehta', school:'Kendriya Vidyalaya', xp:41800, subject:'English', rankId:'SS' },
-        { rank:4, name:'Sneha Iyer', school:'CBSE Chennai', xp:38900, subject:'Math', rankId:'S' },
-        { rank:5, name:'Karan Malhotra', school:"St. Xavier's", xp:36400, subject:'Science', rankId:'S' },
-        { rank:6, name:'Anika Singh', school:'DPS Noida', xp:34100, subject:'English', rankId:'S' },
-        { rank:7, name:'Dev Kapoor', school:'Modern School', xp:31700, subject:'Math', rankId:'S' },
-        { rank:8, name:'Meera Nair', school:'Amity Pune', xp:29500, subject:'Science', rankId:'A' },
-        { rank:9, name:'Vikram Rao', school:'MIT Hyderabad', xp:27200, subject:'Math', rankId:'A' },
-        { rank:10, name:'Ritika Gupta', school:'DPS Bangalore', xp:25800, subject:'English', rankId:'A' }
-      ];
+      // Build national board from all real users in localStorage
+      const allUsers = JSON.parse(localStorage.getItem('lvlbase_all_users') || '[]');
+      const schools = JSON.parse(localStorage.getItem('lvlbase_schools') || '[]');
+      const schoolMap = {};
+      schools.forEach(s => { schoolMap[s.id] = s.name; });
+
+      let nationalUsers = allUsers
+        .filter(u => u.role === 'student' && u.totalXP > 0)
+        .map(u => ({
+          name: u.displayName || u.email,
+          school: schoolMap[u.schoolId] || 'Independent',
+          xp: u.totalXP || 0,
+          subject: u.subject || (u.subjectProgress ? Object.keys(u.subjectProgress).reduce((a, b) => (u.subjectProgress[a] >= u.subjectProgress[b] ? a : b)) : 'All'),
+          rankId: getRankId(u.totalXP || 0),
+          isCurrentUser: profile && u.uid === profile.uid
+        }));
+
+      // Include current user if not already present
+      if (profile && profile.totalXP > 0) {
+        const exists = nationalUsers.find(u => u.isCurrentUser);
+        if (!exists) {
+          nationalUsers.push({
+            name: profile.displayName || 'You',
+            school: schoolMap[profile.schoolId] || 'Independent',
+            xp: profile.totalXP,
+            subject: 'All',
+            rankId: getRankId(profile.totalXP),
+            isCurrentUser: true
+          });
+        }
+      }
+
+      nationalUsers = nationalUsers.sort((a, b) => b.xp - a.xp).map((u, i) => ({ ...u, rank: i + 1 }));
+      allData = nationalUsers;
+
       const list = document.getElementById('board-list');
+      if (nationalUsers.length === 0) {
+        list.innerHTML = '<div style="text-align:center;color:var(--text-muted);padding:2.5rem 1rem"><div style="font-size:2.5rem;margin-bottom:0.75rem">🌏</div><div style="font-weight:700;margin-bottom:0.4rem">No national entries yet</div><div style="font-size:0.85rem">Be the first to earn XP and claim the top spot!</div></div>';
+        return;
+      }
       const colors = ['#FFD700','#C0C0C0','#CD7F32'];
       const emojis = ['🥇','🥈','🥉'];
-      list.innerHTML = allData.map((item, i) => `
-        <div class="lb-full-item">
+      list.innerHTML = nationalUsers.map((item, i) => `
+        <div class="lb-full-item ${item.isCurrentUser ? 'current-user-row' : ''}">
           <div class="lb-position" style="color:${i<3?colors[i]:'var(--text-muted)'}">${i<3?emojis[i]:'#'+item.rank}</div>
           <div class="lb-avatar" style="background:linear-gradient(135deg,var(--primary),var(--secondary))">${item.name.substring(0,2)}</div>
           <div class="lb-info">
-            <div class="lb-full-name">${item.name}</div>
-            <div style="font-size:0.75rem;color:var(--text-muted)">🏫 ${item.school} • 📚 ${item.subject}</div>
+            <div class="lb-full-name">${item.name} ${item.isCurrentUser ? '<span class="badge badge-primary" style="font-size:0.65rem">You</span>' : ''}</div>
+            <div style="font-size:0.75rem;color:var(--text-muted)">🏫 ${item.school}</div>
           </div>
           <span class="rank-badge rank-${item.rankId.toLowerCase()}">${item.rankId}-Rank</span>
           <div class="lb-xp" style="color:var(--primary);font-weight:700">⚡ ${fmt(item.xp)}</div>
         </div>
-        ${i < allData.length-1 ? '<div class="lb-separator"></div>' : ''}`).join('');
+        ${i < nationalUsers.length-1 ? '<div class="lb-separator"></div>' : ''}`).join('');
     }
 
     function switchTab(tab, btn) {
@@ -246,10 +313,11 @@
     }
 
     function filterBoard() {
-      const query = document.getElementById('search-input').value.toLowerCase();
-      if (!query) { if (currentTab === 'individual') renderIndividual(); return; }
-      const filtered = allData.filter(u => (u.name||u.school||'').toLowerCase().includes(query));
-      renderBoard(filtered);
+      const q = document.getElementById('search-input').value.toLowerCase();
+      if (!q) { if (currentTab === 'individual') renderIndividual(); else if (currentTab === 'guild') renderGuildBoard(); else renderNationalBoard(); return; }
+      const filtered = allData.filter(u => (u.name || '').toLowerCase().includes(q) || (u.school || '').toLowerCase().includes(q));
+      if (currentTab === 'individual' || currentTab === 'national') renderBoard(filtered);
+      // Guild board filtering not applicable (only 5 guilds)
     }
 
     function clearSearch() {
