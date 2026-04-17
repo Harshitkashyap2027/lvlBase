@@ -201,9 +201,5 @@ function initAdminPage(pageId) {
     }
   });
 
-  // Hide loader, reveal main
-  var loader = document.getElementById('page-loader');
-  if (loader) { loader.style.opacity = '0'; setTimeout(function(){ loader.style.display = 'none'; }, 300); }
-  var main = document.getElementById('sa-main');
-  if (main) { main.style.opacity = '1'; }
+
 }
