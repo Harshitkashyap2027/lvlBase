@@ -4,6 +4,22 @@
 
 var CREDS_KEY = 'lvlbase_admin_creds';
 
+// ── Firebase config (mirrored from firebase-config.js) ────
+var _FB_CONFIG = {
+  apiKey: "AIzaSyAO6FNdpr87WPGjXEdfEs5bjB_4T2ZpzZg",
+  authDomain: "lvlbase.firebaseapp.com",
+  projectId: "lvlbase",
+  storageBucket: "lvlbase.firebasestorage.app",
+  messagingSenderId: "493311771136",
+  appId: "1:493311771136:web:35428db96267a1f55c4ee5"
+};
+
+// ── In-memory caches (populated from Firestore) ───────────
+var _usersCache   = null;  // null = not yet loaded
+var _schoolsCache = null;
+var _fbDb         = null;
+var _fbMod        = null;  // Firestore module functions
+
 // ── Session Check ─────────────────────────────────────────
 function checkSession() {
   var u = JSON.parse(localStorage.getItem('lvlbase_current_user') || 'null');
@@ -41,15 +57,105 @@ function esc(s) {
     .replace(/'/g, '&#39;');
 }
 
+// ── Internal: sync a single user document to Firestore ────
+function _fbSyncUser(u) {
+  if (!_fbDb || !_fbMod || !u || !u.uid) return;
+  _fbMod.setDoc(_fbMod.doc(_fbDb, 'users', u.uid), u, { merge: true })
+    .catch(function(e) { console.warn('Admin: Firestore user write failed:', e.message); });
+}
+
+// ── Internal: sync a single school document to Firestore ──
+function _fbSyncSchool(s) {
+  if (!_fbDb || !_fbMod || !s || !s.id) return;
+  _fbMod.setDoc(_fbMod.doc(_fbDb, 'schools', s.id), s, { merge: true })
+    .catch(function(e) { console.warn('Admin: Firestore school write failed:', e.message); });
+}
+
 // ── Data Helpers ──────────────────────────────────────────
-function getAllUsers()    { return JSON.parse(localStorage.getItem('lvlbase_all_users')    || '[]'); }
-function getAllSchools()  { return JSON.parse(localStorage.getItem('lvlbase_schools')      || '[]'); }
+function getAllUsers() {
+  if (_usersCache !== null) return _usersCache;
+  return JSON.parse(localStorage.getItem('lvlbase_all_users') || '[]');
+}
+function getAllSchools() {
+  if (_schoolsCache !== null) return _schoolsCache;
+  return JSON.parse(localStorage.getItem('lvlbase_schools') || '[]');
+}
 function getQuizHistory(){ return JSON.parse(localStorage.getItem('lvlbase_quiz_history') || '[]'); }
-function saveUsers(u)    { localStorage.setItem('lvlbase_all_users',  JSON.stringify(u)); }
-function saveSchools(s)  { localStorage.setItem('lvlbase_schools',    JSON.stringify(s)); }
+
+function saveUsers(newArr) {
+  var oldArr = _usersCache || JSON.parse(localStorage.getItem('lvlbase_all_users') || '[]');
+  _usersCache = newArr;
+  localStorage.setItem('lvlbase_all_users', JSON.stringify(newArr));
+  // Sync changed users to Firestore
+  newArr.forEach(function(u) {
+    var old = oldArr.find(function(x) { return x.uid === u.uid; });
+    if (!old || JSON.stringify(old) !== JSON.stringify(u)) {
+      _fbSyncUser(u);
+    }
+  });
+}
+
+function saveSchools(newArr) {
+  var oldArr = _schoolsCache || JSON.parse(localStorage.getItem('lvlbase_schools') || '[]');
+  _schoolsCache = newArr;
+  localStorage.setItem('lvlbase_schools', JSON.stringify(newArr));
+  // Sync changed schools to Firestore
+  newArr.forEach(function(s) {
+    var old = oldArr.find(function(x) { return x.id === s.id; });
+    if (!old || JSON.stringify(old) !== JSON.stringify(s)) {
+      _fbSyncSchool(s);
+    }
+  });
+}
+
 function getCreds()      {
   var def = { email: 'admin@lvlbase.in', password: 'Admin@123' };
   try { return JSON.parse(localStorage.getItem(CREDS_KEY)) || def; } catch(e) { return def; }
+}
+
+// ── Load all data from Firestore ──────────────────────────
+function loadFirebaseData(callback) {
+  Promise.all([
+    import('https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js'),
+    import('https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js')
+  ]).then(function(mods) {
+    var appMod = mods[0];
+    var fsMod  = mods[1];
+
+    // Reuse existing Firebase app if already initialized
+    var apps = appMod.getApps ? appMod.getApps() : [];
+    var app  = apps.length ? apps[0] : appMod.initializeApp(_FB_CONFIG);
+    var db   = fsMod.getFirestore(app);
+
+    _fbDb  = db;
+    _fbMod = {
+      doc:              fsMod.doc,
+      setDoc:           fsMod.setDoc,
+      collection:       fsMod.collection,
+      getDocs:          fsMod.getDocs,
+      serverTimestamp:  fsMod.serverTimestamp
+    };
+
+    Promise.all([
+      fsMod.getDocs(fsMod.collection(db, 'users')),
+      fsMod.getDocs(fsMod.collection(db, 'schools'))
+    ]).then(function(snaps) {
+      var users   = snaps[0].docs.map(function(d) { return d.data(); });
+      var schools = snaps[1].docs.map(function(d) { return d.data(); });
+      _usersCache   = users;
+      _schoolsCache = schools;
+      // Mirror into localStorage for backward-compat helpers
+      localStorage.setItem('lvlbase_all_users', JSON.stringify(users));
+      localStorage.setItem('lvlbase_schools',   JSON.stringify(schools));
+      if (typeof callback === 'function') callback();
+    }).catch(function(e) {
+      console.warn('Admin: Firestore fetch failed:', e.message);
+      if (typeof callback === 'function') callback();
+    });
+  }).catch(function(e) {
+    console.warn('Admin: Firebase import failed:', e.message);
+    if (typeof callback === 'function') callback();
+  });
 }
 function getSchoolName(id) {
   var s = getAllSchools().find(function(x){ return x.id === id; });
@@ -201,5 +307,43 @@ function initAdminPage(pageId) {
     }
   });
 
+  // Load live data from Firestore and re-render once available
+  _showLoadingBanner();
+  loadFirebaseData(function() {
+    _hideLoadingBanner();
+    updateBadges();
+    // Re-call whichever render/init function the page defines
+    if (typeof initPage      === 'function') initPage();
+    if (typeof renderOverview === 'function') renderOverview();
+  });
+}
 
+// ── Loading banner ────────────────────────────────────────
+function _showLoadingBanner() {
+  var existing = document.getElementById('_fb-loading-banner');
+  if (existing) return;
+  var el = document.createElement('div');
+  el.id = '_fb-loading-banner';
+  el.style.cssText = 'position:fixed;bottom:1.5rem;left:50%;transform:translateX(-50%);' +
+    'background:rgba(16,16,30,0.96);border:1px solid rgba(108,99,255,0.35);border-radius:12px;' +
+    'padding:0.6rem 1.2rem;font-size:0.8rem;color:#8892A4;font-family:inherit;z-index:9999;' +
+    'display:flex;align-items:center;gap:0.5rem;box-shadow:0 8px 32px rgba(0,0,0,0.4);' +
+    'transition:opacity 0.3s';
+  el.innerHTML = '<span style="display:inline-block;width:12px;height:12px;border:2px solid rgba(108,99,255,0.4);' +
+    'border-top-color:#6C63FF;border-radius:50%;animation:_fbspin 0.7s linear infinite"></span>' +
+    'Loading live data from Firebase…';
+  // Add keyframe if not already present
+  if (!document.getElementById('_fb-spin-style')) {
+    var s = document.createElement('style');
+    s.id = '_fb-spin-style';
+    s.textContent = '@keyframes _fbspin{to{transform:rotate(360deg)}}';
+    document.head.appendChild(s);
+  }
+  document.body.appendChild(el);
+}
+function _hideLoadingBanner() {
+  var el = document.getElementById('_fb-loading-banner');
+  if (!el) return;
+  el.style.opacity = '0';
+  setTimeout(function() { if (el.parentNode) el.parentNode.removeChild(el); }, 350);
 }
