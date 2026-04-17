@@ -1,0 +1,398 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>International Competition – lvlBase ⚡</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <link rel="manifest" href="manifest.json">
+  <link rel="stylesheet" href="css/main.css">
+  <style>
+    .comp-wrapper { max-width: 1100px; margin: 0 auto; padding: 5.5rem 1.5rem 3rem; }
+    .comp-hero { text-align: center; margin-bottom: 2rem; }
+    .comp-hero h1 { font-size: 2rem; font-weight: 800; background: linear-gradient(135deg, #3B82F6, var(--success)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+    .comp-grid { display: grid; grid-template-columns: 1fr 360px; gap: 1.5rem; }
+    @media(max-width:900px) { .comp-grid { grid-template-columns: 1fr; } }
+    /* Filters */
+    .filter-bar { display: flex; gap: 0.75rem; flex-wrap: wrap; margin-bottom: 1.5rem; align-items: center; }
+    .filter-bar select, .filter-bar input { background: rgba(255,255,255,0.05); border: 1px solid var(--border-color); border-radius: var(--radius); padding: 0.5rem 0.875rem; color: var(--text-light); font-family: var(--font); font-size: 0.85rem; }
+    .filter-bar select:focus, .filter-bar input:focus { outline: none; border-color: var(--primary); }
+    /* Leaderboard table */
+    .lb-table { background: var(--card-bg); border: 1px solid var(--border-color); border-radius: var(--radius-lg); overflow: hidden; }
+    .lb-header { display: grid; grid-template-columns: 50px 40px 1fr 90px 90px 80px; gap: 0.5rem; padding: 0.875rem 1.25rem; background: rgba(108,99,255,0.08); font-size: 0.78rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; color: var(--text-muted); }
+    .lb-row { display: grid; grid-template-columns: 50px 40px 1fr 90px 90px 80px; gap: 0.5rem; padding: 0.875rem 1.25rem; border-top: 1px solid rgba(255,255,255,0.04); align-items: center; transition: var(--transition); }
+    .lb-row:hover { background: rgba(108,99,255,0.05); }
+    .lb-row.current-user { background: rgba(108,99,255,0.1); border-left: 3px solid var(--primary); }
+    .lb-rank { font-weight: 800; font-size: 0.95rem; text-align: center; }
+    .lb-rank.top1 { color: #FFD700; }
+    .lb-rank.top2 { color: #C0C0C0; }
+    .lb-rank.top3 { color: #CD7F32; }
+    .lb-flag { font-size: 1.3rem; text-align: center; }
+    .lb-user { display: flex; align-items: center; gap: 0.5rem; overflow: hidden; }
+    .lb-avatar { width: 30px; height: 30px; border-radius: 50%; background: var(--primary); display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 0.7rem; flex-shrink: 0; }
+    .lb-name { font-size: 0.88rem; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .lb-country { font-size: 0.78rem; color: var(--text-muted); }
+    .lb-xp { font-weight: 700; font-size: 0.88rem; color: var(--accent); text-align: right; }
+    .lb-rank-badge { font-size: 0.75rem; text-align: center; }
+    .lb-streak { font-size: 0.85rem; text-align: right; }
+    /* Right panel */
+    .side-card { background: var(--card-bg); border: 1px solid var(--border-color); border-radius: var(--radius-lg); padding: 1.5rem; margin-bottom: 1.5rem; }
+    .side-card h3 { font-weight: 700; font-size: 1rem; margin-bottom: 1.25rem; }
+    /* Country stats */
+    .country-bar { margin-bottom: 1rem; }
+    .country-bar-header { display: flex; justify-content: space-between; font-size: 0.83rem; margin-bottom: 0.3rem; }
+    .bar-track { height: 8px; background: rgba(255,255,255,0.07); border-radius: 4px; overflow: hidden; }
+    .bar-fill { height: 100%; border-radius: 4px; }
+    /* Competition timer */
+    .comp-timer { text-align: center; background: linear-gradient(135deg, rgba(108,99,255,0.15), rgba(0,209,178,0.1)); border: 1px solid rgba(108,99,255,0.3); border-radius: var(--radius-lg); padding: 1.5rem; }
+    .timer-digits { font-size: 2.5rem; font-weight: 900; font-variant-numeric: tabular-nums; color: var(--accent); letter-spacing: 2px; }
+    /* Your position banner */
+    .my-pos-banner { background: linear-gradient(135deg, rgba(108,99,255,0.15), rgba(0,209,178,0.1)); border: 1px solid rgba(108,99,255,0.3); border-radius: var(--radius-lg); padding: 1.25rem; margin-bottom: 1.5rem; display: flex; gap: 1.25rem; align-items: center; flex-wrap: wrap; }
+    .my-pos-stat { text-align: center; }
+    .my-pos-stat .val { font-size: 1.3rem; font-weight: 800; color: var(--accent); }
+    .my-pos-stat .lbl { font-size: 0.72rem; color: var(--text-muted); }
+    /* Pagination */
+    .pagination { display: flex; gap: 0.5rem; justify-content: center; padding: 1rem; flex-wrap: wrap; }
+    .page-btn { width: 36px; height: 36px; border-radius: var(--radius); border: 1px solid var(--border-color); background: transparent; color: var(--text-muted); font-family: var(--font); font-size: 0.85rem; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: var(--transition); }
+    .page-btn.active { background: var(--primary); color: white; border-color: var(--primary); }
+    .page-btn:hover:not(.active) { border-color: var(--primary); color: var(--text-light); }
+  </style>
+</head>
+<body>
+  <nav class="navbar">
+    <a href="index.html" class="navbar-brand">lvlBase ⚡</a>
+    <div class="navbar-nav">
+      <a href="dashboard.html" class="nav-link">Dashboard</a>
+      <a href="leaderboard.html" class="nav-link">Ranks</a>
+      <a href="quiz.html" class="nav-link">Quiz</a>
+    </div>
+    <div class="navbar-actions">
+      <span id="nav-xp" style="color:var(--accent);font-weight:700;font-size:0.9rem"></span>
+      <a href="dashboard.html" class="btn btn-ghost btn-sm">← Back</a>
+    </div>
+    <div class="hamburger" id="hamburger"><span></span><span></span><span></span></div>
+  </nav>
+
+  <div class="comp-wrapper">
+    <div class="comp-hero">
+      <h1>🌍 International Competition</h1>
+      <p style="color:var(--text-muted)">Compete with students from around the world. Rise to the top of the global leaderboard!</p>
+    </div>
+
+    <!-- My position banner -->
+    <div class="my-pos-banner" id="my-pos-banner"></div>
+
+    <div class="comp-grid">
+      <!-- Left: Leaderboard -->
+      <div>
+        <!-- Filters -->
+        <div class="filter-bar">
+          <select id="filter-country" onchange="applyFilters()">
+            <option value="all">🌍 All Countries</option>
+          </select>
+          <select id="filter-subject" onchange="applyFilters()">
+            <option value="all">All Subjects</option>
+            <option value="math">📐 Mathematics</option>
+            <option value="science">🔬 Science</option>
+            <option value="english">📚 English</option>
+          </select>
+          <select id="filter-period" onchange="applyFilters()">
+            <option value="alltime">All Time</option>
+            <option value="monthly">This Month</option>
+            <option value="weekly">This Week</option>
+          </select>
+          <input type="text" id="filter-search" placeholder="🔍 Search player..." oninput="applyFilters()">
+        </div>
+
+        <div class="lb-table">
+          <div class="lb-header">
+            <div>#</div><div>🌍</div><div>Player</div><div style="text-align:right">XP</div><div style="text-align:center">Rank</div><div style="text-align:right">Streak</div>
+          </div>
+          <div id="lb-body"></div>
+        </div>
+        <div class="pagination" id="pagination"></div>
+      </div>
+
+      <!-- Right panel -->
+      <div>
+        <!-- Competition timer -->
+        <div class="comp-timer side-card" style="margin-bottom:1.5rem">
+          <div style="font-size:0.8rem;font-weight:700;text-transform:uppercase;letter-spacing:0.1em;color:var(--text-muted);margin-bottom:0.5rem">🏆 Season Ends In</div>
+          <div class="timer-digits" id="comp-timer">--:--:--</div>
+          <div style="font-size:0.78rem;color:var(--text-muted);margin-top:0.5rem">Season 1 · Global Rankings</div>
+        </div>
+
+        <!-- Top countries -->
+        <div class="side-card">
+          <h3>🌍 Top Countries</h3>
+          <div id="country-stats"></div>
+        </div>
+
+        <!-- Subject leaderboard tabs -->
+        <div class="side-card">
+          <h3>📚 Subject Leaders</h3>
+          <div style="display:flex;gap:0.5rem;margin-bottom:1rem">
+            <button class="btn btn-sm btn-primary" onclick="showSubjectLeaders('math', this)">Math</button>
+            <button class="btn btn-sm btn-ghost" onclick="showSubjectLeaders('science', this)">Science</button>
+            <button class="btn btn-sm btn-ghost" onclick="showSubjectLeaders('english', this)">English</button>
+          </div>
+          <div id="subject-leaders"></div>
+        </div>
+
+        <!-- Fun facts -->
+        <div class="side-card" style="background: linear-gradient(135deg, rgba(108,99,255,0.1), rgba(0,209,178,0.05));">
+          <h3>💡 Did You Know?</h3>
+          <div id="fun-fact" style="font-size:0.85rem;color:var(--text-muted);line-height:1.7"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="toast-container" class="toast-container"></div>
+
+  <script>
+  const COUNTRIES = [
+    { code:'IN', flag:'🇮🇳', name:'India' },
+    { code:'US', flag:'🇺🇸', name:'United States' },
+    { code:'GB', flag:'🇬🇧', name:'United Kingdom' },
+    { code:'CN', flag:'🇨🇳', name:'China' },
+    { code:'JP', flag:'🇯🇵', name:'Japan' },
+    { code:'BR', flag:'🇧🇷', name:'Brazil' },
+    { code:'DE', flag:'🇩🇪', name:'Germany' },
+    { code:'FR', flag:'🇫🇷', name:'France' },
+    { code:'AU', flag:'🇦🇺', name:'Australia' },
+    { code:'CA', flag:'🇨🇦', name:'Canada' },
+    { code:'KR', flag:'🇰🇷', name:'South Korea' },
+    { code:'NG', flag:'🇳🇬', name:'Nigeria' },
+    { code:'ZA', flag:'🇿🇦', name:'South Africa' },
+    { code:'MX', flag:'🇲🇽', name:'Mexico' },
+    { code:'AR', flag:'🇦🇷', name:'Argentina' }
+  ];
+
+  const RANK_BADGES = { SS:'⭐', S:'🔴', A:'🟡', B:'🟣', C:'🔵', D:'🟢', E:'⚫' };
+
+  const NAMES = {
+    IN: ['Arjun Sharma','Priya Patel','Rohan Mehta','Anika Singh','Dev Kapoor','Sneha Iyer','Kiran Rao'],
+    US: ['Alex Johnson','Emma Davis','Ryan Wilson','Olivia Brown','Liam Garcia','Sophia Martinez'],
+    GB: ['James Smith','Charlotte White','Harry Jones','Amelia Taylor','Oliver Brown'],
+    CN: ['Wei Li','Mei Zhang','Fang Wang','Xiao Chen','Jian Liu'],
+    JP: ['Yuki Tanaka','Hana Sato','Kenji Suzuki','Aoi Watanabe'],
+    BR: ['Pedro Silva','Ana Santos','Lucas Oliveira','Maria Souza'],
+    DE: ['Max Müller','Lena Schmidt','Felix Wagner','Anna Becker'],
+    FR: ['Hugo Martin','Léa Dubois','Louis Bernard','Chloé Thomas'],
+    AU: ['Jack Wilson','Chloe Taylor','Liam Cooper','Mia Hughes'],
+    CA: ['Noah Tremblay','Emma Roy','Oliver Martin','Olivia Lee'],
+    KR: ['Min-jun Kim','Seo-yeon Park','Ji-ho Lee','Ha-eun Choi'],
+    NG: ['Chidi Okonkwo','Amina Bello','Emeka Nwosu','Fatima Musa'],
+    ZA: ['Sipho Dlamini','Thandi Nkosi','Kagiso Mokoena'],
+    MX: ['Sofía Ramírez','Diego Hernández','Valentina López'],
+    AR: ['Santiago Gómez','Valentina Pérez','Mateo García']
+  };
+
+  // Generate deterministic pseudo-random data
+  function seededRand(seed) {
+    let s = seed;
+    return () => { s = (s * 9301 + 49297) % 233280; return s / 233280; };
+  }
+
+  function generatePlayers() {
+    const players = [];
+    let id = 0;
+    COUNTRIES.forEach(c => {
+      const names = NAMES[c.code] || ['Student'];
+      const r = seededRand(c.code.charCodeAt(0) + c.code.charCodeAt(1));
+      names.forEach(name => {
+        const xp = Math.floor(r() * 28000) + 500;
+        const rank = xp >= 30000 ? 'SS' : xp >= 15000 ? 'S' : xp >= 7000 ? 'A' : xp >= 3500 ? 'B' : xp >= 1500 ? 'C' : xp >= 500 ? 'D' : 'E';
+        players.push({
+          id: id++, name, country: c, xp, rank,
+          streak: Math.floor(r() * 45) + 1,
+          mathXP: Math.floor(xp * (0.25 + r() * 0.3)),
+          scienceXP: Math.floor(xp * (0.25 + r() * 0.3)),
+          englishXP: Math.floor(xp * (0.25 + r() * 0.3))
+        });
+      });
+    });
+    return players.sort((a, b) => b.xp - a.xp).map((p, i) => ({ ...p, globalRank: i + 1 }));
+  }
+
+  let ALL_PLAYERS = generatePlayers();
+
+  // Inject current user
+  const me = JSON.parse(localStorage.getItem('lvlbase_user_profile') || '{}');
+  if (me && me.displayName) {
+    const myXP = me.totalXP || 20;
+    const rank = myXP >= 30000 ? 'SS' : myXP >= 15000 ? 'S' : myXP >= 7000 ? 'A' : myXP >= 3500 ? 'B' : myXP >= 1500 ? 'C' : myXP >= 500 ? 'D' : 'E';
+    ALL_PLAYERS.push({ id: 9999, name: me.displayName + ' (You)', country: COUNTRIES[0], xp: myXP, rank, streak: me.streak || 0, isMe: true,
+                       mathXP: me.subjectProgress?.math || 0, scienceXP: me.subjectProgress?.science || 0, englishXP: me.subjectProgress?.english || 0 });
+    ALL_PLAYERS.sort((a, b) => b.xp - a.xp).forEach((p, i) => p.globalRank = i + 1);
+  }
+
+  // ── Populate country filter ───────────────────────────────────────────────
+  const cf = document.getElementById('filter-country');
+  COUNTRIES.forEach(c => { const o = document.createElement('option'); o.value = c.code; o.textContent = `${c.flag} ${c.name}`; cf.appendChild(o); });
+
+  let currentPage = 1;
+  const PAGE_SIZE = 15;
+  let filteredPlayers = [...ALL_PLAYERS];
+
+  window.applyFilters = function() {
+    const country = document.getElementById('filter-country').value;
+    const subject = document.getElementById('filter-subject').value;
+    const search  = document.getElementById('filter-search').value.toLowerCase().trim();
+
+    filteredPlayers = ALL_PLAYERS.filter(p => {
+      if (country !== 'all' && p.country.code !== country) return false;
+      if (search && !p.name.toLowerCase().includes(search)) return false;
+      return true;
+    });
+
+    // Sort by selected subject
+    if (subject !== 'all') {
+      const key = subject + 'XP';
+      filteredPlayers.sort((a, b) => (b[key] || 0) - (a[key] || 0));
+      filteredPlayers.forEach((p, i) => p.subjectRank = i + 1);
+    }
+
+    currentPage = 1;
+    renderLB();
+  };
+
+  function renderLB() {
+    const body = document.getElementById('lb-body');
+    const subject = document.getElementById('filter-subject').value;
+    const start = (currentPage - 1) * PAGE_SIZE;
+    const page  = filteredPlayers.slice(start, start + PAGE_SIZE);
+
+    body.innerHTML = page.map((p) => {
+      const rankNum = subject !== 'all' ? p.subjectRank : p.globalRank;
+      const rankClass = rankNum === 1 ? 'top1' : rankNum === 2 ? 'top2' : rankNum === 3 ? 'top3' : '';
+      const rankLabel = rankNum <= 3 ? ['🥇','🥈','🥉'][rankNum-1] : '#' + rankNum;
+      const xpShow = subject !== 'all' ? p[subject + 'XP'] : p.xp;
+      return `<div class="lb-row${p.isMe ? ' current-user' : ''}">
+        <div class="lb-rank ${rankClass}">${rankLabel}</div>
+        <div class="lb-flag">${p.country.flag}</div>
+        <div class="lb-user">
+          <div class="lb-avatar">${p.name.substring(0,2).toUpperCase()}</div>
+          <div><div class="lb-name">${p.name}</div><div class="lb-country">${p.country.name}</div></div>
+        </div>
+        <div class="lb-xp">⚡ ${xpShow.toLocaleString()}</div>
+        <div class="lb-rank-badge">${RANK_BADGES[p.rank] || '⚫'} ${p.rank}-Rank</div>
+        <div class="lb-streak">🔥 ${p.streak}d</div>
+      </div>`;
+    }).join('');
+
+    renderPagination();
+  }
+
+  function renderPagination() {
+    const total = Math.ceil(filteredPlayers.length / PAGE_SIZE);
+    const pg = document.getElementById('pagination');
+    pg.innerHTML = '';
+    const range = [];
+    for (let i = Math.max(1, currentPage - 2); i <= Math.min(total, currentPage + 2); i++) range.push(i);
+    if (range[0] > 1) { addPageBtn(pg, 1, '1'); if (range[0] > 2) addPageBtn(pg, null, '…'); }
+    range.forEach(i => addPageBtn(pg, i, '' + i));
+    if (range[range.length - 1] < total) { if (range[range.length-1] < total - 1) addPageBtn(pg, null, '…'); addPageBtn(pg, total, '' + total); }
+  }
+
+  function addPageBtn(container, page, label) {
+    const btn = document.createElement('button');
+    btn.className = 'page-btn' + (page === currentPage ? ' active' : '');
+    btn.textContent = label;
+    if (page) btn.onclick = () => { currentPage = page; renderLB(); };
+    else btn.disabled = true;
+    container.appendChild(btn);
+  }
+
+  // ── My position ───────────────────────────────────────────────────────────
+  function renderMyPos() {
+    const banner = document.getElementById('my-pos-banner');
+    if (!me || !me.displayName) { banner.style.display = 'none'; return; }
+    const myEntry = ALL_PLAYERS.find(p => p.isMe);
+    if (!myEntry) return;
+    banner.innerHTML = `
+      <div style="font-size:1.5rem">👤</div>
+      <div style="flex:1"><div style="font-weight:800">${myEntry.name}</div><div style="font-size:0.8rem;color:var(--text-muted)">${myEntry.country.flag} Your global standing</div></div>
+      <div class="my-pos-stat"><div class="val">#${myEntry.globalRank}</div><div class="lbl">Global Rank</div></div>
+      <div class="my-pos-stat"><div class="val">⚡ ${myEntry.xp.toLocaleString()}</div><div class="lbl">Total XP</div></div>
+      <div class="my-pos-stat"><div class="val">${RANK_BADGES[myEntry.rank]} ${myEntry.rank}</div><div class="lbl">Rank</div></div>
+      <div class="my-pos-stat"><div class="val">🔥 ${myEntry.streak}d</div><div class="lbl">Streak</div></div>
+    `;
+  }
+
+  // ── Country stats ─────────────────────────────────────────────────────────
+  function renderCountryStats() {
+    const totals = {};
+    ALL_PLAYERS.forEach(p => {
+      if (!totals[p.country.code]) totals[p.country.code] = { flag: p.country.flag, name: p.country.name, totalXP: 0, count: 0 };
+      totals[p.country.code].totalXP += p.xp;
+      totals[p.country.code].count++;
+    });
+    const sorted = Object.values(totals).sort((a, b) => b.totalXP - a.totalXP).slice(0, 6);
+    const maxXP = sorted[0].totalXP;
+    document.getElementById('country-stats').innerHTML = sorted.map((c, i) => {
+      const pct = Math.round(c.totalXP / maxXP * 100);
+      const colors = ['#6C63FF','#00D1B2','#FF6B6B','#FFD700','#A855F7','#3B82F6'];
+      return `<div class="country-bar">
+        <div class="country-bar-header"><span>${c.flag} ${c.name}</span><span style="color:var(--text-muted);font-size:0.75rem">${c.totalXP.toLocaleString()} XP</span></div>
+        <div class="bar-track"><div class="bar-fill" style="width:${pct}%;background:${colors[i]};"></div></div>
+      </div>`;
+    }).join('');
+  }
+
+  // ── Subject leaders ───────────────────────────────────────────────────────
+  window.showSubjectLeaders = function(subj, btn) {
+    document.querySelectorAll('.side-card .btn').forEach(b => { b.className = 'btn btn-sm btn-ghost'; });
+    btn.className = 'btn btn-sm btn-primary';
+    const sorted = [...ALL_PLAYERS].sort((a, b) => (b[subj + 'XP'] || 0) - (a[subj + 'XP'] || 0)).slice(0, 5);
+    document.getElementById('subject-leaders').innerHTML = sorted.map((p, i) =>
+      `<div style="display:flex;align-items:center;gap:0.75rem;padding:0.5rem 0;border-bottom:1px solid rgba(255,255,255,0.04)">
+        <span style="font-weight:800;width:20px;color:${['#FFD700','#C0C0C0','#CD7F32','var(--text-muted)','var(--text-muted)'][i]}">${['🥇','🥈','🥉','4.','5.'][i]}</span>
+        <span>${p.country.flag}</span>
+        <span style="flex:1;font-size:0.85rem;font-weight:600">${p.name}</span>
+        <span style="font-size:0.82rem;color:var(--accent)">⚡${(p[subj + 'XP'] || 0).toLocaleString()}</span>
+      </div>`
+    ).join('');
+  };
+
+  // ── Competition timer ─────────────────────────────────────────────────────
+  function updateTimer() {
+    // Next month start
+    const now = new Date();
+    const end = new Date(now.getFullYear(), now.getMonth() + 1, 1);
+    const diff = end - now;
+    const d = Math.floor(diff / 86400000);
+    const h = Math.floor((diff % 86400000) / 3600000);
+    const m = Math.floor((diff % 3600000) / 60000);
+    const s = Math.floor((diff % 60000) / 1000);
+    document.getElementById('comp-timer').textContent = `${d}d ${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
+  }
+
+  // ── Fun facts ─────────────────────────────────────────────────────────────
+  const FACTS = [
+    'Students who use spaced repetition remember <strong>80% more</strong> than those who cram.',
+    'India has the <strong>largest number of engineering students</strong> in the world.',
+    'The average student brain can only focus for <strong>20–25 minutes</strong> at a stretch.',
+    'Learning a new subject activates <strong>more brain regions</strong> than any other activity.',
+    'Sleep after studying improves memory retention by up to <strong>40%</strong>!',
+    'Top performers worldwide spend an average of <strong>4 hours daily</strong> in deliberate practice.',
+    'Testing yourself is <strong>2× more effective</strong> than re-reading notes (The Testing Effect).',
+    'Music at 60 BPM (like baroque) can sync your brainwaves to a <strong>learning-optimal state</strong>.'
+  ];
+  document.getElementById('fun-fact').innerHTML = FACTS[Math.floor(Math.random() * FACTS.length)];
+
+  // ── Init ──────────────────────────────────────────────────────────────────
+  if (me?.totalXP) document.getElementById('nav-xp').textContent = `⚡ ${me.totalXP} XP`;
+  document.getElementById('hamburger').addEventListener('click', () => {
+    document.getElementById('mobile-menu')?.classList.toggle('open');
+  });
+  applyFilters();
+  renderMyPos();
+  renderCountryStats();
+  showSubjectLeaders('math', document.querySelector('.side-card .btn'));
+  updateTimer();
+  setInterval(updateTimer, 1000);
+  </script>
+</body>
+</html>
