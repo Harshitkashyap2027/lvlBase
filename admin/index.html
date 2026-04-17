@@ -244,9 +244,9 @@
         return '<tr><td style="font-weight:700;color:#FFD60A">' + (medals[i] || '#' + (i + 1)) + '</td>' +
           '<td><div style="font-weight:700">' + esc(u.displayName) + '</div><div style="font-size:0.75rem;color:#8892A4">' + esc(u.email) + '</div></td>' +
           '<td style="font-size:0.82rem">' + getSchoolName(u.schoolId) + '</td>' +
-          '<td style="font-weight:700;color:#6C63FF">XP ' + (u.totalXP || 0).toLocaleString() + '</td>' +
-          '<td><span class="badge badge-purple">' + getRank(u.totalXP || 0) + '</span></td>' +
-          '<td style="color:#FFD60A">' + (u.streak || 0) + ' days</td>' +
+          '<td style="font-weight:700;color:#6C63FF">XP ' + (parseInt(u.totalXP) || 0).toLocaleString() + '</td>' +
+          '<td><span class="badge badge-purple">' + getRank(parseInt(u.totalXP) || 0) + '</span></td>' +
+          '<td style="color:#FFD60A">' + (parseInt(u.streak) || 0) + ' days</td>' +
           '<td><span class="badge ' + (u.status === 'approved' ? 'badge-green' : u.status === 'banned' ? 'badge-red' : 'badge-amber') + '">' + esc(u.status || 'active') + '</span></td>' +
           '<td><div class="abg"><button class="ab ab-boost" onclick="boostUserXP(\'' + esc(u.uid) + '\',\'' + esc(u.displayName) + '\')">+XP</button>' +
           (u.status === 'banned'
