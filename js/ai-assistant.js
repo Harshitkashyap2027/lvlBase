@@ -1,5 +1,9 @@
 // ===== AI ASSISTANT MODULE =====
 
+// Gemini API configuration — set your API key in ai-assistant.html where the module is used.
+// Get a key from: https://aistudio.google.com/app/apikey
+export const GEMINI_API_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent";
+
 const RESPONSES = {
   greeting: ["Hello, Champion! 👋 I'm Sage, your AI study companion. Ask me anything!", "Hey! ⚡ Ready to level up your knowledge today?"],
   math: "Great math question! 📐\n\n**Key Tips:**\n• Show every step for full marks\n• Isolate variables in algebra\n• Draw diagrams for geometry\n• Use BODMAS: Brackets, Orders, Division, Multiplication, Addition, Subtraction\n\nWhich topic? (algebra, geometry, trigonometry, statistics?)",
