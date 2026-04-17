@@ -212,40 +212,96 @@ lvlBase/
 
 ## 🔧 Firebase Setup
 
-### Step 1 — Create Firebase Project
+> **No npm or build tools needed.** lvlBase loads the Firebase SDK directly from Google's CDN (v10.7.1). All you need is a text editor and a browser.
 
-1. Go to [firebase.google.com](https://firebase.google.com) → **Add Project**
+### Step 1 — Create a Firebase Project
+
+1. Go to [console.firebase.google.com](https://console.firebase.google.com) → **Add project**
 2. Name it `lvlbase` (or anything you like)
 3. Enable **Google Analytics** (optional but recommended)
+4. Click **Create project** and wait for it to be ready
 
-### Step 2 — Enable Services
+### Step 2 — Register a Web App
+
+1. On the project overview page, click the **`</>`** (Web) icon to add a web app
+2. Give it a nickname (e.g. `lvlbase-web`)
+3. Check **"Also set up Firebase Hosting"** if you plan to host on Firebase *(optional)*
+4. Click **Register app**
+5. Firebase will show you your **config object** — copy it (you'll need it in Step 4)
+
+```
+It looks like this:
+────────────────────────────────────────────
+const firebaseConfig = {
+  apiKey: "AIzaSyXXXXXXXXXXXXXXXXXXXXXXXXXXXXX",
+  authDomain: "your-project.firebaseapp.com",
+  projectId: "your-project",
+  storageBucket: "your-project.appspot.com",
+  messagingSenderId: "123456789012",
+  appId: "1:123456789012:web:abcdef1234567890",
+  measurementId: "G-XXXXXXXXXX"   ← only if Analytics enabled
+};
+────────────────────────────────────────────
+```
+
+### Step 3 — Enable Firebase Services
+
+In your Firebase console, enable the following services:
 
 ```
 Authentication → Sign-in method → Enable:
   ✅ Email/Password
   ✅ Google
 
-Firestore Database → Create database → Production mode
+Firestore Database → Create database → Start in production mode → choose region
 
 Storage (optional) → For profile pictures
 ```
 
-### Step 3 — Configure Your App
+### Step 4 — Paste Your Config into the Project
+
+Open `js/firebase-config.js` and replace the placeholder values with the config you copied in Step 2:
 
 ```javascript
-// js/firebase-config.js — Replace with YOUR config
+// js/firebase-config.js
+
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+import { getAuth, GoogleAuthProvider } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+import { getFirestore } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+// ✏️ Replace ALL values below with your own Firebase project credentials
 const firebaseConfig = {
-  apiKey: "AIzaSy...",
+  apiKey: "AIzaSyXXXXXXXXXXXXXXXXXXXXXXXXXXXXX",
   authDomain: "your-project.firebaseapp.com",
   projectId: "your-project",
   storageBucket: "your-project.appspot.com",
-  messagingSenderId: "123456789",
-  appId: "1:123456789:web:abc123",
-  measurementId: "G-XXXXXXXX"
+  messagingSenderId: "123456789012",
+  appId: "1:123456789012:web:abcdef1234567890",
+  measurementId: "G-XXXXXXXXXX"   // remove this line if you didn't enable Analytics
 };
+
+const app = initializeApp(firebaseConfig);
+export const auth = getAuth(app);
+export const db = getFirestore(app);
+export const googleProvider = new GoogleAuthProvider();
+
+export { app };
 ```
 
-### Step 4 — Firestore Security Rules
+### Step 5 — Switch from Demo Mode to Live Firebase
+
+The app runs in **demo mode** by default (data is stored in `localStorage` — no Firebase calls are made). To switch to your real Firebase backend, open `js/auth.js` and change line 4:
+
+```javascript
+// js/auth.js — line 4
+export const DEMO_MODE = false;  // ← change from true to false
+```
+
+Once `DEMO_MODE` is `false`, all sign-in, sign-up, and data operations go through Firebase Auth + Firestore.
+
+### Step 6 — Set Firestore Security Rules
+
+In the Firebase console go to **Firestore → Rules** and replace the default rules with:
 
 ```javascript
 rules_version = '2';
@@ -262,19 +318,24 @@ service cloud.firestore {
     }
     // Admin-only collections
     match /admin/{document=**} {
-      allow read, write: if request.auth != null && 
+      allow read, write: if request.auth != null &&
         get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
     }
   }
 }
 ```
 
-### Step 5 — Enable Live Mode
+Click **Publish** to save the rules.
 
-```javascript
-// In js/auth.js, change:
-const DEMO_MODE = false;  // Switch from demo to Firebase
-```
+### ✅ Firebase Connection Checklist
+
+Before going live, confirm:
+
+- [ ] Config values in `js/firebase-config.js` are from **your** project (not the placeholder)
+- [ ] `DEMO_MODE = false` in `js/auth.js`
+- [ ] Email/Password and Google sign-in are enabled in Firebase Auth
+- [ ] Firestore database has been created and security rules are published
+- [ ] You're serving the files over **HTTP/HTTPS** (not `file://`) — use a local server or Firebase Hosting
 
 ---
 
