@@ -4,6 +4,8 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>lvlBase ⚡ – Level Up Your Learning</title>
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#6C63FF">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="css/main.css">
@@ -41,7 +43,9 @@
       <a href="leaderboard.html" class="nav-link">Leaderboard</a>
     </div>
     <div class="navbar-actions">
+      <button id="pwa-install-btn" onclick="installPWA()" style="display:none;align-items:center;gap:6px;padding:0.5rem 1rem;background:linear-gradient(135deg,#6C63FF,#8B85FF);color:white;border:none;border-radius:12px;font-family:Poppins,sans-serif;font-size:0.82rem;font-weight:700;cursor:pointer">📲 Install App</button>
       <a href="login.html" id="nav-login" class="btn btn-ghost btn-sm">Login</a>
+      <a href="signup.html" class="btn btn-primary btn-sm">Sign Up</a>
       <a href="dashboard.html" id="nav-user" class="btn btn-primary btn-sm" style="display:none">Dashboard</a>
     </div>
     <div class="hamburger" id="hamburger">
@@ -69,8 +73,8 @@
           </h1>
           <p class="hero-subtitle">Join 50,000+ students turning studying into an epic adventure. Earn XP, unlock ranks, battle opponents, and master every subject.</p>
           <div class="hero-buttons">
-            <a href="login.html" class="btn btn-primary btn-xl">⚡ Start Free Now</a>
-            <a href="#features" class="btn btn-ghost btn-xl">See How It Works</a>
+            <a href="signup.html" class="btn btn-primary btn-xl">⚡ Start Free Now</a>
+            <a href="school-signup.html" class="btn btn-ghost btn-xl">🏫 Register School</a>
           </div>
           <div class="hero-stats">
             <div class="hero-stat-item">
@@ -345,6 +349,7 @@
 
   <div id="toast-container" class="toast-container"></div>
 
+  <script src="js/popup.js"></script>
   <script>
     // Hamburger menu
     document.getElementById('hamburger').addEventListener('click', () => {
@@ -365,6 +370,43 @@
         document.getElementById('mobile-menu').classList.remove('open');
       });
     });
+
+    // ── PWA Install Button ──
+    let deferredPrompt = null;
+    window.addEventListener('beforeinstallprompt', (e) => {
+      e.preventDefault();
+      deferredPrompt = e;
+      const installBtn = document.getElementById('pwa-install-btn');
+      if (installBtn) installBtn.style.display = 'flex';
+    });
+
+    window.addEventListener('appinstalled', () => {
+      deferredPrompt = null;
+      const installBtn = document.getElementById('pwa-install-btn');
+      if (installBtn) installBtn.style.display = 'none';
+      lvlPopup.toast('lvlBase installed on your device! 🎉', 'success');
+    });
+
+    function installPWA() {
+      if (!deferredPrompt) return;
+      deferredPrompt.prompt();
+      deferredPrompt.userChoice.then((result) => {
+        deferredPrompt = null;
+        if (result.outcome === 'accepted') {
+          const installBtn = document.getElementById('pwa-install-btn');
+          if (installBtn) installBtn.style.display = 'none';
+        }
+      });
+    }
+
+    // ── Service Worker Registration ──
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('/sw.js').catch(err => {
+          console.warn('SW registration failed:', err);
+        });
+      });
+    }
   </script>
 </body>
 </html>
