@@ -142,11 +142,32 @@ function loadFirebaseData(callback) {
     ]).then(function(snaps) {
       var users   = snaps[0].docs.map(function(d) { return d.data(); });
       var schools = snaps[1].docs.map(function(d) { return d.data(); });
-      _usersCache   = users;
-      _schoolsCache = schools;
+
+      // Merge: keep any schools that are only in localStorage (e.g. Firestore save
+      // failed silently during signup) so admins can still see and approve them.
+      var localSchools = JSON.parse(localStorage.getItem('lvlbase_schools') || '[]');
+      var fsSchoolIds  = {};
+      schools.forEach(function(s) { fsSchoolIds[s.id] = true; });
+      var localOnlySchools = localSchools.filter(function(s) { return !fsSchoolIds[s.id]; });
+      var mergedSchools = schools.concat(localOnlySchools);
+
+      // Same merge for users
+      var localUsers  = JSON.parse(localStorage.getItem('lvlbase_all_users') || '[]');
+      var fsUserIds   = {};
+      users.forEach(function(u) { fsUserIds[u.uid] = true; });
+      var localOnlyUsers = localUsers.filter(function(u) { return !fsUserIds[u.uid]; });
+      var mergedUsers = users.concat(localOnlyUsers);
+
+      _usersCache   = mergedUsers;
+      _schoolsCache = mergedSchools;
       // Mirror into localStorage for backward-compat helpers
-      localStorage.setItem('lvlbase_all_users', JSON.stringify(users));
-      localStorage.setItem('lvlbase_schools',   JSON.stringify(schools));
+      localStorage.setItem('lvlbase_all_users', JSON.stringify(mergedUsers));
+      localStorage.setItem('lvlbase_schools',   JSON.stringify(mergedSchools));
+
+      // Sync any local-only schools to Firestore so future loads also include them
+      localOnlySchools.forEach(function(s) { _fbSyncSchool(s); });
+      localOnlyUsers.forEach(function(u)   { _fbSyncUser(u);   });
+
       if (typeof callback === 'function') callback();
     }).catch(function(e) {
       console.warn('Admin: Firestore fetch failed:', e.message);
