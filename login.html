@@ -330,7 +330,7 @@
 
         if (userData && userData.schoolId) {
           // Role mismatch check
-          if (selectedRole !== userData.role && !(selectedRole === 'school_admin' && userData.role === 'school_admin')) {
+          if (selectedRole !== userData.role) {
             btn.disabled = false;
             btn.innerHTML = _googleBtnInner();
             await showRoleMismatch(selectedRole, userData.role);
