@@ -431,7 +431,16 @@
       });
       if (solution.tip) html += `<div style="margin-top:1.25rem;padding:0.875rem;background:rgba(255,215,0,0.08);border:1px solid rgba(255,215,0,0.2);border-radius:var(--radius);font-size:0.9rem">${solution.tip}</div>`;
 
-      lastResult = solution.steps.map((s, i) => `Step ${i + 1}: ${s.label}\n${s.content.replace(/<[^>]+>/g, '')}`).join('\n\n');
+      function stripHtml(html) {
+        try {
+          const doc = new DOMParser().parseFromString(html, 'text/html');
+          return doc.body.textContent || html;
+        } catch (_) {
+          // DOMParser unavailable — output is only used in clipboard/share, never innerHTML
+          return html;
+        }
+      }
+      lastResult = solution.steps.map((s, i) => `Step ${i + 1}: ${s.label}\n${stripHtml(s.content)}`).join('\n\n');
       body.innerHTML = html;
       card.classList.add('visible');
       card.scrollIntoView({ behavior: 'smooth', block: 'nearest' });

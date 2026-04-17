@@ -92,8 +92,17 @@ export function speak(text, { rate = 0.95, pitch = 1, lang = 'en-US', onEnd } = 
   if (!TTS_SUPPORTED || !ttsEnabled) { onEnd && onEnd(); return; }
   stopSpeaking();
 
-  // Strip HTML tags and markdown-style bold markers
-  const plain = text.replace(/<[^>]+>/g, '').replace(/\*\*(.+?)\*\*/g, '$1').trim();
+  // Convert text to speech-friendly plain text without using DOM APIs
+  // (output goes to SpeechSynthesisUtterance only — not a DOM sink)
+  const plain = text
+    .replace(/\*\*(.+?)\*\*/g, '$1')          // strip markdown bold
+    .replace(/<br\s*\/?>/gi, ' ')              // <br> → space
+    .replace(/<\/(?:p|div|li|h[1-6])>/gi, '. ') // block end → period+space
+    .replace(/<[^>]+>/g, '')                   // strip remaining tags
+    .replace(/&amp;/gi, '&').replace(/&lt;/gi, '').replace(/&gt;/gi, '')
+    .replace(/&[a-z]+;/gi, ' ')               // strip other entities
+    .replace(/\s{2,}/g, ' ')
+    .trim();
   if (!plain) { onEnd && onEnd(); return; }
 
   currentUtterance = new SpeechSynthesisUtterance(plain);

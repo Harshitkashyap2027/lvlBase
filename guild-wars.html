@@ -385,11 +385,20 @@
   }
 
   // ── Chat ──────────────────────────────────────────────────────────────────
+  function escapeHtml(str) {
+    return String(str)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#39;');
+  }
+
   function addChat(sender, text) {
     const el = document.getElementById('chat-msgs');
     const msg = document.createElement('div');
     msg.className = 'chat-msg';
-    msg.innerHTML = `<span class="sender">${sender}:</span> ${text}`;
+    msg.innerHTML = `<span class="sender">${escapeHtml(sender)}:</span> ${escapeHtml(text)}`;
     el.appendChild(msg);
     el.scrollTop = el.scrollHeight;
   }
