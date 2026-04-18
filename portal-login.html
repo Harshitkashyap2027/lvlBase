@@ -359,7 +359,19 @@
       if (currentRole === 'school_admin') {
         const schools = JSON.parse(localStorage.getItem('lvlbase_schools') || '[]');
         const match = schools.find(s => s.adminEmail && s.adminEmail.toLowerCase() === email.toLowerCase());
-        if (match) { schoolId = match.id; } else { schoolId = 'school_' + btoa(email).replace(/=/g,'').slice(0,8); }
+        if (match) {
+          schoolId = match.id;
+          if (match.status === 'rejected') {
+            showToast('❌ Your school registration was rejected. Contact platform admin.', 'error');
+            return;
+          }
+          if (match.status === 'pending') {
+            showToast('⏳ Your school is pending verification. You can view your dashboard status.', 'warning');
+            // Allow through — school-dashboard.html will show the locked overlay
+          }
+        } else {
+          schoolId = 'school_' + btoa(email).replace(/=/g,'').slice(0,8);
+        }
       }
 
       // Super-admin credential check
