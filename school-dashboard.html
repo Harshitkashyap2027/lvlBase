@@ -467,18 +467,7 @@
         msgEl.innerHTML = 'Your school <strong style="color:#E8E8FF">' + esc(schoolData.name) + '</strong> is awaiting verification by the platform admin.<br><br>All dashboard features are locked until your school is verified. Tap the button below to contact the admin and speed up the process.';
       }
 
-      const waMsg = 'Hello Admin,
-
-*School ' + (isRejected ? 'Re-verification' : 'Verification') + ' Request – lvlBase* 🏫
-
-🏫 School: ' + schoolData.name + '
-👤 Principal: ' + schoolData.principal + '
-📍 ' + schoolData.city + ', ' + schoolData.state + '
-📞 ' + schoolData.phone + '
-📧 ' + schoolData.email + '
-
-Please ' + (isRejected ? 're-review' : 'verify') + ' this school.
-Thank you!';
+      const waMsg = `Hello Admin,\n\n*School ${isRejected ? 'Re-verification' : 'Verification'} Request \u2013 lvlBase* \U0001f3eb\n\n\U0001f3eb School: ${schoolData.name}\n\U0001f464 Principal: ${schoolData.principal}\n\U0001f4cd ${schoolData.city}, ${schoolData.state}\n\U0001f4de ${schoolData.phone}\n\U0001f4e7 ${schoolData.email}\n\nPlease ${isRejected ? 're-review' : 'verify'} this school.\nThank you!`;
       waLink.href = 'https://wa.me/919258837596?text=' + encodeURIComponent(waMsg);
       overlay.style.display = 'flex';
     }
@@ -643,7 +632,7 @@ Thank you!';
           <td><span class="badge ${u.status === 'approved' ? 'badge-approved' : 'badge-pending'}">${esc(u.status)}</span></td>
           <td style="color:var(--text-muted);font-size:.78rem">${new Date(u.createdAt).toLocaleDateString('en-IN')}</td>
           <td>
-            ${u.status === 'pending' ? '<div class="action-btns"><button class="btn-xs btn-approve" onclick="approveUser('' + esc(u.uid) + '')">✓</button><button class="btn-xs btn-reject" onclick="rejectUser('' + esc(u.uid) + '')">✗</button></div>' : ''}
+            ${u.status === 'pending' ? `<div class="action-btns"><button class="btn-xs btn-approve" onclick="approveUser('${esc(u.uid)}')">✓</button><button class="btn-xs btn-reject" onclick="rejectUser('${esc(u.uid)}')">✗</button></div>` : ''}
           </td>
         </tr>`;
       }).join('');
@@ -797,18 +786,20 @@ Thank you!';
         tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;color:var(--text-muted);padding:1.5rem">No tests created yet. Teachers can create tests from the Teacher Dashboard.</td></tr>';
         return;
       }
-      tbody.innerHTML = tests.map(t => {
+            tbody.innerHTML = tests.map(t => {
         const statusClass = t.archived ? 'badge-rejected' : 'badge-approved';
         const statusLabel = t.archived ? 'Archived' : 'Active';
-        return '<tr>' +
-          '<td><strong>' + esc(t.title || 'Untitled') + '</strong></td>' +
-          '<td style="color:var(--text-muted)">' + esc(t.teacherName || '-') + '</td>' +
-          '<td>' + esc(t.subject || '-') + '</td>' +
-          '<td style="color:var(--text-muted)">' + esc(String((t.questions || []).length)) + '</td>' +
-          '<td style="color:var(--text-muted);font-size:.78rem">' + new Date(t.createdAt || Date.now()).toLocaleDateString('en-IN') + '</td>' +
-          '<td><span class="badge ' + statusClass + '">' + statusLabel + '</span></td>' +
-          '<td><button class="btn-xs ' + (t.archived ? 'btn-approve' : 'btn-reject') + '" onclick="toggleTestArchive(\'' + esc(t.id) + '\')">' + (t.archived ? 'Re-enable' : 'Archive') + '</button></td>' +
-          '</tr>';
+        const toggleLabel = t.archived ? 'Re-enable' : 'Archive';
+        const toggleClass = t.archived ? 'btn-approve' : 'btn-reject';
+        return `<tr>
+          <td><strong>${esc(t.title || 'Untitled')}</strong></td>
+          <td style="color:var(--text-muted)">${esc(t.teacherName || '-')}</td>
+          <td>${esc(t.subject || '-')}</td>
+          <td style="color:var(--text-muted)">${esc(String((t.questions || []).length))}</td>
+          <td style="color:var(--text-muted);font-size:.78rem">${new Date(t.createdAt || Date.now()).toLocaleDateString('en-IN')}</td>
+          <td><span class="badge ${statusClass}">${statusLabel}</span></td>
+          <td><button class="btn-xs ${toggleClass}" onclick="toggleTestArchive('${esc(t.id)}')">${toggleLabel}</button></td>
+        </tr>`;
       }).join('');
     }
 
@@ -840,14 +831,15 @@ Thank you!';
         container.innerHTML = '<div style="color:var(--text-muted);font-size:.84rem">No announcements posted yet.</div>';
         return;
       }
-      container.innerHTML = list.map(a => '<div style="border-bottom:1px solid var(--border);padding:.85rem 0">' +
-        '<div style="display:flex;align-items:flex-start;justify-content:space-between;gap:.5rem">' +
-        '<strong style="font-size:.9rem">' + esc(a.title) + '</strong>' +
-        '<span style="font-size:.73rem;color:var(--text-muted);white-space:nowrap">' + new Date(a.createdAt).toLocaleDateString('en-IN') + '</span>' +
-        '</div>' +
-        '<p style="color:var(--text-muted);font-size:.83rem;margin:.35rem 0 .5rem;line-height:1.6">' + esc(a.body) + '</p>' +
-        '<button class="btn-xs btn-reject" onclick="deleteAnnouncement(\'' + esc(a.id) + '\')">Delete</button>' +
-        '</div>').join('');
+            container.innerHTML = list.map(a => `
+        <div style="border-bottom:1px solid var(--border);padding:.85rem 0">
+          <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:.5rem">
+            <strong style="font-size:.9rem">${esc(a.title)}</strong>
+            <span style="font-size:.73rem;color:var(--text-muted);white-space:nowrap">${new Date(a.createdAt).toLocaleDateString('en-IN')}</span>
+          </div>
+          <p style="color:var(--text-muted);font-size:.83rem;margin:.35rem 0 .5rem;line-height:1.6">${esc(a.body)}</p>
+          <button class="btn-xs btn-reject" onclick="deleteAnnouncement('${esc(a.id)}')">Delete</button>
+        </div>`).join('');
     }
 
     function createAnnouncement() {
