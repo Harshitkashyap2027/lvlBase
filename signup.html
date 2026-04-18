@@ -240,48 +240,51 @@
     }
 
     async function getVerifiedSchools() {
-      // Try Firebase (Firestore + RTDB) first — returns pending + verified schools
+      // Try Firebase (Firestore + RTDB) first — returns all non-rejected schools
       if (window.fb && window.fb.live) {
         try {
-          const firestoreSchools = await window.fb.getAllSchools();
-          if (firestoreSchools && firestoreSchools.length > 0) {
+          const allSchools = await window.fb.getAllSchools();
+          if (allSchools && allSchools.length > 0) {
             // Cache into localStorage so offline use still works
             const localSchools = JSON.parse(localStorage.getItem('lvlbase_schools') || '[]');
-            for (const fs of firestoreSchools) {
+            for (const fs of allSchools) {
               const idx = localSchools.findIndex(s => s.id === fs.id);
               if (idx !== -1) localSchools[idx] = fs;
               else localSchools.push(fs);
             }
             localStorage.setItem('lvlbase_schools', JSON.stringify(localSchools));
-            return firestoreSchools;
+            // Return only admin-verified schools so students cannot join unverified schools
+            return allSchools.filter(s => s.status === 'verified');
           }
         } catch (e) { console.warn('Firestore school fetch failed:', e.message); }
       }
-      // Fallback: localStorage — include pending + verified (exclude rejected)
+      // Fallback: localStorage — only verified schools
       const schools = JSON.parse(localStorage.getItem('lvlbase_schools') || '[]');
-      return schools.filter(s => s.status !== 'rejected');
+      return schools.filter(s => s.status === 'verified');
     }
 
     function renderSchools(list) {
       const container = document.getElementById('schools-list');
       if (!list.length) {
-        container.innerHTML = '<div style="color:var(--text-muted);font-size:0.85rem;text-align:center;padding:1.5rem 0">No schools found yet.<br>Ask your school to register at <a href="school-signup.html" style="color:var(--primary)">school-signup.html</a></div>';
+        container.innerHTML = `
+          <div style="text-align:center;padding:1.75rem 0">
+            <div style="font-size:2.5rem;margin-bottom:0.75rem">🏫</div>
+            <div style="color:var(--text-muted);font-size:0.85rem;line-height:1.7">
+              No verified schools are available yet.<br>
+              Ask your school to register on lvlBase and<br>wait for platform admin approval.<br><br>
+              <a href="school-signup.html" style="color:var(--primary);font-weight:600">Register your school →</a>
+            </div>
+          </div>`;
         return;
       }
-      container.innerHTML = list.map(s => {
-        const isPending = s.status === 'pending';
-        const statusBadge = isPending
-          ? '<span style="font-size:0.7rem;background:rgba(255,165,0,0.15);color:#FFA500;border:1px solid rgba(255,165,0,0.35);border-radius:6px;padding:0.1rem 0.4rem;margin-left:0.4rem">Pending verification</span>'
-          : '';
-        return `
-          <div class="school-option" id="school-opt-${s.id}" onclick="selectSchool('${s.id}')">
-            <div>
-              <div class="school-name-tag">🏫 ${s.name}${statusBadge}</div>
-              <div class="school-meta">${s.city}, ${s.state}</div>
-            </div>
+      container.innerHTML = list.map(s => `
+        <div class="school-option" id="school-opt-${s.id}" onclick="selectSchool('${s.id}')">
+          <div>
+            <div class="school-name-tag">🏫 ${s.name}</div>
+            <div class="school-meta">${s.city}, ${s.state}</div>
           </div>
-        `;
-      }).join('');
+        </div>
+      `).join('');
     }
 
     function filterSchools(query) {

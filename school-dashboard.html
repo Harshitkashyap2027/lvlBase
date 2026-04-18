@@ -111,6 +111,17 @@
   </style>
 </head>
 <body>
+  <!-- FULL-PAGE LOCKED OVERLAY (shown when school is pending or rejected) -->
+  <div id="locked-overlay" class="locked-overlay" style="display:none">
+    <div style="background:#1A1A2E;border:2px solid var(--danger);border-radius:28px;padding:3rem 2rem;max-width:480px;width:100%;text-align:center;box-shadow:0 20px 60px rgba(0,0,0,0.5)">
+      <div id="lock-icon" style="font-size:4rem;margin-bottom:1rem">⏳</div>
+      <h2 id="lock-title" style="color:var(--warning);font-size:1.5rem;font-weight:800;margin-bottom:0.75rem">Pending Verification</h2>
+      <p id="lock-message" style="color:var(--text-muted);font-size:0.9rem;line-height:1.8;margin-bottom:2rem"></p>
+      <a id="lock-whatsapp" href="#" target="_blank" rel="noopener noreferrer" class="btn btn-primary btn-full" style="display:block;padding:0.85rem;background:linear-gradient(135deg,#25D366,#128C7E);color:white;border-radius:14px;font-weight:700;text-decoration:none;margin-bottom:0.75rem;font-size:0.95rem">💬 Message Admin on WhatsApp</a>
+      <button onclick="doLogout()" style="width:100%;padding:0.75rem;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.08);border-radius:14px;color:var(--text-muted);cursor:pointer;font-family:var(--font);font-size:0.9rem;font-weight:600">🚪 Logout</button>
+    </div>
+  </div>
+
   <!-- SIDEBAR -->
   <aside class="sidebar" id="sidebar">
     <div class="sidebar-brand">
@@ -131,6 +142,7 @@
       <a onclick="showSection('teachers',this)"><span class="icon">👨‍🏫</span>Teachers</a>
       <a onclick="showSection('parents',this)"><span class="icon">👨‍👩‍👧</span>Parents</a>
       <a onclick="showSection('tests',this)"><span class="icon">📝</span>Tests & Exams</a>
+      <a onclick="showSection('announcements',this)"><span class="icon">📢</span>Announcements</a>
       <a onclick="showSection('cheat-reports',this)"><span class="icon">⚠️</span>Cheat Reports</a>
       <a onclick="showSection('settings',this)"><span class="icon">⚙️</span>Settings</a>
     </nav>
@@ -190,12 +202,13 @@
       <div id="section-students" class="section">
         <div class="section-title">🎓 Students</div>
         <p class="section-sub">All approved students in your school</p>
-        <div class="card" style="margin-bottom:1rem">
-          <input type="text" id="student-search" class="form-control" placeholder="🔍 Search by name or email…" oninput="renderStudents(this.value)" style="max-width:300px">
+        <div class="card" style="margin-bottom:1rem;display:flex;align-items:center;gap:0.75rem;flex-wrap:wrap">
+          <input type="text" id="student-search" class="form-control" placeholder="🔍 Search by name or email…" oninput="renderStudents(this.value)" style="max-width:280px;flex:1">
+          <button onclick="exportStudentsCSV()" class="btn btn-ghost btn-sm" style="font-size:.82rem;white-space:nowrap">⬇️ Export CSV</button>
         </div>
         <div class="card" style="overflow-x:auto">
           <table>
-            <thead><tr><th>Name</th><th>Email</th><th>Grade</th><th>Guild</th><th>XP</th><th>Status</th><th>Joined</th></tr></thead>
+            <thead><tr><th>Name</th><th>Email</th><th>Grade</th><th>Guild</th><th>XP</th><th>Parent</th><th>Status</th><th>Joined</th></tr></thead>
             <tbody id="students-tbody"></tbody>
           </table>
         </div>
@@ -205,6 +218,9 @@
       <div id="section-teachers" class="section">
         <div class="section-title">👨‍🏫 Teachers</div>
         <p class="section-sub">All approved teachers in your school</p>
+        <div style="text-align:right;margin-bottom:0.75rem">
+          <button onclick="exportTeachersCSV()" class="btn btn-ghost btn-sm" style="font-size:.82rem">⬇️ Export CSV</button>
+        </div>
         <div class="card" style="overflow-x:auto">
           <table>
             <thead><tr><th>Name</th><th>Email</th><th>Subject</th><th>Qualification</th><th>Status</th><th>Joined</th><th>Actions</th></tr></thead>
@@ -228,9 +244,38 @@
       <!-- TESTS -->
       <div id="section-tests" class="section">
         <div class="section-title">📝 Tests & Exams</div>
-        <p class="section-sub">Manage ongoing tests. Teachers can create; you can monitor.</p>
+        <p class="section-sub">Tests created by teachers in your school. You can archive or re-enable them.</p>
+        <div class="card" style="overflow-x:auto">
+          <table>
+            <thead><tr><th>Title</th><th>Teacher</th><th>Subject</th><th>Questions</th><th>Created</th><th>Status</th><th>Actions</th></tr></thead>
+            <tbody id="tests-tbody"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- ANNOUNCEMENTS -->
+      <div id="section-announcements" class="section">
+        <div class="section-title">📢 Announcements</div>
+        <p class="section-sub">Post announcements visible to all students, teachers and parents in your school</p>
+
+        <!-- Create Announcement -->
+        <div class="card" style="margin-bottom:1.25rem">
+          <div class="card-title">✏️ New Announcement</div>
+          <div class="form-group">
+            <label class="form-label">Title *</label>
+            <input type="text" id="ann-title" class="form-control" placeholder="e.g. Holiday Notice, Exam Schedule">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Message *</label>
+            <textarea id="ann-body" class="form-control" rows="4" placeholder="Write your announcement here…" style="resize:vertical"></textarea>
+          </div>
+          <button class="btn btn-primary" onclick="createAnnouncement()">📢 Post Announcement</button>
+        </div>
+
+        <!-- Announcements List -->
         <div class="card">
-          <p style="color:var(--text-muted);font-size:.88rem">Test management feature coming soon. Teachers can assign tests from the Teacher Dashboard.</p>
+          <div class="card-title">📋 Posted Announcements</div>
+          <div id="announcements-list"><div style="color:var(--text-muted);font-size:.84rem">No announcements yet.</div></div>
         </div>
       </div>
 
@@ -249,8 +294,49 @@
       <!-- SETTINGS -->
       <div id="section-settings" class="section">
         <div class="section-title">⚙️ School Settings</div>
-        <p class="section-sub">View and update your school information</p>
-        <div class="card" id="settings-card">Loading…</div>
+        <p class="section-sub">Update your school profile information</p>
+        <div class="card">
+          <div class="grid2" style="gap:1rem;margin-bottom:1rem">
+            <div class="form-group" style="margin-bottom:0">
+              <label class="form-label">School Name *</label>
+              <input type="text" id="set-name" class="form-control" placeholder="School name">
+            </div>
+            <div class="form-group" style="margin-bottom:0">
+              <label class="form-label">Principal / Head Name *</label>
+              <input type="text" id="set-principal" class="form-control" placeholder="Principal name">
+            </div>
+            <div class="form-group" style="margin-bottom:0">
+              <label class="form-label">Contact Phone *</label>
+              <input type="tel" id="set-phone" class="form-control" placeholder="Phone number">
+            </div>
+            <div class="form-group" style="margin-bottom:0">
+              <label class="form-label">Contact Email *</label>
+              <input type="email" id="set-email" class="form-control" placeholder="School email">
+            </div>
+            <div class="form-group" style="margin-bottom:0">
+              <label class="form-label">City</label>
+              <input type="text" id="set-city" class="form-control" placeholder="City">
+            </div>
+            <div class="form-group" style="margin-bottom:0">
+              <label class="form-label">State</label>
+              <input type="text" id="set-state" class="form-control" placeholder="State">
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Full Address</label>
+            <input type="text" id="set-address" class="form-control" placeholder="Street, Area">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Website (optional)</label>
+            <input type="url" id="set-website" class="form-control" placeholder="https://yourschool.edu.in">
+          </div>
+          <div style="display:flex;align-items:center;gap:0.5rem;margin-bottom:1.25rem;font-size:.84rem;color:var(--text-muted)">
+            <span>Status:</span>
+            <span id="set-status-badge" class="badge badge-pending">pending</span>
+            <span style="margin-left:auto;font-size:.78rem">Registered: <strong id="set-created"></strong></span>
+          </div>
+          <button class="btn btn-primary" onclick="saveSchoolProfile()">💾 Save Changes</button>
+        </div>
       </div>
     </div>
   </div>
@@ -338,11 +424,15 @@
       if (schoolData.status === 'verified') {
         statusBadge.textContent = '✅ Verified';
         statusBadge.style.cssText = 'background:rgba(0,209,178,.15);color:#00D1B2;font-size:.8rem;font-weight:700;padding:.3rem .8rem;border-radius:10px';
+        // Hide overlay if school was just verified
+        document.getElementById('locked-overlay').style.display = 'none';
       } else {
-        statusBadge.textContent = '⏳ Pending Verification';
-        statusBadge.style.cssText = 'background:rgba(255,165,0,.15);color:#FFA500;font-size:.8rem;font-weight:700;padding:.3rem .8rem;border-radius:10px';
-        // Show locked popup
-        setTimeout(showPendingPopup, 500);
+        statusBadge.textContent = schoolData.status === 'rejected' ? '❌ Rejected' : '⏳ Pending Verification';
+        statusBadge.style.cssText = schoolData.status === 'rejected'
+          ? 'background:rgba(255,68,68,.15);color:#FF4444;font-size:.8rem;font-weight:700;padding:.3rem .8rem;border-radius:10px'
+          : 'background:rgba(255,165,0,.15);color:#FFA500;font-size:.8rem;font-weight:700;padding:.3rem .8rem;border-radius:10px';
+        showLockedOverlay();
+        return; // Do not render data sections while school is not verified
       }
 
       loadStats();
@@ -352,24 +442,45 @@
       renderParents();
       renderCheatReports();
       renderSettings();
+      renderTests();
+      renderAnnouncements();
     }
 
-    function showPendingPopup() {
+    function showLockedOverlay() {
       if (!schoolData) return;
-      const waMsg = `Hello Admin,\n\n*School Verification Request – lvlBase* 🏫\n\n🏫 School: ${schoolData.name}\n👤 Principal: ${schoolData.principal}\n👨‍💼 Admin: ${schoolData.adminName}\n📍 ${schoolData.address}, ${schoolData.city}, ${schoolData.state} - ${schoolData.pincode}\n📞 ${schoolData.phone}\n📧 ${schoolData.email}\n\nPlease verify this school in the admin panel.\nThank you!`;
-      const waLink = `https://wa.me/919258837596?text=${encodeURIComponent(waMsg)}`;
+      const isRejected = schoolData.status === 'rejected';
+      const overlay  = document.getElementById('locked-overlay');
+      const cardEl   = overlay.querySelector('div');
+      const icon     = document.getElementById('lock-icon');
+      const title    = document.getElementById('lock-title');
+      const msgEl    = document.getElementById('lock-message');
+      const waLink   = document.getElementById('lock-whatsapp');
 
-      lvlPopup.show({
-        type: 'warning',
-        icon: '⏳',
-        title: 'Pending Admin Verification',
-        message: `Your school <strong style="color:#E8E8FF">${schoolData.name}</strong> is awaiting verification by the platform admin.<br><br>All dashboard actions are locked until verified. Tap WhatsApp to contact the admin and speed up the process.`,
-        dismissable: true,
-        buttons: [
-          { label: '💬 Message Admin on WhatsApp', style: 'whatsapp', href: waLink, target: '_blank' },
-          { label: 'Dismiss', style: 'ghost', action: 'close' }
-        ]
-      });
+      cardEl.style.borderColor = isRejected ? 'var(--danger)' : 'var(--warning)';
+      icon.textContent  = isRejected ? '❌' : '⏳';
+      title.textContent = isRejected ? 'School Registration Rejected' : 'Pending Admin Verification';
+      title.style.color = isRejected ? 'var(--danger)' : 'var(--warning)';
+
+      if (isRejected) {
+        msgEl.innerHTML = 'Your school <strong style="color:#E8E8FF">' + esc(schoolData.name) + '</strong> registration was rejected by the platform admin.<br><br>Please contact the admin for more information or to resubmit your application.';
+      } else {
+        msgEl.innerHTML = 'Your school <strong style="color:#E8E8FF">' + esc(schoolData.name) + '</strong> is awaiting verification by the platform admin.<br><br>All dashboard features are locked until your school is verified. Tap the button below to contact the admin and speed up the process.';
+      }
+
+      const waMsg = 'Hello Admin,
+
+*School ' + (isRejected ? 'Re-verification' : 'Verification') + ' Request – lvlBase* 🏫
+
+🏫 School: ' + schoolData.name + '
+👤 Principal: ' + schoolData.principal + '
+📍 ' + schoolData.city + ', ' + schoolData.state + '
+📞 ' + schoolData.phone + '
+📧 ' + schoolData.email + '
+
+Please ' + (isRejected ? 're-review' : 'verify') + ' this school.
+Thank you!';
+      waLink.href = 'https://wa.me/919258837596?text=' + encodeURIComponent(waMsg);
+      overlay.style.display = 'flex';
     }
 
     function isLocked() {
@@ -378,7 +489,7 @@
     }
 
     function requireUnlocked(fn) {
-      if (isLocked()) { showPendingPopup(); return; }
+      if (isLocked()) { showLockedOverlay(); return; }
       fn();
     }
 
@@ -458,9 +569,13 @@
     function renderStudents(search = '') {
       const su = getSchoolUsers().filter(u => u.role === 'student' && u.status === 'approved');
       const filtered = search ? su.filter(u => (u.displayName + u.email).toLowerCase().includes(search.toLowerCase())) : su;
+      // Build parent lookup: childUid -> parent displayName
+      const parents = getSchoolUsers().filter(u => u.role === 'parent');
+      const parentByChild = {};
+      parents.forEach(p => { if (p.childUid) parentByChild[p.childUid] = p.displayName; });
       const tbody = document.getElementById('students-tbody');
       if (filtered.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;color:var(--text-muted);padding:1.5rem">No students found.</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;color:var(--text-muted);padding:1.5rem">No students found.</td></tr>';
         return;
       }
       tbody.innerHTML = filtered.map(u => `
@@ -470,6 +585,7 @@
           <td>Grade ${esc(u.grade || '-')}</td>
           <td>${u.guild ? esc(u.guild.charAt(0).toUpperCase() + u.guild.slice(1)) : '-'}</td>
           <td style="color:var(--accent)">⚡ ${esc(String(u.totalXP || 0))}</td>
+          <td style="color:var(--text-muted);font-size:.82rem">${parentByChild[u.uid] ? esc(parentByChild[u.uid]) : '-'}</td>
           <td><span class="badge badge-approved">Active</span></td>
           <td style="color:var(--text-muted);font-size:.78rem">${new Date(u.createdAt).toLocaleDateString('en-IN')}</td>
         </tr>
@@ -500,23 +616,37 @@
 
     function renderParents() {
       const su = getSchoolUsers().filter(u => u.role === 'parent');
+      // Build student lookup by uid and by email
+      const allSchoolUsers = getSchoolUsers();
+      const studentByUid   = {};
+      const studentByEmail = {};
+      allSchoolUsers.filter(u => u.role === 'student').forEach(s => {
+        studentByUid[s.uid]   = s.displayName;
+        if (s.email) studentByEmail[s.email.toLowerCase()] = s.displayName;
+      });
       const tbody = document.getElementById('parents-tbody');
       if (su.length === 0) {
         tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;color:var(--text-muted);padding:1.5rem">No parents yet.</td></tr>';
         return;
       }
-      tbody.innerHTML = su.map(u => `
+      tbody.innerHTML = su.map(u => {
+        const childName = (u.childUid && studentByUid[u.childUid])
+          ? studentByUid[u.childUid]
+          : (u.studentEmail && studentByEmail[u.studentEmail.toLowerCase()])
+            ? studentByEmail[u.studentEmail.toLowerCase()]
+            : (u.studentEmail ? esc(u.studentEmail) : '-');
+        return `
         <tr>
           <td><strong>${esc(u.displayName)}</strong></td>
           <td style="color:var(--text-muted)">${esc(u.email)}</td>
-          <td style="color:var(--text-muted)">${esc(u.studentEmail || '-')}</td>
+          <td style="color:var(--text-muted)">${childName}</td>
           <td><span class="badge ${u.status === 'approved' ? 'badge-approved' : 'badge-pending'}">${esc(u.status)}</span></td>
           <td style="color:var(--text-muted);font-size:.78rem">${new Date(u.createdAt).toLocaleDateString('en-IN')}</td>
           <td>
-            ${u.status === 'pending' ? `<div class="action-btns"><button class="btn-xs btn-approve" onclick="approveUser('${esc(u.uid)}')">✓</button><button class="btn-xs btn-reject" onclick="rejectUser('${esc(u.uid)}')">✗</button></div>` : ''}
+            ${u.status === 'pending' ? '<div class="action-btns"><button class="btn-xs btn-approve" onclick="approveUser('' + esc(u.uid) + '')">✓</button><button class="btn-xs btn-reject" onclick="rejectUser('' + esc(u.uid) + '')">✗</button></div>' : ''}
           </td>
-        </tr>
-      `).join('');
+        </tr>`;
+      }).join('');
     }
 
     function renderCheatReports() {
@@ -543,19 +673,52 @@
     function renderSettings() {
       if (!schoolData) return;
       const s = schoolData;
-      document.getElementById('settings-card').innerHTML = `
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;font-size:.88rem">
-          <div><div style="color:var(--text-muted);margin-bottom:.2rem">School Name</div><strong>${esc(s.name)}</strong></div>
-          <div><div style="color:var(--text-muted);margin-bottom:.2rem">Principal</div><strong>${esc(s.principal)}</strong></div>
-          <div><div style="color:var(--text-muted);margin-bottom:.2rem">City</div><strong>${esc(s.city)}</strong></div>
-          <div><div style="color:var(--text-muted);margin-bottom:.2rem">State</div><strong>${esc(s.state)}</strong></div>
-          <div><div style="color:var(--text-muted);margin-bottom:.2rem">Phone</div><strong>${esc(s.phone)}</strong></div>
-          <div><div style="color:var(--text-muted);margin-bottom:.2rem">Email</div><strong>${esc(s.email)}</strong></div>
-          ${s.website ? `<div><div style="color:var(--text-muted);margin-bottom:.2rem">Website</div><strong>${esc(s.website)}</strong></div>` : ''}
-          <div><div style="color:var(--text-muted);margin-bottom:.2rem">Status</div><span class="badge ${s.status === 'verified' ? 'badge-approved' : 'badge-pending'}">${esc(s.status)}</span></div>
-          <div><div style="color:var(--text-muted);margin-bottom:.2rem">Registered</div><strong>${new Date(s.createdAt).toLocaleDateString('en-IN')}</strong></div>
-        </div>
-      `;
+      // Populate editable form fields
+      document.getElementById('set-name').value      = s.name      || '';
+      document.getElementById('set-principal').value = s.principal || '';
+      document.getElementById('set-phone').value     = s.phone     || '';
+      document.getElementById('set-email').value     = s.email     || '';
+      document.getElementById('set-city').value      = s.city      || '';
+      document.getElementById('set-state').value     = s.state     || '';
+      document.getElementById('set-address').value   = s.address   || '';
+      document.getElementById('set-website').value   = s.website   || '';
+      const sb = document.getElementById('set-status-badge');
+      sb.textContent  = esc(s.status);
+      sb.className    = 'badge ' + (s.status === 'verified' ? 'badge-approved' : s.status === 'rejected' ? 'badge-rejected' : 'badge-pending');
+      document.getElementById('set-created').textContent = s.createdAt ? new Date(s.createdAt).toLocaleDateString('en-IN') : '-';
+    }
+
+    function saveSchoolProfile() {
+      requireUnlocked(() => {
+        if (!schoolData) return;
+        const name      = document.getElementById('set-name').value.trim();
+        const principal = document.getElementById('set-principal').value.trim();
+        const phone     = document.getElementById('set-phone').value.trim();
+        const email     = document.getElementById('set-email').value.trim();
+        const city      = document.getElementById('set-city').value.trim();
+        const state     = document.getElementById('set-state').value.trim();
+        const address   = document.getElementById('set-address').value.trim();
+        const website   = document.getElementById('set-website').value.trim();
+        if (!name || !principal || !phone || !email) {
+          lvlPopup.toast('Please fill in all required fields', 'error');
+          return;
+        }
+        // Update only non-sensitive fields; schoolId and status are immutable here
+        const schools = JSON.parse(localStorage.getItem('lvlbase_schools') || '[]');
+        const idx = schools.findIndex(s => s.id === schoolData.id);
+        if (idx !== -1) {
+          schools[idx] = { ...schools[idx], name, principal, phone, email, city, state, address, website, updatedAt: new Date().toISOString() };
+          localStorage.setItem('lvlbase_schools', JSON.stringify(schools));
+          schoolData = schools[idx];
+          // Sync to Firebase if available
+          if (window.fb && window.fb.live) {
+            window.fb.saveSchool(schoolData).catch(() => {});
+          }
+          lvlPopup.toast('School profile saved! ✅', 'success');
+        } else {
+          lvlPopup.toast('School not found in local data.', 'error');
+        }
+      });
     }
 
     function approveUser(uid) {
@@ -606,6 +769,8 @@
       renderTeachers();
       renderParents();
       renderCheatReports();
+      renderTests();
+      renderAnnouncements();
     }
 
     function showSection(id, el) {
@@ -613,8 +778,148 @@
       document.getElementById('section-' + id).classList.add('active');
       document.querySelectorAll('.sidebar-nav a').forEach(a => a.classList.remove('active'));
       if (el) el.classList.add('active');
-      const titles = { overview:'📊 Overview', pending:'⏳ Pending Approvals', students:'🎓 Students', teachers:'👨‍🏫 Teachers', parents:'👨‍👩‍👧 Parents', tests:'📝 Tests & Exams', 'cheat-reports':'⚠️ Cheat Reports', settings:'⚙️ Settings' };
+      const titles = { overview:'📊 Overview', pending:'⏳ Pending Approvals', students:'🎓 Students', teachers:'👨‍🏫 Teachers', parents:'👨‍👩‍👧 Parents', tests:'📝 Tests & Exams', announcements:'📢 Announcements', 'cheat-reports':'⚠️ Cheat Reports', settings:'⚙️ Settings' };
       document.getElementById('topbar-title').textContent = titles[id] || id;
+    }
+
+    // ── Tests ───────────────────────────────────────────────
+    function getSchoolTests() {
+      const tests = JSON.parse(localStorage.getItem('lvlbase_tests') || '[]');
+      const sid = schoolData ? schoolData.id : user.schoolId;
+      return tests.filter(t => t.schoolId === sid);
+    }
+
+    function renderTests() {
+      const tests = getSchoolTests();
+      const tbody = document.getElementById('tests-tbody');
+      if (!tbody) return;
+      if (!tests.length) {
+        tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;color:var(--text-muted);padding:1.5rem">No tests created yet. Teachers can create tests from the Teacher Dashboard.</td></tr>';
+        return;
+      }
+      tbody.innerHTML = tests.map(t => {
+        const statusClass = t.archived ? 'badge-rejected' : 'badge-approved';
+        const statusLabel = t.archived ? 'Archived' : 'Active';
+        return '<tr>' +
+          '<td><strong>' + esc(t.title || 'Untitled') + '</strong></td>' +
+          '<td style="color:var(--text-muted)">' + esc(t.teacherName || '-') + '</td>' +
+          '<td>' + esc(t.subject || '-') + '</td>' +
+          '<td style="color:var(--text-muted)">' + esc(String((t.questions || []).length)) + '</td>' +
+          '<td style="color:var(--text-muted);font-size:.78rem">' + new Date(t.createdAt || Date.now()).toLocaleDateString('en-IN') + '</td>' +
+          '<td><span class="badge ' + statusClass + '">' + statusLabel + '</span></td>' +
+          '<td><button class="btn-xs ' + (t.archived ? 'btn-approve' : 'btn-reject') + '" onclick="toggleTestArchive(\'' + esc(t.id) + '\')">' + (t.archived ? 'Re-enable' : 'Archive') + '</button></td>' +
+          '</tr>';
+      }).join('');
+    }
+
+    function toggleTestArchive(testId) {
+      requireUnlocked(() => {
+        const tests = JSON.parse(localStorage.getItem('lvlbase_tests') || '[]');
+        const idx = tests.findIndex(t => t.id === testId);
+        if (idx !== -1) {
+          tests[idx].archived = !tests[idx].archived;
+          localStorage.setItem('lvlbase_tests', JSON.stringify(tests));
+          lvlPopup.toast(tests[idx].archived ? 'Test archived.' : 'Test re-enabled! ✅', tests[idx].archived ? 'warning' : 'success');
+          renderTests();
+        }
+      });
+    }
+
+    // ── Announcements ───────────────────────────────────────
+    function getSchoolAnnouncements() {
+      const ann = JSON.parse(localStorage.getItem('lvlbase_announcements') || '[]');
+      const sid = schoolData ? schoolData.id : user.schoolId;
+      return ann.filter(a => a.schoolId === sid).sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+    }
+
+    function renderAnnouncements() {
+      const list = getSchoolAnnouncements();
+      const container = document.getElementById('announcements-list');
+      if (!container) return;
+      if (!list.length) {
+        container.innerHTML = '<div style="color:var(--text-muted);font-size:.84rem">No announcements posted yet.</div>';
+        return;
+      }
+      container.innerHTML = list.map(a => '<div style="border-bottom:1px solid var(--border);padding:.85rem 0">' +
+        '<div style="display:flex;align-items:flex-start;justify-content:space-between;gap:.5rem">' +
+        '<strong style="font-size:.9rem">' + esc(a.title) + '</strong>' +
+        '<span style="font-size:.73rem;color:var(--text-muted);white-space:nowrap">' + new Date(a.createdAt).toLocaleDateString('en-IN') + '</span>' +
+        '</div>' +
+        '<p style="color:var(--text-muted);font-size:.83rem;margin:.35rem 0 .5rem;line-height:1.6">' + esc(a.body) + '</p>' +
+        '<button class="btn-xs btn-reject" onclick="deleteAnnouncement(\'' + esc(a.id) + '\')">Delete</button>' +
+        '</div>').join('');
+    }
+
+    function createAnnouncement() {
+      requireUnlocked(() => {
+        const title = document.getElementById('ann-title').value.trim();
+        const body  = document.getElementById('ann-body').value.trim();
+        if (!title || !body) { lvlPopup.toast('Please fill in both title and message.', 'error'); return; }
+        const sid = schoolData ? schoolData.id : user.schoolId;
+        const ann = JSON.parse(localStorage.getItem('lvlbase_announcements') || '[]');
+        const entry = {
+          id: 'ann_' + Date.now(),
+          schoolId: sid,
+          title, body,
+          createdBy: user.uid,
+          createdByName: user.displayName || 'School Admin',
+          createdAt: new Date().toISOString()
+        };
+        ann.unshift(entry);
+        localStorage.setItem('lvlbase_announcements', JSON.stringify(ann));
+        // Sync to Firebase if available
+        if (window.fb && window.fb.live && window.fb.saveAnnouncement) {
+          window.fb.saveAnnouncement(entry).catch(() => {});
+        }
+        document.getElementById('ann-title').value = '';
+        document.getElementById('ann-body').value  = '';
+        lvlPopup.toast('Announcement posted! 📢', 'success');
+        renderAnnouncements();
+      });
+    }
+
+    function deleteAnnouncement(id) {
+      requireUnlocked(() => {
+        lvlPopup.confirm('Delete Announcement', 'Remove this announcement permanently?', { confirmLabel: 'Delete', confirmStyle: 'danger', type: 'error' }).then(c => {
+          if (!c) return;
+          let ann = JSON.parse(localStorage.getItem('lvlbase_announcements') || '[]');
+          ann = ann.filter(a => a.id !== id);
+          localStorage.setItem('lvlbase_announcements', JSON.stringify(ann));
+          lvlPopup.toast('Announcement deleted.', 'warning');
+          renderAnnouncements();
+        });
+      });
+    }
+
+    // ── CSV Export ──────────────────────────────────────────
+    function downloadCSV(filename, rows) {
+      const csv = rows.map(r => r.map(cell => '"' + String(cell || '').replace(/"/g, '""') + '"').join(',')).join('\n');
+      const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+      const url  = URL.createObjectURL(blob);
+      const a    = document.createElement('a');
+      a.href = url; a.download = filename; a.click();
+      URL.revokeObjectURL(url);
+    }
+
+    function exportStudentsCSV() {
+      const students = getSchoolUsers().filter(u => u.role === 'student');
+      const parents  = getSchoolUsers().filter(u => u.role === 'parent');
+      const parentByChild = {};
+      parents.forEach(p => { if (p.childUid) parentByChild[p.childUid] = p.displayName; });
+      const rows = [['Name', 'Email', 'Grade', 'Guild', 'XP', 'Parent', 'Status', 'Joined']];
+      students.forEach(u => {
+        rows.push([u.displayName, u.email, u.grade || '', u.guild || '', u.totalXP || 0, parentByChild[u.uid] || '', u.status, u.createdAt ? new Date(u.createdAt).toLocaleDateString('en-IN') : '']);
+      });
+      downloadCSV((schoolData ? schoolData.name.replace(/\s+/g, '_') : 'school') + '_students.csv', rows);
+    }
+
+    function exportTeachersCSV() {
+      const teachers = getSchoolUsers().filter(u => u.role === 'teacher');
+      const rows = [['Name', 'Email', 'Subject', 'Qualification', 'Status', 'Joined']];
+      teachers.forEach(u => {
+        rows.push([u.displayName, u.email, u.subject || '', u.qualification || '', u.status, u.createdAt ? new Date(u.createdAt).toLocaleDateString('en-IN') : '']);
+      });
+      downloadCSV((schoolData ? schoolData.name.replace(/\s+/g, '_') : 'school') + '_teachers.csv', rows);
     }
 
     function doLogout() {

@@ -152,6 +152,31 @@ window.fb = {
       } catch (e) { console.warn('RTDB getAllSchools failed:', e.message); }
     }
     return results.length > 0 ? results : null;
+  },
+
+  /** Save an announcement document to Firestore and RTDB. */
+  async saveAnnouncement(ann) {
+    if (!FIREBASE_LIVE || !ann || !ann.id) return;
+    if (rtdb) {
+      try {
+        await dbSet(dbRef(rtdb, 'announcements/' + ann.id), { ...ann, updatedAt: Date.now() });
+      } catch (e) { console.warn('RTDB saveAnnouncement failed:', e.message); }
+    }
+    if (db) {
+      try {
+        await setDoc(doc(db, 'announcements', ann.id), { ...ann, updatedAt: serverTimestamp() }, { merge: true });
+      } catch (e) { console.warn('Firestore saveAnnouncement failed:', e.message); }
+    }
+  },
+
+  /** Fetch announcements for a school. Returns array or null. */
+  async getAnnouncements(schoolId) {
+    if (!FIREBASE_LIVE || !db || !schoolId) return null;
+    try {
+      const q = query(collection(db, 'announcements'), where('schoolId', '==', schoolId));
+      const snap = await getDocs(q);
+      return snap.docs.map(d => d.data());
+    } catch (e) { console.warn('Firestore getAnnouncements failed:', e.message); return null; }
   }
 };
 
