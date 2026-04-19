@@ -1,0 +1,428 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Parent Analytics – lvlBase ⚡</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../../core/css/base.css">
+  <link rel="stylesheet" href="../../core/css/data.css">
+  <style>
+    .parent-sidebar .sidebar-link.active { color: var(--success); background: rgba(0,209,178,0.12); }
+    .period-btn {
+      padding: 0.5rem 1.25rem; border: 1px solid var(--border-color);
+      border-radius: var(--radius); background: transparent; color: var(--text-muted);
+      font-family: var(--font); font-size: 0.85rem; font-weight: 600;
+      cursor: pointer; transition: var(--transition);
+    }
+    .period-btn.active, .period-btn:hover {
+      background: var(--primary); color: white;
+      border-color: var(--primary); box-shadow: 0 4px 15px rgba(108,99,255,0.3);
+    }
+    .bar-chart-container {
+      display: flex; align-items: flex-end; gap: 1rem;
+      height: 200px; padding: 0 0.5rem;
+      border-bottom: 2px solid var(--border-color);
+      border-left: 2px solid var(--border-color);
+      position: relative; margin-left: 1rem;
+    }
+    .bar-col {
+      flex: 1; display: flex; flex-direction: column;
+      align-items: center; height: 100%; justify-content: flex-end; gap: 0.4rem;
+    }
+    .bar {
+      width: 100%; max-width: 48px; border-radius: 6px 6px 0 0;
+      background: linear-gradient(180deg, var(--primary), #4A00E0);
+      transition: all 0.8s ease; position: relative; cursor: pointer;
+    }
+    .bar:hover { filter: brightness(1.3); }
+    .bar-value {
+      position: absolute; top: -1.5rem; left: 50%;
+      transform: translateX(-50%); font-size: 0.68rem; font-weight: 700;
+      color: var(--text-light); white-space: nowrap;
+    }
+    .bar-label { font-size: 0.72rem; color: var(--text-muted); font-weight: 600; }
+    .data-table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
+    .data-table th {
+      padding: 0.75rem 1rem; text-align: left; color: var(--text-muted);
+      font-weight: 600; font-size: 0.78rem; text-transform: uppercase;
+      letter-spacing: 0.05em; border-bottom: 1px solid var(--border-color);
+    }
+    .data-table td {
+      padding: 0.85rem 1rem; border-bottom: 1px solid rgba(255,255,255,0.04);
+      vertical-align: middle;
+    }
+    .data-table tr:hover td { background: rgba(255,255,255,0.03); }
+    .rank-timeline { display: flex; align-items: center; overflow-x: auto; padding: 1.5rem 0; }
+    .rank-milestone { display: flex; flex-direction: column; align-items: center; flex-shrink: 0; }
+    .rank-dot {
+      width: 44px; height: 44px; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-weight: 800; font-size: 0.85rem;
+      border: 3px solid var(--border-color); background: var(--card-bg);
+      transition: var(--transition); position: relative; z-index: 1;
+    }
+    .rank-dot.reached { border-color: var(--primary); background: rgba(108,99,255,0.15); }
+    .rank-dot.current { border-color: var(--accent); background: rgba(255,215,0,0.2); box-shadow: 0 0 20px rgba(255,215,0,0.4); }
+    .rank-connector { flex: 1; min-width: 40px; height: 3px; background: var(--border-color); }
+    .rank-connector.filled { background: linear-gradient(90deg, var(--primary), var(--primary-light)); }
+    .rank-name { font-size: 0.7rem; color: var(--text-muted); margin-top: 0.4rem; }
+    .heatmap-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; }
+    .heat-cell { aspect-ratio: 1; border-radius: 4px; background: rgba(108,99,255,0.07); cursor: pointer; transition: var(--transition); }
+    .heat-cell:hover { transform: scale(1.3); }
+    .heat-cell.h1 { background: rgba(108,99,255,0.2); }
+    .heat-cell.h2 { background: rgba(108,99,255,0.42); }
+    .heat-cell.h3 { background: rgba(108,99,255,0.65); }
+    .heat-cell.h4 { background: rgba(108,99,255,0.9); }
+    .strengths-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1.25rem; }
+    .strength-item { display: flex; align-items: center; gap: 0.6rem; padding: 0.55rem 0.85rem; border-radius: var(--radius); background: rgba(0,209,178,0.1); font-size: 0.85rem; }
+    .weakness-item { display: flex; align-items: center; gap: 0.6rem; padding: 0.55rem 0.85rem; border-radius: var(--radius); background: rgba(255,68,68,0.1); font-size: 0.85rem; }
+    .trend-up { color: var(--success); font-weight: 700; }
+    .trend-down { color: var(--danger); font-weight: 700; }
+    @media(max-width:768px){
+      .main-content { margin-left:0 !important; }
+      .sidebar { transform: translateX(-100%); }
+      .sidebar.open { transform: translateX(0); }
+      .stats-grid { grid-template-columns:1fr 1fr; }
+      .strengths-grid { grid-template-columns:1fr; }
+    }
+  </style>
+</head>
+<body>
+  <nav class="navbar">
+    <a href="index.html" class="navbar-brand">lvlBase ⚡</a>
+    <div class="navbar-actions">
+      <span id="nav-parent-name" style="color:var(--success);font-weight:600;font-size:0.9rem">👨‍👩‍👧 Parent</span>
+      <button onclick="handleParentLogout()" class="btn btn-sm" style="background:rgba(255,68,68,0.15);color:var(--danger)">Logout</button>
+    </div>
+    <div class="hamburger" id="hamburger"><span></span><span></span><span></span></div>
+  </nav>
+
+  <div class="mobile-menu" id="mobile-menu">
+    <a href="parent-dashboard.html" class="nav-link">Overview</a>
+    <a href="parent-analytics.html" class="nav-link active">Analytics</a>
+    <a href="parent-complaints.html" class="nav-link">Complaints</a>
+    <button onclick="handleParentLogout()" class="btn btn-danger btn-sm btn-full" style="margin-top:1rem">Logout</button>
+  </div>
+
+  <div class="dashboard-wrapper">
+    <aside class="sidebar parent-sidebar" id="sidebar">
+      <div class="sidebar-user">
+        <div style="display:flex;align-items:center;gap:0.75rem;margin-bottom:0.5rem">
+          <div class="avatar" style="background:linear-gradient(135deg,#00D1B2,#00B89C)" id="sidebar-avatar">P</div>
+          <div>
+            <div class="sidebar-user-name" id="sidebar-pname">Parent</div>
+            <div style="font-size:0.75rem;color:var(--success)">Parent Account</div>
+          </div>
+        </div>
+      </div>
+      <nav class="sidebar-nav">
+        <div class="sidebar-label">Monitoring</div>
+        <a href="parent-dashboard.html" class="sidebar-link"><span class="icon">🏠</span> Overview</a>
+        <a href="parent-analytics.html" class="sidebar-link active"><span class="icon">📊</span> Analytics</a>
+        <a href="parent-analytics.html" class="sidebar-link"><span class="icon">📈</span> Reports</a>
+        <div class="sidebar-label">Communication</div>
+        <a href="parent-complaints.html" class="sidebar-link"><span class="icon">📋</span> Complaints</a>
+        <a href="communication.html" class="sidebar-link"><span class="icon">💬</span> Messages</a>
+        <div class="sidebar-label">Account</div>
+        <a href="settings.html" class="sidebar-link"><span class="icon">⚙️</span> Settings</a>
+        <a href="#" onclick="handleParentLogout()" class="sidebar-link" style="color:var(--danger)"><span class="icon">🚪</span> Logout</a>
+      </nav>
+    </aside>
+
+    <main class="main-content" id="main-content">
+
+      <!-- HEADER -->
+      <div class="flex-between mb-3" style="flex-wrap:wrap;gap:1rem">
+        <div>
+          <h1 style="font-size:1.6rem;font-weight:800;margin-bottom:0.25rem">📊 Student Analytics</h1>
+          <p style="color:var(--text-muted);font-size:0.9rem">Detailed performance insights</p>
+        </div>
+        <div style="display:flex;gap:0.5rem">
+          <button class="period-btn active" onclick="setPeriod(this,'week')">This Week</button>
+          <button class="period-btn" onclick="setPeriod(this,'month')">This Month</button>
+          <button class="period-btn" onclick="setPeriod(this,'all')">All Time</button>
+        </div>
+      </div>
+
+      <!-- PERF OVERVIEW STATS -->
+      <div class="stats-grid mb-3">
+        <div class="stat-card-dash">
+          <div class="stat-icon" style="background:rgba(108,99,255,0.15)">📊</div>
+          <div class="stat-info">
+            <div class="value" id="avg-score">72%</div>
+            <div class="label">Average Score</div>
+            <div class="change change-up">↑ +5% vs last week</div>
+          </div>
+        </div>
+        <div class="stat-card-dash">
+          <div class="stat-icon" style="background:rgba(0,209,178,0.15)">⏱️</div>
+          <div class="stat-info">
+            <div class="value" id="study-time">8.5h</div>
+            <div class="label">Study Time</div>
+            <div class="change change-up">↑ This week</div>
+          </div>
+        </div>
+        <div class="stat-card-dash">
+          <div class="stat-icon" style="background:rgba(255,215,0,0.15)">🎯</div>
+          <div class="stat-info">
+            <div class="value" id="tests-taken">14</div>
+            <div class="label">Tests Taken</div>
+            <div class="change" style="color:var(--text-muted)">Total completed</div>
+          </div>
+        </div>
+        <div class="stat-card-dash">
+          <div class="stat-icon" style="background:rgba(255,107,107,0.15)">📈</div>
+          <div class="stat-info">
+            <div class="value" id="rank-progress">+2</div>
+            <div class="label">Rank Progress</div>
+            <div class="change change-up">↑ Ranks gained</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- BAR CHART -->
+      <div class="card mb-3">
+        <div class="flex-between mb-3">
+          <h2 style="font-size:1.05rem;font-weight:700">📅 Weekly Performance</h2>
+          <span class="badge badge-primary">Score %</span>
+        </div>
+        <div class="bar-chart-container" id="bar-chart"></div>
+        <div style="display:flex;gap:1rem;margin-top:1.5rem;flex-wrap:wrap">
+          <span style="font-size:0.78rem;color:var(--text-muted)">■ <span style="color:var(--primary)">Quiz Score</span> – Average daily performance</span>
+        </div>
+      </div>
+
+      <!-- SUBJECT BREAKDOWN TABLE -->
+      <div class="card mb-3">
+        <h2 style="font-size:1.05rem;font-weight:700;margin-bottom:1.25rem">📚 Subject Breakdown</h2>
+        <div style="overflow-x:auto">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Subject</th>
+                <th>Tests Taken</th>
+                <th>Avg Score</th>
+                <th>Best Score</th>
+                <th>Topics Mastered</th>
+                <th>Trend</th>
+              </tr>
+            </thead>
+            <tbody id="subject-table-body"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- TEST HISTORY TABLE -->
+      <div class="card mb-3">
+        <div class="flex-between mb-2">
+          <h2 style="font-size:1.05rem;font-weight:700">📋 Test History</h2>
+          <span class="badge badge-success" id="history-count">0 tests</span>
+        </div>
+        <div style="overflow-x:auto">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Date</th>
+                <th>Subject</th>
+                <th>Test Name</th>
+                <th>Score</th>
+                <th>Time Taken</th>
+                <th>XP Earned</th>
+              </tr>
+            </thead>
+            <tbody id="history-table-body"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- RANK PROGRESSION + HEATMAP (grid) -->
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:1.5rem;margin-bottom:1.5rem" id="rank-heat-grid">
+        <!-- Rank Progression -->
+        <div class="card">
+          <h2 style="font-size:1.05rem;font-weight:700;margin-bottom:0.5rem">🏆 Rank Progression</h2>
+          <p style="color:var(--text-muted);font-size:0.8rem;margin-bottom:1rem">Current position highlighted</p>
+          <div class="rank-timeline" id="rank-timeline"></div>
+        </div>
+
+        <!-- Study Heatmap -->
+        <div class="card">
+          <h2 style="font-size:1.05rem;font-weight:700;margin-bottom:0.25rem">🗓️ Study Time Heatmap</h2>
+          <p style="color:var(--text-muted);font-size:0.8rem;margin-bottom:1rem">Past 4 weeks · darker = more time</p>
+          <div style="display:flex;gap:0.5rem;margin-bottom:0.5rem">
+            <span class="heat-day-label" style="flex:1">Mon</span>
+            <span class="heat-day-label" style="flex:1">Tue</span>
+            <span class="heat-day-label" style="flex:1">Wed</span>
+            <span class="heat-day-label" style="flex:1">Thu</span>
+            <span class="heat-day-label" style="flex:1">Fri</span>
+            <span class="heat-day-label" style="flex:1">Sat</span>
+            <span class="heat-day-label" style="flex:1">Sun</span>
+          </div>
+          <div class="heatmap-grid" id="heatmap"></div>
+          <div style="display:flex;align-items:center;gap:0.5rem;margin-top:1rem;font-size:0.75rem;color:var(--text-muted)">
+            <span>Less</span>
+            <div style="width:14px;height:14px;border-radius:3px;background:rgba(108,99,255,0.07)"></div>
+            <div style="width:14px;height:14px;border-radius:3px;background:rgba(108,99,255,0.25)"></div>
+            <div style="width:14px;height:14px;border-radius:3px;background:rgba(108,99,255,0.5)"></div>
+            <div style="width:14px;height:14px;border-radius:3px;background:rgba(108,99,255,0.9)"></div>
+            <span>More</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- STRENGTHS & WEAKNESSES -->
+      <div class="strengths-grid mb-3">
+        <div class="card">
+          <h2 style="font-size:1.05rem;font-weight:700;margin-bottom:1rem;color:var(--success)">💪 Strengths</h2>
+          <div style="display:flex;flex-direction:column;gap:0.5rem" id="strengths-list"></div>
+        </div>
+        <div class="card">
+          <h2 style="font-size:1.05rem;font-weight:700;margin-bottom:1rem;color:var(--danger)">📉 Needs Improvement</h2>
+          <div style="display:flex;flex-direction:column;gap:0.5rem" id="weaknesses-list"></div>
+        </div>
+      </div>
+
+    </main>
+  </div>
+
+  <div id="toast-container" class="toast-container"></div>
+
+  <script>
+    const roleUser = JSON.parse(localStorage.getItem('lvlbase_role_user') || 'null');
+    if (roleUser && roleUser.role !== 'parent') window.location.href = 'portal-login.html';
+
+    const profile = JSON.parse(localStorage.getItem('lvlbase_user_profile') || 'null');
+    const qHistory = JSON.parse(localStorage.getItem('lvlbase_quiz_history') || '[]');
+
+    const parentName = roleUser ? roleUser.name : 'Parent';
+    document.getElementById('nav-parent-name').textContent = '👨‍👩‍👧 ' + parentName;
+    document.getElementById('sidebar-pname').textContent = parentName;
+    document.getElementById('sidebar-avatar').textContent = parentName.charAt(0).toUpperCase();
+
+    if (profile) {
+      const xp = profile.xp || 0;
+      const avgScore = qHistory.length ? Math.round(qHistory.reduce((a,q) => a + (q.score||0), 0) / qHistory.length) : 72;
+      document.getElementById('avg-score').textContent = avgScore + '%';
+      document.getElementById('tests-taken').textContent = qHistory.length || 14;
+    }
+
+    function setPeriod(btn, period) {
+      document.querySelectorAll('.period-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+    }
+
+    // Bar chart
+    const weekData = [
+      { day:'Mon', score:65 }, { day:'Tue', score:78 }, { day:'Wed', score:55 },
+      { day:'Thu', score:88 }, { day:'Fri', score:72 }, { day:'Sat', score:91 }, { day:'Sun', score:68 }
+    ];
+    const barChart = document.getElementById('bar-chart');
+    barChart.innerHTML = weekData.map(d => `
+      <div class="bar-col">
+        <div class="bar" style="height:${d.score * 1.9}px">
+          <span class="bar-value">${d.score}%</span>
+        </div>
+        <span class="bar-label">${d.day}</span>
+      </div>
+    `).join('');
+
+    // Subject table
+    const subjectData = [
+      { name:'🔢 Mathematics', tests:5, avg:72, best:95, mastered:8, trend:'up' },
+      { name:'🔬 Science',     tests:4, avg:65, best:80, mastered:6, trend:'up' },
+      { name:'📝 English',     tests:5, avg:80, best:98, mastered:10, trend:'up' },
+      { name:'🌍 Social Sci',  tests:3, avg:58, best:75, mastered:4, trend:'down' },
+      { name:'💻 Computer',    tests:3, avg:88, best:100, mastered:7, trend:'up' },
+    ];
+    document.getElementById('subject-table-body').innerHTML = subjectData.map(s => `
+      <tr>
+        <td style="font-weight:600">${s.name}</td>
+        <td>${s.tests}</td>
+        <td>
+          <div style="display:flex;align-items:center;gap:0.5rem">
+            <div style="flex:1;max-width:80px;background:rgba(255,255,255,0.08);border-radius:10px;height:6px;overflow:hidden">
+              <div style="width:${s.avg}%;height:100%;background:var(--primary);border-radius:10px"></div>
+            </div>
+            ${s.avg}%
+          </div>
+        </td>
+        <td style="color:var(--success);font-weight:700">${s.best}%</td>
+        <td><span class="badge badge-primary">${s.mastered} topics</span></td>
+        <td class="${s.trend==='up'?'trend-up':'trend-down'}">${s.trend==='up'?'↑ Rising':'↓ Falling'}</td>
+      </tr>
+    `).join('');
+
+    // Test history
+    const mockHistory = [
+      { date:'2025-07-10', subject:'Math',    name:'Algebra Quiz',       score:88, time:'12 min', xp:44 },
+      { date:'2025-07-09', subject:'Science', name:'Physics Chapter 3',  score:72, time:'18 min', xp:36 },
+      { date:'2025-07-08', subject:'English', name:'Grammar Test',        score:95, time:'10 min', xp:47 },
+      { date:'2025-07-07', subject:'Math',    name:'Geometry Practice',   score:65, time:'15 min', xp:32 },
+      { date:'2025-07-06', subject:'Science', name:'Chemistry Basics',    score:80, time:'20 min', xp:40 },
+    ];
+    const histRows = [
+      ...qHistory.slice(-5).map(q => ({ date: q.date||'Recently', subject: q.subject||'Unknown', name: q.name||'Quiz', score: q.score||0, time: q.time||'N/A', xp: q.xp||0 })),
+      ...mockHistory
+    ].slice(0, 10);
+    document.getElementById('history-count').textContent = histRows.length + ' tests';
+    document.getElementById('history-table-body').innerHTML = histRows.map(h => `
+      <tr>
+        <td style="color:var(--text-muted)">${h.date}</td>
+        <td><span class="badge badge-primary">${h.subject}</span></td>
+        <td>${h.name}</td>
+        <td style="font-weight:700;color:${h.score>=80?'var(--success)':h.score>=60?'var(--warning)':'var(--danger)'}">${h.score}%</td>
+        <td style="color:var(--text-muted)">${h.time}</td>
+        <td style="color:var(--accent);font-weight:700">+${h.xp} XP</td>
+      </tr>
+    `).join('');
+
+    // Rank timeline
+    const RANKS = ['E','D','C','B','A','S','SS'];
+    const RANK_XP = [0,500,1500,3500,7000,15000,30000];
+    const currentXP = profile ? (profile.xp||0) : 0;
+    const currentRankIdx = RANK_XP.filter(x => x <= currentXP).length - 1;
+    const tl = document.getElementById('rank-timeline');
+    tl.innerHTML = RANKS.map((r, i) => {
+      const cls = i < currentRankIdx ? 'reached' : i === currentRankIdx ? 'current' : '';
+      const connFilled = i < currentRankIdx ? 'filled' : '';
+      return (i > 0 ? `<div class="rank-connector ${connFilled}"></div>` : '') +
+        `<div class="rank-milestone">
+          <div class="rank-dot ${cls}">${r}</div>
+          <div class="rank-name">${r}-Rank</div>
+          <div class="rank-xp">${RANK_XP[i].toLocaleString()}</div>
+        </div>`;
+    }).join('');
+
+    // Heatmap (7 cols x 4 rows = 28 cells)
+    const heatLevels = [0,1,0,2,3,1,0,2,3,4,2,1,0,1,3,2,4,3,1,0,2,1,0,3,2,1,4,2];
+    const heatmap = document.getElementById('heatmap');
+    heatmap.innerHTML = heatLevels.map(l => `<div class="heat-cell ${l>0?'h'+l:''}" title="${l===0?'No study':l===1?'< 30 min':l===2?'30-60 min':l===3?'1-2 hrs':'2+ hrs'}"></div>`).join('');
+
+    // Strengths & weaknesses
+    const strengths = ['Algebra', 'Grammar', 'Reading Comprehension', 'Computer Science', 'Geometry'];
+    const weaknesses = ['Chemistry', 'Social Science', 'Trigonometry', 'Essay Writing'];
+    document.getElementById('strengths-list').innerHTML = strengths.map(s => `
+      <div class="strength-item"><span>✅</span>${s}</div>`).join('');
+    document.getElementById('weaknesses-list').innerHTML = weaknesses.map(w => `
+      <div class="weakness-item"><span>⚠️</span>${w}</div>`).join('');
+
+    function handleParentLogout() {
+      localStorage.removeItem('lvlbase_role_user');
+      window.location.href = 'portal-login.html';
+    }
+
+    const hamburger = document.getElementById('hamburger');
+    const mobileMenu = document.getElementById('mobile-menu');
+    const sidebar = document.getElementById('sidebar');
+    hamburger.addEventListener('click', () => {
+      mobileMenu.classList.toggle('open');
+      sidebar.classList.toggle('open');
+    });
+
+    // Responsive rank-heat grid
+    if (window.innerWidth <= 768) {
+      document.getElementById('rank-heat-grid').style.gridTemplateColumns = '1fr';
+    }
+  </script>
+</body>
+</html>

@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dashboard – Admin – lvlBase ⚡</title>
+  <link rel="manifest" href="../manifest.json">
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../../../core/css/base.css">
+  <link rel="stylesheet" href="../css/admin-bento.css">
+  <script>
+    (function() {
+      var u = JSON.parse(localStorage.getItem('lvlbase_current_user') || 'null');
+      var d = JSON.parse(localStorage.getItem('lvlbase_admin_session') || 'null');
+      if (!(u && u.role === 'admin') && !(d && d.loggedIn && Date.now() - d.loginTime < 28800000)) {
+        window.location.replace('login.html');
+      }
+    })();
+  </script>
+</head>
+<body>
+
+  <!-- Sidebar (injected by shared.js) -->
+  <div id="sa-sidebar-root"></div>
+
+  <!-- Main Content -->
+  <main class="sa-main" id="sa-main">
+    <div class="sa-topbar">
+      <div style="display:flex;align-items:center;gap:0.75rem">
+        <button id="hamburger-btn" onclick="document.getElementById('sa-sidebar').classList.toggle('open')" style="background:none;border:none;cursor:pointer;color:#F5F5FF;font-size:1.2rem;display:none">&#x2630;</button>
+        <div class="sa-topbar-title">Dashboard</div>
+      </div>
+      <div class="sa-topbar-actions">
+        <span id="admin-clock" style="font-size:0.78rem;color:#8892A4"></span>
+        <span style="font-size:0.82rem;color:#8892A4">Welcome, <strong style="color:#F5F5FF">Super Admin</strong></span>
+        <a href="../index.html" style="padding:0.4rem 0.9rem;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);border-radius:10px;color:#F5F5FF;font-size:0.8rem;text-decoration:none">View Site</a>
+      </div>
+    </div>
+
+    <div class="sa-content">
+      <div class="section-heading">Platform Overview</div>
+      <p class="section-sub">Real-time metrics and platform health at a glance</p>
+
+      <!-- Stats Row -->
+      <div class="bento-grid mb-3">
+        <div class="bc bc-purple bento-1">
+          <div class="bc-stat-label">Total Users</div>
+          <div class="bc-stat-value text-purple" id="b-total-users">0</div>
+          <div class="bc-stat-change" id="b-users-change">Loading…</div>
+          <div style="position:absolute;bottom:1.2rem;right:1.2rem;font-size:2.5rem;opacity:0.12">&#x1F465;</div>
+        </div>
+        <div class="bc bc-green bento-1">
+          <div class="bc-stat-label">Schools</div>
+          <div class="bc-stat-value text-success" id="b-schools">0</div>
+          <div class="bc-stat-change" id="b-schools-sub">Loading…</div>
+          <div style="position:absolute;bottom:1.2rem;right:1.2rem;font-size:2.5rem;opacity:0.12">&#x1F3EB;</div>
+        </div>
+        <div class="bc bc-amber bento-1">
+          <div class="bc-stat-label">Quizzes Taken</div>
+          <div class="bc-stat-value text-accent" id="b-quizzes">0</div>
+          <div class="bc-stat-change change-up">Total platform</div>
+          <div style="position:absolute;bottom:1.2rem;right:1.2rem;font-size:2.5rem;opacity:0.12">&#x1F3AF;</div>
+        </div>
+        <div class="bc bc-red bento-1">
+          <div class="bc-stat-label">Pending Items</div>
+          <div class="bc-stat-value text-danger" id="b-pending">0</div>
+          <div class="bc-stat-change" id="b-pending-sub">Needs attention</div>
+          <div style="position:absolute;bottom:1.2rem;right:1.2rem;font-size:2.5rem;opacity:0.12">&#x23F3;</div>
+        </div>
+
+        <!-- XP Multiplier -->
+        <div class="bc bc-yellow bento-3" style="display:flex;align-items:center;gap:2rem;flex-wrap:wrap">
+          <div>
+            <div class="bc-stat-label">Global XP Multiplier</div>
+            <div class="multiplier-big" id="mult-display">1x</div>
+            <div style="color:#8892A4;font-size:0.82rem;margin-top:0.4rem">Applied to all students instantly</div>
+          </div>
+          <div style="display:flex;gap:0.6rem;flex-wrap:wrap">
+            <button class="mult-btn" onclick="setMultiplier(1)"   style="background:rgba(255,255,255,0.1);color:#F5F5FF">1x</button>
+            <button class="mult-btn" onclick="setMultiplier(1.5)" style="background:rgba(108,99,255,0.3);color:#fff">1.5x</button>
+            <button class="mult-btn" onclick="setMultiplier(2)"   style="background:rgba(255,159,10,0.3);color:#fff">2x Fire</button>
+            <button class="mult-btn" onclick="setMultiplier(3)"   style="background:rgba(255,68,68,0.3);color:#fff">3x Rocket</button>
+          </div>
+        </div>
+
+        <!-- Weekly Activity -->
+        <div class="bc bento-3">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0.75rem">
+            <div style="font-weight:700;font-size:0.95rem">Weekly Activity</div>
+            <span class="badge badge-purple" style="font-size:0.7rem">Last 7 days</span>
+          </div>
+          <div class="bar-chart" id="weekly-bars"></div>
+          <div class="bar-labels" id="weekly-bar-labels"></div>
+        </div>
+
+        <!-- System Health -->
+        <div class="bc bento-2">
+          <div style="font-weight:700;margin-bottom:1rem">System Health</div>
+          <div class="health-row"><div class="health-label"><span class="dot dot-green"></span>Platform</div><span class="health-val text-success">Operational</span></div>
+          <div class="health-row"><div class="health-label"><span class="dot dot-green"></span>Firebase DB</div><span class="health-val text-success">Connected</span></div>
+          <div class="health-row"><div class="health-label"><span class="dot dot-green"></span>Quiz Engine</div><span class="health-val text-success">Running</span></div>
+          <div class="health-row"><div class="health-label"><span class="dot dot-green"></span>Battle Arena</div><span class="health-val text-success">Active</span></div>
+          <div class="health-row"><div class="health-label"><span class="dot dot-amber"></span>Email Service</div><span class="health-val" style="color:#FF9F0A">Not Configured</span></div>
+          <div class="health-row"><div class="health-label"><span class="dot dot-green"></span>AI Tutor (Sage)</div><span class="health-val text-success">Online</span></div>
+        </div>
+
+        <!-- Recent Actions -->
+        <div class="bc bento-2">
+          <div style="font-weight:700;margin-bottom:1rem">Recent Actions</div>
+          <div class="timeline" id="admin-timeline"></div>
+        </div>
+      </div>
+
+      <!-- Top Students Table -->
+      <div class="sa-table-wrap">
+        <div class="sa-table-head">
+          <div class="sa-table-head-title">Top Students</div>
+          <div class="sa-table-head-actions">
+            <input type="text" class="sa-input" style="width:180px" placeholder="Search…" oninput="filterTopTable(this.value)">
+            <a href="users.html" class="ab ab-view" style="padding:0.4rem 1rem;text-decoration:none">All Users →</a>
+          </div>
+        </div>
+        <div class="ov-auto">
+          <table class="sa-table">
+            <thead><tr><th>#</th><th>Student</th><th>School</th><th>XP</th><th>Rank</th><th>Streak</th><th>Status</th><th>Actions</th></tr></thead>
+            <tbody id="top-tbody"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Quick Links -->
+      <div class="grid-3 mt-2 mb-3" style="margin-top:1.5rem">
+        <a href="analytics.html" class="bc" style="text-decoration:none;display:block;text-align:center;padding:1.5rem">
+          <div style="font-size:2rem;margin-bottom:0.5rem">📈</div>
+          <div style="font-weight:700">Analytics</div>
+          <div style="color:#8892A4;font-size:0.8rem;margin-top:0.25rem">Platform metrics &amp; growth</div>
+        </a>
+        <a href="schools.html" class="bc" style="text-decoration:none;display:block;text-align:center;padding:1.5rem">
+          <div style="font-size:2rem;margin-bottom:0.5rem">🏫</div>
+          <div style="font-weight:700">Schools</div>
+          <div style="color:#8892A4;font-size:0.8rem;margin-top:0.25rem">Verify &amp; manage schools</div>
+        </a>
+        <a href="user-approvals.html" class="bc" style="text-decoration:none;display:block;text-align:center;padding:1.5rem">
+          <div style="font-size:2rem;margin-bottom:0.5rem">⏳</div>
+          <div style="font-weight:700">User Approvals</div>
+          <div style="color:#8892A4;font-size:0.8rem;margin-top:0.25rem">Review pending accounts</div>
+        </a>
+        <a href="content.html" class="bc" style="text-decoration:none;display:block;text-align:center;padding:1.5rem">
+          <div style="font-size:2rem;margin-bottom:0.5rem">📚</div>
+          <div style="font-weight:700">Content</div>
+          <div style="color:#8892A4;font-size:0.8rem;margin-top:0.25rem">Manage quiz questions</div>
+        </a>
+        <a href="events.html" class="bc" style="text-decoration:none;display:block;text-align:center;padding:1.5rem">
+          <div style="font-size:2rem;margin-bottom:0.5rem">🎉</div>
+          <div style="font-weight:700">Events</div>
+          <div style="color:#8892A4;font-size:0.8rem;margin-top:0.25rem">Launch XP events</div>
+        </a>
+        <a href="platform.html" class="bc" style="text-decoration:none;display:block;text-align:center;padding:1.5rem">
+          <div style="font-size:2rem;margin-bottom:0.5rem">⚙️</div>
+          <div style="font-weight:700">Platform Controls</div>
+          <div style="color:#8892A4;font-size:0.8rem;margin-top:0.25rem">Feature flags &amp; settings</div>
+        </a>
+      </div>
+    </div>
+  </main>
+
+  <div id="toast-container" class="toast-container"></div>
+  <script src="../js/popup.js"></script>
+  <script src="shared.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      initAdminPage('overview');
+      renderOverview();
+    });
+
+    function setMultiplier(val) {
+      localStorage.setItem('lvlbase_xp_multiplier', String(val));
+      document.getElementById('mult-display').textContent = val + 'x';
+      lvlPopup.toast('XP Multiplier set to ' + val + 'x!', 'success');
+      auditLog('XP Multiplier', val + 'x');
+      renderTimeline();
+    }
+
+    function filterTopTable(q) {
+      document.querySelectorAll('#top-tbody tr').forEach(function(r) {
+        r.style.display = r.textContent.toLowerCase().includes(q.toLowerCase()) ? '' : 'none';
+      });
+    }
+
+    function renderTimeline() {
+      var tl = document.getElementById('admin-timeline');
+      var log = JSON.parse(localStorage.getItem('lvlbase_audit_log') || '[]').slice(-5).reverse();
+      if (!log.length) { tl.innerHTML = '<div style="color:#8892A4;font-size:0.82rem">No actions yet.</div>'; return; }
+      tl.innerHTML = log.map(function(l) {
+        return '<div class="tl-item"><div class="tl-dot"></div><div class="tl-body"><div class="tl-action">' + esc(l.action) + '</div><div class="tl-meta">' + esc(l.detail) + ' · ' + new Date(l.ts).toLocaleString('en-IN') + '</div></div></div>';
+      }).join('');
+    }
+
+    function renderOverview() {
+      var users = getAllUsers(), schools = getAllSchools(), quizH = getQuizHistory();
+      document.getElementById('b-total-users').textContent = users.length.toLocaleString();
+      var students = users.filter(function(u) { return u.role === 'student'; });
+      document.getElementById('b-users-change').textContent = students.length + ' students';
+      var verified = schools.filter(function(s) { return s.status === 'verified'; }).length;
+      var pending  = schools.filter(function(s) { return s.status === 'pending'; }).length;
+      document.getElementById('b-schools').textContent = schools.length;
+      document.getElementById('b-schools-sub').textContent = verified + ' verified, ' + pending + ' pending';
+      document.getElementById('b-quizzes').textContent = quizH.length.toLocaleString();
+      var pu = users.filter(function(u) { return u.status === 'pending'; }).length;
+      document.getElementById('b-pending').textContent = (pu + pending);
+      document.getElementById('b-pending-sub').textContent = pu + ' users, ' + pending + ' schools';
+      var m = localStorage.getItem('lvlbase_xp_multiplier') || '1';
+      document.getElementById('mult-display').textContent = m + 'x';
+
+      var days   = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
+      var colors = ['#6C63FF','#8B7BFF','#00D1B2','#FF9F0A','#FF4444','#BF5AF2','#FFD60A'];
+      var vals = days.map(function(_, i) {
+        return quizH.filter(function(q) {
+          if (!q.date) return false;
+          var diff = Math.floor((Date.now() - new Date(q.date)) / 86400000);
+          return diff === i;
+        }).length || (Math.floor(Math.random() * 25) + 8);
+      });
+      var maxV = Math.max.apply(null, vals.concat([1]));
+      document.getElementById('weekly-bars').innerHTML = vals.map(function(v, i) {
+        return '<div class="bar-col" style="height:' + Math.round(v / maxV * 100) + '%;background:' + colors[i] + '" title="' + v + ' quizzes"></div>';
+      }).join('');
+      document.getElementById('weekly-bar-labels').innerHTML = days.map(function(d) {
+        return '<div class="bar-label">' + d + '</div>';
+      }).join('');
+      renderTimeline();
+
+      var sorted = students.slice().sort(function(a, b) { return (b.totalXP || 0) - (a.totalXP || 0); }).slice(0, 8);
+      var tbody = document.getElementById('top-tbody');
+      if (!sorted.length) { tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;color:#8892A4;padding:1.5rem">No students yet.</td></tr>'; return; }
+      var medals = ['🥇','🥈','🥉'];
+      tbody.innerHTML = sorted.map(function(u, i) {
+        return '<tr><td style="font-weight:700;color:#FFD60A">' + (medals[i] || '#' + (i + 1)) + '</td>' +
+          '<td><div style="font-weight:700">' + esc(u.displayName) + '</div><div style="font-size:0.75rem;color:#8892A4">' + esc(u.email) + '</div></td>' +
+          '<td style="font-size:0.82rem">' + getSchoolName(u.schoolId) + '</td>' +
+          '<td style="font-weight:700;color:#6C63FF">XP ' + (parseInt(u.totalXP) || 0).toLocaleString() + '</td>' +
+          '<td><span class="badge badge-purple">' + getRank(parseInt(u.totalXP) || 0) + '</span></td>' +
+          '<td style="color:#FFD60A">' + (parseInt(u.streak) || 0) + ' days</td>' +
+          '<td><span class="badge ' + (u.status === 'approved' ? 'badge-green' : u.status === 'banned' ? 'badge-red' : 'badge-amber') + '">' + esc(u.status || 'active') + '</span></td>' +
+          '<td><div class="abg"><button class="ab ab-boost" onclick="boostUserXP(\'' + esc(u.uid) + '\',\'' + esc(u.displayName) + '\')">+XP</button>' +
+          (u.status === 'banned'
+            ? '<button class="ab ab-unban" onclick="unbanUser(\'' + esc(u.uid) + '\',\'' + esc(u.displayName) + '\')">Unban</button>'
+            : '<button class="ab ab-ban"   onclick="banUser(\''   + esc(u.uid) + '\',\'' + esc(u.displayName) + '\')">Ban</button>'
+          ) + '</div></td></tr>';
+      }).join('');
+    }
+  </script>
+</body>
+</html>

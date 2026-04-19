@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Contact | lvlBase</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../core/css/base.css">
+  <style>:root { --primary: #6C63FF; --primary-dark: #5A52E8; --secondary: #FF6B6B; --accent: #FFD700; --success: #00D1B2; --warning: #FF9F43; --danger: #FF4444; --dark-bg: #0A0A1A; --card-bg: #1A1A2E; --border-color: rgba(108,99,255,0.2); --text-light: #E8E8FF; --text-muted: #8892A4; --radius: 12px; --radius-xl: 24px; --shadow: 0 4px 20px rgba(0,0,0,0.3); --transition: all 0.3s ease; }
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: "Poppins", sans-serif; background: var(--dark-bg); color: var(--text-light); }
+.navbar { position: fixed; top: 0; left: 0; right: 0; height: 65px; background: rgba(10,10,26,0.95); backdrop-filter: blur(20px); border-bottom: 1px solid var(--border-color); display: flex; align-items: center; justify-content: space-between; padding: 0 2rem; z-index: 1000; }
+.navbar-brand { font-size: 1.3rem; font-weight: 900; background: linear-gradient(135deg, var(--primary), var(--secondary)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; text-decoration: none; }
+.navbar-nav { display: flex; gap: 0.5rem; }
+.nav-link { padding: 0.5rem 1rem; border-radius: var(--radius); color: var(--text-muted); text-decoration: none; font-size: 0.9rem; font-weight: 500; transition: var(--transition); }
+.nav-link:hover { color: var(--text-light); background: rgba(108,99,255,0.15); }
+.page-wrapper { padding-top: 65px; min-height: 100vh; }
+.container { max-width: 1200px; margin: 0 auto; padding: 4rem 2rem; }
+.card { background: var(--card-bg); border: 1px solid var(--border-color); border-radius: var(--radius-xl); padding: 1.5rem; transition: var(--transition); }
+.card:hover { border-color: rgba(108,99,255,0.4); box-shadow: var(--shadow); }
+.grid-2 { display: grid; grid-template-columns: repeat(2,1fr); gap: 1.5rem; }
+.grid-3 { display: grid; grid-template-columns: repeat(3,1fr); gap: 1.5rem; }
+.grid-4 { display: grid; grid-template-columns: repeat(4,1fr); gap: 1.5rem; }
+.btn { padding: 0.75rem 1.5rem; border-radius: var(--radius); font-family: inherit; font-size: 0.9rem; font-weight: 600; cursor: pointer; border: none; transition: var(--transition); text-decoration: none; display: inline-flex; align-items: center; gap: 0.5rem; }
+.btn-primary { background: linear-gradient(135deg, var(--primary), var(--primary-dark)); color: white; }
+.btn-primary:hover { transform: translateY(-2px); box-shadow: 0 8px 25px rgba(108,99,255,0.4); }
+.btn-ghost { background: transparent; color: var(--text-muted); border: 1px solid var(--border-color); }
+.hero { text-align: center; padding: 6rem 2rem; }
+.hero-title { font-size: clamp(2.5rem, 6vw, 4.5rem); font-weight: 900; line-height: 1.1; margin-bottom: 1.5rem; }
+.hero-subtitle { font-size: 1.2rem; color: var(--text-muted); max-width: 600px; margin: 0 auto 2.5rem; }
+.footer { background: var(--card-bg); border-top: 1px solid var(--border-color); padding: 3rem 2rem; text-align: center; margin-top: 6rem; }
+.form-group { margin-bottom: 1.25rem; }
+.form-label { display: block; font-size: 0.85rem; font-weight: 600; color: var(--text-muted); margin-bottom: 0.5rem; text-transform: uppercase; }
+.form-control { width: 100%; padding: 0.75rem 1rem; background: rgba(255,255,255,0.04); border: 1px solid var(--border-color); border-radius: var(--radius); color: var(--text-light); font-family: inherit; font-size: 0.9rem; }
+@keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+@media (max-width: 768px) { .grid-2, .grid-3, .grid-4 { grid-template-columns: 1fr; } .navbar-nav { display: none; } }</style>
+</head>
+<body>
+<nav class="navbar">
+  <a href="index.html" class="navbar-brand">lvlBase ⚡</a>
+  <div class="navbar-nav">
+    <a href="features.html" class="nav-link">Features</a>
+    <a href="pricing.html" class="nav-link">Pricing</a>
+    <a href="for-schools.html" class="nav-link">Schools</a>
+    <a href="case-studies.html" class="nav-link">Case Studies</a>
+  </div>
+  <div style="display:flex;gap:0.75rem;">
+    <a href="../auth/portal-login.html" class="btn btn-ghost" style="padding:0.5rem 1rem;font-size:0.9rem;">Login</a>
+    <a href="../auth/school-onboarding.html" class="btn btn-primary" style="padding:0.5rem 1rem;font-size:0.9rem;">Get Started →</a>
+  </div>
+</nav>
+<div class="page-wrapper">
+
+<div class="container">
+  <h1 style="font-size:2.5rem;font-weight:900;text-align:center;margin-bottom:0.75rem;">📬 Get in Touch</h1>
+  <p style="text-align:center;color:var(--text-muted);margin-bottom:3rem;">We'd love to hear from you</p>
+  <div class="grid-2" style="max-width:900px;margin:0 auto;">
+    <div class="card">
+      <h3 style="margin-bottom:1.5rem;">Send us a Message</h3>
+      <div class="form-group"><label class="form-label">Your Name</label><input class="form-control" type="text" placeholder="Your full name"></div>
+      <div class="form-group"><label class="form-label">Email</label><input class="form-control" type="email" placeholder="you@school.edu"></div>
+      <div class="form-group"><label class="form-label">I am a...</label><select class="form-control"><option>School Administrator</option><option>Teacher</option><option>Parent</option><option>Student</option><option>Investor/Press</option></select></div>
+      <div class="form-group"><label class="form-label">Message</label><textarea class="form-control" rows="5" style="height:120px;resize:vertical;" placeholder="How can we help?"></textarea></div>
+      <button class="btn btn-primary">Send Message 📤</button>
+    </div>
+    <div>
+      <div class="card" style="margin-bottom:1.5rem;"><div style="font-size:2rem;margin-bottom:0.75rem;">💬</div><h3 style="margin-bottom:0.5rem;">Live Chat</h3><p style="color:var(--text-muted);font-size:0.9rem;margin-bottom:1rem;">Available Mon-Fri 9AM-6PM EST</p><button class="btn btn-primary" style="font-size:0.9rem;">Start Chat</button></div>
+      <div class="card" style="margin-bottom:1.5rem;"><div style="font-size:2rem;margin-bottom:0.75rem;">📧</div><h3 style="margin-bottom:0.5rem;">Email</h3><p style="color:var(--primary);font-weight:600;">hello@lvlbase.io</p></div>
+      <div class="card"><div style="font-size:2rem;margin-bottom:0.75rem;">📞</div><h3 style="margin-bottom:0.5rem;">Sales</h3><p style="color:var(--primary);font-weight:600;">+1 (888) 585-2273</p></div>
+    </div>
+  </div>
+</div>
+
+<div class="footer">
+  <p style="color:var(--text-muted);font-size:0.9rem;">© 2025 lvlBase Inc. · <a href="legal/privacy-policy.html" style="color:var(--text-muted);">Privacy</a> · <a href="legal/terms-of-service.html" style="color:var(--text-muted);">Terms</a> · <a href="legal/compliance.html" style="color:var(--text-muted);">Compliance</a></p>
+</div>
+</div>
+</body>
+</html>

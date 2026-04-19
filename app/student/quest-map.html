@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Learn – lvlBase ⚡</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../../core/css/base.css">
+  <style>
+    .learn-wrapper { display: flex; min-height: calc(100vh - 70px); padding-top: 70px; }
+    .chapter-sidebar { width: 280px; flex-shrink: 0; background: var(--card-bg); border-right: 1px solid var(--border-color); padding: 1.25rem; overflow-y: auto; position: sticky; top: 70px; height: calc(100vh - 70px); }
+    .chapter-sidebar-title { font-weight: 800; font-size: 1rem; margin-bottom: 1rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em; font-size: 0.75rem; }
+    .chapter-item { display: flex; align-items: center; gap: 0.6rem; padding: 0.65rem 0.75rem; border-radius: var(--radius); cursor: pointer; transition: var(--transition); font-size: 0.875rem; margin-bottom: 0.2rem; }
+    .chapter-item:hover { background: rgba(108,99,255,0.08); }
+    .chapter-item.active { background: rgba(108,99,255,0.15); color: var(--primary); font-weight: 600; }
+    .chapter-item.completed { color: var(--success); }
+    .chapter-check { font-size: 0.85rem; margin-left: auto; flex-shrink: 0; }
+    .learn-main { flex: 1; overflow-y: auto; }
+    .learn-content { max-width: 800px; margin: 0 auto; padding: 2rem; }
+    .chapter-header-bar { display: flex; align-items: center; justify-content: space-between; margin-bottom: 2rem; flex-wrap: wrap; gap: 1rem; }
+    .content-box { background: var(--card-bg); border: 1px solid var(--border-color); border-radius: var(--radius-xl); padding: 2rem; margin-bottom: 1.5rem; }
+    .content-box h2 { font-size: 1.5rem; font-weight: 800; margin-bottom: 1rem; color: var(--text-light); }
+    .content-box h3 { font-size: 1.1rem; font-weight: 700; margin: 1.25rem 0 0.75rem; color: var(--primary); }
+    .content-box h4 { font-size: 0.95rem; font-weight: 700; margin: 1rem 0 0.5rem; }
+    .content-box p { color: var(--text-muted); line-height: 1.7; margin-bottom: 0.75rem; font-size: 0.95rem; }
+    .content-box ul { padding-left: 1.5rem; color: var(--text-muted); line-height: 1.8; font-size: 0.95rem; }
+    .content-box ul li { margin-bottom: 0.3rem; }
+    .content-box strong { color: var(--text-light); }
+    .concept-box { background: rgba(108,99,255,0.05); border: 1px solid rgba(108,99,255,0.15); border-radius: var(--radius); padding: 1rem; margin: 0.75rem 0; }
+    .formula-box { background: rgba(0,209,178,0.05); border: 1px solid rgba(0,209,178,0.2); border-radius: var(--radius); padding: 1rem 1.25rem; font-family: monospace; font-size: 0.95rem; margin: 0.75rem 0; color: var(--success); }
+    .topic-chips { display: flex; flex-wrap: wrap; gap: 0.4rem; margin-bottom: 1.5rem; }
+    .topic-chip { padding: 0.3rem 0.8rem; background: rgba(108,99,255,0.1); border: 1px solid rgba(108,99,255,0.2); border-radius: 20px; font-size: 0.8rem; color: var(--primary); }
+    .nav-btns { display: flex; justify-content: space-between; gap: 1rem; }
+    @media (max-width: 768px) { .chapter-sidebar { display: none; } .learn-content { padding: 1.25rem; } }
+  </style>
+</head>
+<body>
+  <nav class="navbar">
+    <a href="index.html" class="navbar-brand">lvlBase ⚡</a>
+    <div class="navbar-nav">
+      <a href="../../app/student/dashboard.html" class="nav-link">Dashboard</a>
+      <a href="subjects.html" class="nav-link">Study</a>
+      <a href="quiz.html" class="nav-link">Quiz</a>
+    </div>
+    <div class="navbar-actions">
+      <a href="subjects.html" class="btn btn-ghost btn-sm">← Subjects</a>
+    </div>
+    <div class="hamburger" id="hamburger"><span></span><span></span><span></span></div>
+  </nav>
+
+  <div class="learn-wrapper">
+    <!-- Chapter Sidebar -->
+    <aside class="chapter-sidebar" id="chapter-sidebar"></aside>
+
+    <!-- Content -->
+    <div class="learn-main">
+      <div class="learn-content">
+        <div class="chapter-header-bar">
+          <div>
+            <span id="subject-badge" class="badge badge-primary" style="font-size:0.85rem;padding:0.4rem 0.9rem">📐 Mathematics</span>
+            <h1 id="chapter-title" style="font-size:1.4rem;font-weight:800;margin-top:0.5rem">Chapter 1</h1>
+          </div>
+          <div style="display:flex;align-items:center;gap:0.75rem;flex-wrap:wrap">
+            <span id="chapter-xp" class="badge badge-warning" style="font-size:0.85rem">+75 XP</span>
+            <span id="chapter-difficulty" class="badge badge-success" style="font-size:0.85rem">Medium</span>
+            <span id="chapter-duration" style="font-size:0.85rem;color:var(--text-muted)">⏱ 45 min</span>
+          </div>
+        </div>
+
+        <!-- Topics chips -->
+        <div class="topic-chips" id="topic-chips"></div>
+
+        <!-- Content area -->
+        <div class="content-box" id="content-area">
+          <div style="text-align:center;padding:2rem;color:var(--text-muted)">
+            <div style="font-size:3rem;margin-bottom:1rem">📖</div>
+            <div>Select a chapter to start learning</div>
+          </div>
+        </div>
+
+        <!-- Progress bar -->
+        <div class="content-box" style="padding:1.25rem">
+          <div style="display:flex;justify-content:space-between;font-size:0.85rem;margin-bottom:0.5rem">
+            <span style="font-weight:600">Chapter Progress</span>
+            <span id="reading-pct" style="color:var(--primary)">0%</span>
+          </div>
+          <div class="progress-bar-bg">
+            <div class="progress-bar progress-primary" id="reading-bar" style="width:0%"></div>
+          </div>
+        </div>
+
+        <!-- Navigation buttons -->
+        <div class="nav-btns mt-3">
+          <button class="btn btn-ghost" onclick="prevChapter()" id="btn-prev" disabled>← Previous</button>
+          <div style="display:flex;gap:0.75rem">
+            <button class="btn btn-success" onclick="markComplete()" id="btn-complete">✅ Mark Complete</button>
+            <a id="quiz-link" href="quiz.html" class="btn btn-primary">🎯 Quiz This Chapter</a>
+          </div>
+          <button class="btn btn-primary" onclick="nextChapter()" id="btn-next">Next →</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="toast-container" class="toast-container"></div>
+
+  <script>
+    const SUBJECTS = {
+      math: {
+        name: 'Mathematics', emoji: '📐', color: '#6C63FF',
+        chapters: [
+          { id: 1, title: 'Number Systems', topics: ['Natural Numbers', 'Integers', 'Rational Numbers', 'Irrational Numbers', 'Real Numbers'], difficulty: 'Easy', duration: '45 min', xp: 50 },
+          { id: 2, title: 'Polynomials', topics: ['Definition', 'Types of Polynomials', 'Zeros', 'Division Algorithm', 'Factorisation'], difficulty: 'Medium', duration: '60 min', xp: 75 },
+          { id: 3, title: 'Linear Equations', topics: ['Introduction', 'Graphical Method', 'Substitution Method', 'Elimination Method'], difficulty: 'Medium', duration: '55 min', xp: 75 },
+          { id: 4, title: 'Quadratic Equations', topics: ['Factorisation', 'Completing the Square', 'Quadratic Formula', 'Nature of Roots'], difficulty: 'Hard', duration: '70 min', xp: 100 },
+          { id: 5, title: 'Arithmetic Progressions', topics: ['nth Term', 'Sum of n Terms', 'Applications'], difficulty: 'Medium', duration: '50 min', xp: 75 },
+          { id: 6, title: 'Triangles', topics: ['Similar Triangles', 'BPT Theorem', 'Pythagoras Theorem'], difficulty: 'Medium', duration: '65 min', xp: 75 },
+          { id: 7, title: 'Coordinate Geometry', topics: ['Distance Formula', 'Section Formula', 'Midpoint', 'Area of Triangle'], difficulty: 'Medium', duration: '55 min', xp: 75 },
+          { id: 8, title: 'Trigonometry', topics: ['Ratios', 'Complementary Angles', 'Identities', 'Heights & Distances'], difficulty: 'Hard', duration: '80 min', xp: 100 }
+        ]
+      },
+      science: {
+        name: 'Science', emoji: '🔬', color: '#00D1B2',
+        chapters: [
+          { id: 1, title: 'Chemical Reactions & Equations', topics: ['Types of Reactions', 'Balancing Equations', 'Oxidation & Reduction', 'Corrosion'], difficulty: 'Medium', duration: '60 min', xp: 75 },
+          { id: 2, title: 'Acids, Bases & Salts', topics: ['Properties', 'pH Scale', 'Indicators', 'Preparation of Salts'], difficulty: 'Medium', duration: '55 min', xp: 75 },
+          { id: 3, title: 'Metals & Non-Metals', topics: ['Physical Properties', 'Chemical Properties', 'Reactivity Series'], difficulty: 'Medium', duration: '65 min', xp: 75 },
+          { id: 4, title: 'Life Processes', topics: ['Nutrition', 'Respiration', 'Transportation', 'Excretion'], difficulty: 'Hard', duration: '75 min', xp: 100 },
+          { id: 5, title: 'Electricity', topics: ['Current', "Ohm's Law", 'Resistance', 'Circuits', 'Power'], difficulty: 'Hard', duration: '75 min', xp: 100 },
+          { id: 6, title: 'Light – Reflection & Refraction', topics: ['Laws of Reflection', 'Mirrors', 'Refraction', 'Lenses'], difficulty: 'Hard', duration: '80 min', xp: 100 }
+        ]
+      },
+      english: {
+        name: 'English', emoji: '📚', color: '#FF6B6B',
+        chapters: [
+          { id: 1, title: 'Parts of Speech', topics: ['Nouns', 'Pronouns', 'Verbs', 'Adjectives', 'Adverbs'], difficulty: 'Easy', duration: '55 min', xp: 50 },
+          { id: 2, title: 'Tenses', topics: ['Present Tenses', 'Past Tenses', 'Future Tenses', 'Perfect Tenses'], difficulty: 'Medium', duration: '65 min', xp: 75 },
+          { id: 3, title: 'Active & Passive Voice', topics: ['Rules for Conversion', 'Tense-wise Practice', 'Common Errors'], difficulty: 'Medium', duration: '50 min', xp: 75 },
+          { id: 4, title: 'Reading Comprehension', topics: ['Main Idea', 'Inference', 'Vocabulary in Context', 'Summarising'], difficulty: 'Hard', duration: '70 min', xp: 100 },
+          { id: 5, title: 'Writing Skills', topics: ['Formal Letters', 'Informal Letters', 'Essays', 'Reports'], difficulty: 'Hard', duration: '80 min', xp: 100 },
+          { id: 6, title: 'Literature – Poetry', topics: ['Figures of Speech', 'Rhyme Scheme', 'Tone & Mood', 'Imagery'], difficulty: 'Medium', duration: '65 min', xp: 75 }
+        ]
+      }
+    };
+
+    const params = new URLSearchParams(window.location.search);
+    let currentSubject = params.get('subject') || 'math';
+    let currentChapterIndex = parseInt(params.get('chapter') || '0');
+    let readingProgress = 0;
+    let readingTimer = null;
+
+    const subject = SUBJECTS[currentSubject];
+    const completedKey = `lvlbase_chapters_${currentSubject}`;
+    let completed = JSON.parse(localStorage.getItem(completedKey) || '[]');
+
+    function renderSidebar() {
+      const sidebar = document.getElementById('chapter-sidebar');
+      sidebar.innerHTML = `
+        <div style="margin-bottom:1rem">
+          <div style="font-size:0.7rem;font-weight:700;text-transform:uppercase;letter-spacing:0.1em;color:var(--text-muted);margin-bottom:0.5rem">SUBJECT</div>
+          <div style="display:flex;gap:0.5rem;flex-wrap:wrap">
+            ${Object.entries(SUBJECTS).map(([k, s]) => `<button class="btn btn-sm ${k === currentSubject ? 'btn-primary' : 'btn-ghost'}" onclick="changeSubject('${k}')">${s.emoji}</button>`).join('')}
+          </div>
+        </div>
+        <div class="chapter-sidebar-title">${subject.emoji} ${subject.name} Chapters</div>
+        ${subject.chapters.map((ch, i) => {
+          const isDone = completed.includes(ch.id);
+          return `<div class="chapter-item ${i === currentChapterIndex ? 'active' : ''} ${isDone ? 'completed' : ''}" onclick="loadChapter(${i})">
+            <span style="font-size:0.9rem">${isDone ? '✅' : '📖'}</span>
+            <span>${ch.title}</span>
+            <span class="chapter-check" style="color:var(--text-muted);font-size:0.75rem">+${ch.xp}XP</span>
+          </div>`;
+        }).join('')}`;
+    }
+
+    function loadChapter(idx) {
+      currentChapterIndex = idx;
+      const ch = subject.chapters[idx];
+      if (!ch) return;
+
+      document.getElementById('subject-badge').textContent = `${subject.emoji} ${subject.name}`;
+      document.getElementById('chapter-title').textContent = `Chapter ${ch.id}: ${ch.title}`;
+      document.getElementById('chapter-xp').textContent = `+${ch.xp} XP`;
+      document.getElementById('chapter-difficulty').textContent = ch.difficulty;
+      document.getElementById('chapter-difficulty').className = `badge ${ch.difficulty === 'Easy' ? 'badge-success' : ch.difficulty === 'Medium' ? 'badge-warning' : 'badge-danger'}`;
+      document.getElementById('chapter-duration').textContent = `⏱ ${ch.duration}`;
+      document.getElementById('topic-chips').innerHTML = ch.topics.map(t => `<span class="topic-chip">${t}</span>`).join('');
+      document.getElementById('quiz-link').href = `quiz.html?subject=${currentSubject}`;
+
+      const isDone = completed.includes(ch.id);
+      document.getElementById('btn-complete').textContent = isDone ? '✅ Completed!' : '✅ Mark Complete';
+      document.getElementById('btn-complete').disabled = isDone;
+      document.getElementById('btn-prev').disabled = idx === 0;
+      document.getElementById('btn-next').disabled = idx >= subject.chapters.length - 1;
+
+      // Render content
+      document.getElementById('content-area').innerHTML = `
+        <h2>${ch.title}</h2>
+        <p>Welcome to <strong>${ch.title}</strong>! In this chapter, you'll master: <strong>${ch.topics.join(', ')}</strong>.</p>
+        <h3>📋 Learning Objectives</h3>
+        <ul>${ch.topics.map(t => `<li>Understand and apply concepts of <strong>${t}</strong></li>`).join('')}</ul>
+        <h3>📖 Introduction</h3>
+        <p>This is a fundamental chapter in ${subject.name}. Mastering <strong>${ch.title}</strong> will build a strong foundation for advanced topics and board exams.</p>
+        <h3>🔑 Key Concepts</h3>
+        ${ch.topics.map((t, i) => `
+          <div class="concept-box">
+            <h4>${i + 1}. ${t}</h4>
+            <p>Understanding <strong>${t}</strong> is crucial for this chapter. This concept appears frequently in board examinations and forms the basis for advanced topics.</p>
+            ${i % 2 === 0 ? `<div class="formula-box">Key Formula / Rule for ${t}: Apply systematic approach</div>` : ''}
+          </div>`).join('')}
+        <h3>📝 Practice Tips</h3>
+        <ul>
+          <li>Read through all concepts carefully before attempting problems</li>
+          <li>Use the <strong>Quiz feature</strong> to test your understanding immediately</li>
+          <li>Challenge yourself in <strong>Battles</strong> to apply knowledge under pressure</li>
+          <li>Review incorrect answers carefully – they are your best teachers!</li>
+          <li>Maintain your <strong>daily streak</strong> for XP bonuses</li>
+        </ul>
+        <h3>🎯 Quick Revision</h3>
+        <p>Before taking the quiz, make sure you can answer: <em>What are the ${ch.topics.length} key topics in ${ch.title}? How do they relate to each other?</em></p>`;
+
+      renderSidebar();
+      startReadingTimer();
+    }
+
+    function startReadingTimer() {
+      clearInterval(readingTimer);
+      readingProgress = 0;
+      updateReadingBar(0);
+      readingTimer = setInterval(() => {
+        readingProgress = Math.min(100, readingProgress + 1.67);
+        updateReadingBar(readingProgress);
+        if (readingProgress >= 100) clearInterval(readingTimer);
+      }, 1000);
+    }
+
+    function updateReadingBar(pct) {
+      document.getElementById('reading-bar').style.width = pct + '%';
+      document.getElementById('reading-pct').textContent = Math.round(pct) + '%';
+    }
+
+    function markComplete() {
+      const ch = subject.chapters[currentChapterIndex];
+      if (!ch || completed.includes(ch.id)) return;
+      completed.push(ch.id);
+      localStorage.setItem(completedKey, JSON.stringify(completed));
+
+      const profile = JSON.parse(localStorage.getItem('lvlbase_user_profile') || '{}');
+      profile.totalXP = (profile.totalXP || 0) + ch.xp;
+      if (!profile.subjectProgress) profile.subjectProgress = { math: 0, science: 0, english: 0 };
+      profile.subjectProgress[currentSubject] = Math.min(100, (completed.length / subject.chapters.length) * 100);
+      localStorage.setItem('lvlbase_user_profile', JSON.stringify(profile));
+
+      document.getElementById('btn-complete').textContent = '✅ Completed!';
+      document.getElementById('btn-complete').disabled = true;
+      showToast(`🎉 Chapter completed! +${ch.xp} XP earned!`, 'success');
+      renderSidebar();
+    }
+
+    function nextChapter() {
+      if (currentChapterIndex < subject.chapters.length - 1) loadChapter(currentChapterIndex + 1);
+    }
+
+    function prevChapter() {
+      if (currentChapterIndex > 0) loadChapter(currentChapterIndex - 1);
+    }
+
+    function changeSubject(sub) {
+      currentSubject = sub;
+      currentChapterIndex = 0;
+      completed = JSON.parse(localStorage.getItem(`lvlbase_chapters_${sub}`) || '[]');
+      Object.assign(subject, SUBJECTS[sub]);
+      loadChapter(0);
+    }
+
+    function showToast(msg, type) {
+      const container = document.getElementById('toast-container');
+      const toast = document.createElement('div');
+      toast.className = `toast ${type}`;
+      toast.innerHTML = `<span>✅</span><span>${msg}</span>`;
+      container.appendChild(toast);
+      setTimeout(() => { toast.classList.add('toast-hide'); setTimeout(() => toast.remove(), 300); }, 3000);
+    }
+
+    document.getElementById('hamburger').addEventListener('click', () => {
+      document.getElementById('mobile-menu')?.classList.toggle('open');
+    });
+
+    loadChapter(currentChapterIndex);
+  </script>
+</body>
+</html>

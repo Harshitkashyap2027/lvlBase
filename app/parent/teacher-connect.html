@@ -1,0 +1,311 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Complaints – lvlBase ⚡</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../../core/css/base.css">
+  <link rel="stylesheet" href="../../core/css/data.css">
+  <style>
+    .parent-sidebar .sidebar-link.active { color: var(--success); background: rgba(0,209,178,0.12); }
+    .priority-pills { display: flex; gap: 0.5rem; flex-wrap: wrap; }
+    .priority-pill {
+      padding: 0.4rem 1rem; border-radius: 20px;
+      border: 2px solid var(--border-color);
+      background: transparent; color: var(--text-muted);
+      font-family: var(--font); font-size: 0.82rem; font-weight: 600;
+      cursor: pointer; transition: var(--transition);
+    }
+    .priority-pill.low.active  { border-color: var(--success); background: rgba(0,209,178,0.15); color: var(--success); }
+    .priority-pill.medium.active { border-color: var(--warning); background: rgba(255,165,0,0.15); color: var(--warning); }
+    .priority-pill.high.active { border-color: var(--danger); background: rgba(255,68,68,0.15); color: var(--danger); }
+    .priority-pill:hover { border-color: var(--primary); color: var(--primary); }
+    .complaint-card {
+      background: var(--card-bg); border: 1px solid var(--border-color);
+      border-radius: var(--radius-lg); padding: 1.25rem;
+      transition: var(--transition); margin-bottom: 0.85rem;
+    }
+    .complaint-card:hover { transform: translateY(-2px); box-shadow: var(--shadow); }
+    .complaint-header { display: flex; align-items: flex-start; justify-content: space-between; gap: 0.75rem; flex-wrap: wrap; margin-bottom: 0.75rem; }
+    .complaint-title { font-weight: 700; font-size: 0.95rem; }
+    .complaint-badges { display: flex; gap: 0.4rem; flex-wrap: wrap; align-items: center; }
+    .status-pending  { background: rgba(255,165,0,0.2); color: var(--warning); }
+    .status-inreview { background: rgba(108,99,255,0.2); color: var(--primary); }
+    .status-resolved { background: rgba(0,209,178,0.2); color: var(--success); }
+    .cat-badge { background: rgba(255,255,255,0.08); color: var(--text-muted); }
+    .announcement-card {
+      background: linear-gradient(135deg, rgba(108,99,255,0.08), rgba(108,99,255,0.03));
+      border: 1px solid rgba(108,99,255,0.2); border-radius: var(--radius-lg);
+      padding: 1.25rem; margin-bottom: 0.85rem; transition: var(--transition);
+    }
+    .announcement-card:hover { transform: translateY(-2px); box-shadow: var(--shadow); }
+    .ann-date { font-size: 0.75rem; color: var(--text-muted); margin-bottom: 0.3rem; }
+    .ann-title { font-size: 1rem; font-weight: 700; margin-bottom: 0.4rem; }
+    .ann-content { font-size: 0.85rem; color: var(--text-muted); line-height: 1.6; }
+    .message-thread { display: flex; flex-direction: column; gap: 1rem; }
+    .msg-bubble {
+      max-width: 85%; padding: 0.85rem 1.1rem;
+      border-radius: var(--radius-lg); font-size: 0.88rem; line-height: 1.55;
+    }
+    .msg-bubble.received {
+      background: var(--card-bg); border: 1px solid var(--border-color);
+      border-bottom-left-radius: 4px; align-self: flex-start;
+    }
+    .msg-bubble.sent {
+      background: rgba(108,99,255,0.15); border: 1px solid rgba(108,99,255,0.25);
+      border-bottom-right-radius: 4px; align-self: flex-end;
+    }
+    .msg-sender { font-size: 0.75rem; font-weight: 700; color: var(--primary); margin-bottom: 0.3rem; }
+    .msg-time { font-size: 0.72rem; color: var(--text-muted); margin-top: 0.3rem; text-align: right; }
+    .two-col-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin-bottom: 1.5rem; }
+    @media(max-width:768px){
+      .main-content { margin-left:0 !important; }
+      .sidebar { transform: translateX(-100%); }
+      .sidebar.open { transform: translateX(0); }
+      .two-col-grid { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <nav class="navbar">
+    <a href="index.html" class="navbar-brand">lvlBase ⚡</a>
+    <div class="navbar-actions">
+      <span id="nav-parent-name" style="color:var(--success);font-weight:600;font-size:0.9rem">👨‍👩‍👧 Parent</span>
+      <button onclick="handleParentLogout()" class="btn btn-sm" style="background:rgba(255,68,68,0.15);color:var(--danger)">Logout</button>
+    </div>
+    <div class="hamburger" id="hamburger"><span></span><span></span><span></span></div>
+  </nav>
+
+  <div class="mobile-menu" id="mobile-menu">
+    <a href="parent-dashboard.html" class="nav-link">Overview</a>
+    <a href="parent-analytics.html" class="nav-link">Analytics</a>
+    <a href="parent-complaints.html" class="nav-link active">Complaints</a>
+    <button onclick="handleParentLogout()" class="btn btn-danger btn-sm btn-full" style="margin-top:1rem">Logout</button>
+  </div>
+
+  <div class="dashboard-wrapper">
+    <aside class="sidebar parent-sidebar" id="sidebar">
+      <div class="sidebar-user">
+        <div style="display:flex;align-items:center;gap:0.75rem;margin-bottom:0.5rem">
+          <div class="avatar" style="background:linear-gradient(135deg,#00D1B2,#00B89C)" id="sidebar-avatar">P</div>
+          <div>
+            <div class="sidebar-user-name" id="sidebar-pname">Parent</div>
+            <div style="font-size:0.75rem;color:var(--success)">Parent Account</div>
+          </div>
+        </div>
+      </div>
+      <nav class="sidebar-nav">
+        <div class="sidebar-label">Monitoring</div>
+        <a href="parent-dashboard.html" class="sidebar-link"><span class="icon">🏠</span> Overview</a>
+        <a href="parent-analytics.html" class="sidebar-link"><span class="icon">📊</span> Analytics</a>
+        <a href="parent-analytics.html" class="sidebar-link"><span class="icon">📈</span> Reports</a>
+        <div class="sidebar-label">Communication</div>
+        <a href="parent-complaints.html" class="sidebar-link active"><span class="icon">📋</span> Complaints</a>
+        <a href="communication.html" class="sidebar-link"><span class="icon">💬</span> Messages</a>
+        <div class="sidebar-label">Account</div>
+        <a href="settings.html" class="sidebar-link"><span class="icon">⚙️</span> Settings</a>
+        <a href="#" onclick="handleParentLogout()" class="sidebar-link" style="color:var(--danger)"><span class="icon">🚪</span> Logout</a>
+      </nav>
+    </aside>
+
+    <main class="main-content" id="main-content">
+
+      <!-- HEADER -->
+      <div class="mb-3">
+        <h1 style="font-size:1.6rem;font-weight:800;margin-bottom:0.25rem">📋 Complaints &amp; Messages</h1>
+        <p style="color:var(--text-muted);font-size:0.9rem">Communicate with teachers and school administration</p>
+      </div>
+
+      <!-- FORM + MY COMPLAINTS -->
+      <div class="two-col-grid">
+
+        <!-- FILE NEW COMPLAINT FORM -->
+        <div class="card">
+          <h2 style="font-size:1.05rem;font-weight:700;margin-bottom:1.25rem">📝 File New Complaint</h2>
+          <div class="form-group">
+            <label class="form-label">Complaint Title</label>
+            <input type="text" class="form-control" id="c-title" placeholder="Brief description of the issue">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Category</label>
+            <select class="form-control" id="c-category">
+              <option value="">Select category…</option>
+              <option>Academic Performance</option>
+              <option>Behavior</option>
+              <option>Technical Issue</option>
+              <option>Teacher Concern</option>
+              <option>Other</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Priority</label>
+            <div class="priority-pills">
+              <button class="priority-pill low" onclick="setPriority('Low',this)">🟢 Low</button>
+              <button class="priority-pill medium active" onclick="setPriority('Medium',this)">🟡 Medium</button>
+              <button class="priority-pill high" onclick="setPriority('High',this)">🔴 High</button>
+            </div>
+            <input type="hidden" id="c-priority" value="Medium">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Description</label>
+            <textarea class="form-control" id="c-description" rows="4" placeholder="Describe the issue in detail…"></textarea>
+          </div>
+          <button class="btn btn-primary btn-full" onclick="submitComplaint()">📤 Submit Complaint</button>
+        </div>
+
+        <!-- MY COMPLAINTS -->
+        <div>
+          <div class="flex-between mb-2">
+            <h2 style="font-size:1.05rem;font-weight:700">📁 My Complaints</h2>
+            <span class="badge badge-warning" id="complaint-count">0</span>
+          </div>
+          <div id="complaints-list"></div>
+        </div>
+      </div>
+
+      <!-- SCHOOL ANNOUNCEMENTS -->
+      <div class="mb-3">
+        <h2 style="font-size:1.05rem;font-weight:700;margin-bottom:1.25rem">📢 School Announcements</h2>
+        <div id="announcements-list"></div>
+      </div>
+
+      <!-- TEACHER MESSAGES -->
+      <div class="card mb-3">
+        <div class="flex-between mb-3">
+          <div>
+            <h2 style="font-size:1.05rem;font-weight:700">💬 Messages from Teachers</h2>
+            <p style="color:var(--text-muted);font-size:0.8rem;margin-top:0.2rem">Mrs. Sharma – Mathematics Teacher</p>
+          </div>
+          <div style="display:flex;align-items:center;gap:0.5rem">
+            <div style="width:10px;height:10px;border-radius:50%;background:var(--success)"></div>
+            <span style="font-size:0.8rem;color:var(--success)">Online</span>
+          </div>
+        </div>
+        <div class="message-thread" id="message-thread"></div>
+      </div>
+
+    </main>
+  </div>
+
+  <div id="toast-container" class="toast-container"></div>
+
+  <script>
+    const roleUser = JSON.parse(localStorage.getItem('lvlbase_role_user') || 'null');
+    if (roleUser && roleUser.role !== 'parent') window.location.href = 'portal-login.html';
+
+    const parentName = roleUser ? roleUser.name : 'Parent';
+    document.getElementById('nav-parent-name').textContent = '👨‍👩‍👧 ' + parentName;
+    document.getElementById('sidebar-pname').textContent = parentName;
+    document.getElementById('sidebar-avatar').textContent = parentName.charAt(0).toUpperCase();
+
+    let selectedPriority = 'Medium';
+
+    function setPriority(p, btn) {
+      selectedPriority = p;
+      document.getElementById('c-priority').value = p;
+      document.querySelectorAll('.priority-pill').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+    }
+
+    const MOCK_COMPLAINTS = [
+      { title:'Child cannot access quiz module', category:'Technical Issue', priority:'High', status:'In Review', date:'2025-07-08', desc:'The quiz page keeps showing an error for the last 3 days. My child is missing daily challenges.' },
+      { title:'Marks not updated after test', category:'Academic Performance', priority:'Medium', status:'Resolved', date:'2025-07-05', desc:'After the Chapter 2 test, the scores were not reflected in the analytics for a week.' },
+    ];
+
+    function renderComplaints() {
+      const stored = JSON.parse(localStorage.getItem('lvlbase_complaints') || '[]');
+      const all = [...stored, ...MOCK_COMPLAINTS];
+      document.getElementById('complaint-count').textContent = all.length;
+      const priorityColors = { High:'var(--danger)', Medium:'var(--warning)', Low:'var(--success)' };
+      const statusClass = { Pending:'status-pending', 'In Review':'status-inreview', Resolved:'status-resolved' };
+      document.getElementById('complaints-list').innerHTML = all.map(c => `
+        <div class="complaint-card">
+          <div class="complaint-header">
+            <div class="complaint-title">${c.title}</div>
+            <div class="complaint-badges">
+              <span class="badge cat-badge">${c.category}</span>
+              <span class="badge" style="background:${priorityColors[c.priority]||'var(--primary)'}22;color:${priorityColors[c.priority]||'var(--primary)'}">${c.priority}</span>
+              <span class="badge ${statusClass[c.status]||'status-pending'}">${c.status||'Pending'}</span>
+            </div>
+          </div>
+          <p style="font-size:0.83rem;color:var(--text-muted);margin-bottom:0.4rem">${c.desc}</p>
+          <div style="font-size:0.75rem;color:var(--text-muted)">📅 Filed on ${c.date}</div>
+        </div>
+      `).join('') || '<p style="color:var(--text-muted);font-size:0.85rem">No complaints filed yet.</p>';
+    }
+
+    function submitComplaint() {
+      const title = document.getElementById('c-title').value.trim();
+      const category = document.getElementById('c-category').value;
+      const desc = document.getElementById('c-description').value.trim();
+      if (!title) { showToast('⚠️ Please enter a complaint title', 'warning'); return; }
+      if (!category) { showToast('⚠️ Please select a category', 'warning'); return; }
+      if (!desc) { showToast('⚠️ Please describe the issue', 'warning'); return; }
+
+      const complaints = JSON.parse(localStorage.getItem('lvlbase_complaints') || '[]');
+      complaints.unshift({ title, category, priority: selectedPriority, status:'Pending', date: new Date().toISOString().slice(0,10), desc });
+      localStorage.setItem('lvlbase_complaints', JSON.stringify(complaints));
+
+      document.getElementById('c-title').value = '';
+      document.getElementById('c-category').value = '';
+      document.getElementById('c-description').value = '';
+      showToast('✅ Complaint filed successfully!', 'success');
+      renderComplaints();
+    }
+
+    // Announcements
+    const announcements = [
+      { date:'Jul 10, 2025', title:'📅 Mid-term Examination Schedule Released', content:'Mid-term exams are scheduled from July 21–28. Students should prepare using the revision modules available in the platform.' },
+      { date:'Jul 7, 2025', title:'🏆 Summer Learning Challenge Results', content:'Congratulations to all participants! Winners will be announced at the school assembly on July 15th.' },
+      { date:'Jul 3, 2025', title:'🔧 Platform Maintenance Notice', content:'lvlBase will undergo scheduled maintenance on July 12th from 2–4 AM. Please plan your study sessions accordingly.' },
+    ];
+    document.getElementById('announcements-list').innerHTML = announcements.map(a => `
+      <div class="announcement-card">
+        <div class="ann-date">${a.date}</div>
+        <div class="ann-title">${a.title}</div>
+        <div class="ann-content">${a.content}</div>
+      </div>
+    `).join('');
+
+    // Messages
+    const messages = [
+      { sender:'Mrs. Sharma', text:"Hello! I wanted to share that your child has been making great progress in Algebra this week. Their quiz scores improved by 18% compared to last month.", time:'Jul 10 · 9:32 AM', type:'received' },
+      { sender:'You', text:"Thank you so much for the update, Mrs. Sharma! We've been working on it together at home.", time:'Jul 10 · 10:15 AM', type:'sent' },
+      { sender:'Mrs. Sharma', text:"That's wonderful to hear! Please note that the Chapter 4 assignment is due this Friday. It covers quadratic equations.", time:'Jul 10 · 10:22 AM', type:'received' },
+      { sender:'You', text:"Got it. Will remind them tonight. Is there any additional practice material you'd recommend?", time:'Jul 10 · 11:00 AM', type:'sent' },
+      { sender:'Mrs. Sharma', text:"Yes! I've assigned a practice set in the Goals section on lvlBase. It should appear under 'Teacher Tasks'. Let me know if you have any concerns.", time:'Jul 10 · 11:08 AM', type:'received' },
+    ];
+    document.getElementById('message-thread').innerHTML = messages.map(m => `
+      <div style="display:flex;flex-direction:column;align-items:${m.type==='sent'?'flex-end':'flex-start'}">
+        ${m.type==='received'?`<div class="msg-sender">👩‍🏫 ${m.sender}</div>`:''}
+        <div class="msg-bubble ${m.type}">${m.text}<div class="msg-time">${m.time}</div></div>
+      </div>
+    `).join('');
+
+    renderComplaints();
+
+    function handleParentLogout() {
+      localStorage.removeItem('lvlbase_role_user');
+      window.location.href = 'portal-login.html';
+    }
+
+    function showToast(msg, type='info') {
+      const tc = document.getElementById('toast-container');
+      const t = document.createElement('div');
+      t.className = `toast ${type}`;
+      t.textContent = msg;
+      tc.appendChild(t);
+      setTimeout(() => { t.classList.add('toast-hide'); setTimeout(() => t.remove(), 300); }, 3000);
+    }
+
+    const hamburger = document.getElementById('hamburger');
+    const mobileMenu = document.getElementById('mobile-menu');
+    const sidebar = document.getElementById('sidebar');
+    hamburger.addEventListener('click', () => {
+      mobileMenu.classList.toggle('open');
+      sidebar.classList.toggle('open');
+    });
+  </script>
+</body>
+</html>

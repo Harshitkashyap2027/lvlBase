@@ -1,0 +1,337 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Leaderboard – lvlBase ⚡</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../../../core/css/base.css">
+  <style>
+    .lb-full-item { display: flex; align-items: center; gap: 1rem; padding: 0.85rem 1rem; border-radius: var(--radius); transition: var(--transition); border: 1px solid transparent; }
+    .lb-full-item:hover { background: rgba(108,99,255,0.06); border-color: var(--border-color); }
+    .lb-full-item.current-user-row { background: rgba(108,99,255,0.1); border-color: var(--primary); }
+    .lb-position { font-size: 1.1rem; font-weight: 800; min-width: 40px; text-align: center; }
+    .lb-avatar { width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 0.9rem; flex-shrink: 0; }
+    .lb-info { flex: 1; }
+    .lb-full-name { font-weight: 600; font-size: 0.95rem; }
+    .lb-rank-badge { margin-left: auto; }
+    .lb-streak { font-size: 0.85rem; min-width: 50px; }
+    .lb-xp { min-width: 80px; text-align: right; }
+    .lb-separator { height: 1px; background: var(--border-color); margin: 0.25rem 0; }
+    .search-box { display: flex; gap: 0.75rem; margin-bottom: 1.5rem; }
+    .search-input { flex: 1; }
+    .user-rank-card { background: linear-gradient(135deg, rgba(108,99,255,0.2), var(--card-bg)); border: 1px solid var(--primary); border-radius: var(--radius-lg); padding: 1.5rem; margin-bottom: 1.5rem; }
+  </style>
+</head>
+<body>
+  <nav class="navbar">
+    <a href="index.html" class="navbar-brand">lvlBase ⚡</a>
+    <div class="navbar-nav">
+      <a href="../../app/student/dashboard.html" class="nav-link">Dashboard</a>
+      <a href="quiz.html" class="nav-link">Quiz</a>
+      <a href="battles.html" class="nav-link">Battle</a>
+      <a href="leaderboard.html" class="nav-link active">Leaderboard</a>
+    </div>
+    <div class="navbar-actions">
+      <span id="nav-xp" style="color:var(--accent);font-weight:700;font-size:0.9rem"></span>
+      <a href="../../app/student/dashboard.html" class="btn btn-ghost btn-sm">← Back</a>
+    </div>
+    <div class="hamburger" id="hamburger"><span></span><span></span><span></span></div>
+  </nav>
+
+  <div class="page-wrapper">
+    <div style="max-width:900px;margin:0 auto;padding:2rem 1.5rem">
+      <div class="page-header">
+        <h1 class="page-title">🏆 Leaderboard</h1>
+        <p class="page-subtitle">See where you stand among the best</p>
+      </div>
+
+      <!-- User's current rank -->
+      <div class="user-rank-card" id="user-rank-card" style="display:none">
+        <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:1rem">
+          <div style="display:flex;align-items:center;gap:1rem">
+            <div class="avatar avatar-lg" id="my-avatar">??</div>
+            <div>
+              <div style="font-weight:700;font-size:1.1rem" id="my-name">Player</div>
+              <div id="my-rank-badge"></div>
+            </div>
+          </div>
+          <div style="display:flex;gap:2rem;text-align:center;flex-wrap:wrap">
+            <div><div style="font-size:1.5rem;font-weight:800;color:var(--primary)" id="my-xp">0</div><div style="font-size:0.75rem;color:var(--text-muted)">XP</div></div>
+            <div><div style="font-size:1.5rem;font-weight:800;color:var(--accent)" id="my-position">#-</div><div style="font-size:0.75rem;color:var(--text-muted)">Rank Position</div></div>
+            <div><div style="font-size:1.5rem;font-weight:800;color:var(--success)" id="my-streak">0</div><div style="font-size:0.75rem;color:var(--text-muted)">Day Streak</div></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Tabs -->
+      <div class="tabs mb-3">
+        <button class="tab-btn active" onclick="switchTab('individual',this)">👤 Individual</button>
+        <button class="tab-btn" onclick="switchTab('guild',this)">🏰 Guild</button>
+        <button class="tab-btn" onclick="switchTab('national',this)">🌏 National</button>
+      </div>
+
+      <!-- Search -->
+      <div class="search-box">
+        <input type="text" class="form-control search-input" id="search-input" placeholder="🔍 Search players..." oninput="filterBoard()">
+        <button class="btn btn-ghost btn-sm" onclick="clearSearch()">Clear</button>
+      </div>
+
+      <!-- Board -->
+      <div class="card" id="board-container" style="padding:1.5rem">
+        <div id="board-list"></div>
+      </div>
+    </div>
+  </div>
+
+  <div id="toast-container" class="toast-container"></div>
+
+  <script>
+    const GUILDS = { shadow:{name:'Shadow Guild',emoji:'🌙',gradient:'linear-gradient(135deg,#4C1D95,#7C3AED)'}, azure:{name:'Azure Order',emoji:'💧',gradient:'linear-gradient(135deg,#1E3A8A,#2563EB)'}, inferno:{name:'Inferno Legion',emoji:'🔥',gradient:'linear-gradient(135deg,#7F1D1D,#DC2626)'}, titan:{name:'Titan Brotherhood',emoji:'⚡',gradient:'linear-gradient(135deg,#14532D,#16A34A)'}, zenith:{name:'Zenith Circle',emoji:'✨',gradient:'linear-gradient(135deg,#78350F,#D97706)'} };
+
+    const profile = JSON.parse(localStorage.getItem('lvlbase_user_profile') || 'null');
+    if (profile?.totalXP) document.getElementById('nav-xp').textContent = `⚡ ${profile.totalXP} XP`;
+
+    function getIndividualBoard() {
+      // Build board from real registered users in localStorage
+      const allUsers = JSON.parse(localStorage.getItem('lvlbase_all_users') || '[]');
+      const board = allUsers
+        .filter(u => u.role === 'student' && u.totalXP > 0)
+        .map(u => ({
+          name: u.displayName || u.email,
+          xp: u.totalXP || 0,
+          rankId: getRankId(u.totalXP || 0),
+          guild: u.guild || 'none',
+          avatar: (u.displayName || u.email || 'P').substring(0, 2).toUpperCase(),
+          streak: u.streak || 0,
+          isCurrentUser: profile && u.uid === profile.uid
+        }));
+
+      // Add current user if not already present
+      if (profile && profile.totalXP > 0) {
+        const exists = board.find(u => u.isCurrentUser);
+        if (!exists) {
+          board.push({
+            name: profile.displayName || 'You',
+            xp: profile.totalXP,
+            rankId: getRankId(profile.totalXP),
+            guild: profile.guild || 'none',
+            avatar: (profile.displayName || 'P').substring(0, 2).toUpperCase(),
+            streak: profile.streak || 0,
+            isCurrentUser: true
+          });
+        }
+      }
+
+      if (board.length === 0) return [];
+      return board.sort((a, b) => b.xp - a.xp).map((u, i) => ({ ...u, rank: i + 1 }));
+    }
+
+    function getRankId(xp) {
+      if (xp >= 30000) return 'SS';
+      if (xp >= 15000) return 'S';
+      if (xp >= 7000) return 'A';
+      if (xp >= 3500) return 'B';
+      if (xp >= 1500) return 'C';
+      if (xp >= 500) return 'D';
+      return 'E';
+    }
+
+    function fmt(n) { if (n >= 1000) return (n/1000).toFixed(1)+'K'; return n; }
+
+    let currentTab = 'individual';
+    let allData = [];
+
+    function renderIndividual() {
+      const board = getIndividualBoard();
+      allData = board;
+
+      // Show user rank card
+      if (profile) {
+        const myPos = board.find(u => u.isCurrentUser);
+        document.getElementById('user-rank-card').style.display = 'block';
+        document.getElementById('my-avatar').textContent = (profile.displayName||'P').substring(0,2).toUpperCase();
+        document.getElementById('my-name').textContent = profile.displayName || 'Player';
+        document.getElementById('my-rank-badge').innerHTML = `<span class="rank-badge rank-${getRankId(profile.totalXP).toLowerCase()}">${getRankId(profile.totalXP)}-Rank</span>`;
+        document.getElementById('my-xp').textContent = fmt(profile.totalXP || 0);
+        document.getElementById('my-position').textContent = myPos ? '#' + myPos.rank : '#–';
+        document.getElementById('my-streak').textContent = profile.streak || 0;
+      }
+
+      renderBoard(board);
+    }
+
+    function renderBoard(data) {
+      const list = document.getElementById('board-list');
+      if (data.length === 0) {
+        list.innerHTML = '<div style="text-align:center;color:var(--text-muted);padding:2.5rem 1rem"><div style="font-size:2.5rem;margin-bottom:0.75rem">🏆</div><div style="font-weight:700;margin-bottom:0.4rem">No players yet</div><div style="font-size:0.85rem">Complete quizzes to earn XP and appear here!</div></div>';
+        return;
+      }
+      list.innerHTML = data.map((item, i) => {
+        const colors = ['#FFD700','#C0C0C0','#CD7F32'];
+        const emojis = ['🥇','🥈','🥉'];
+        const isTop3 = i < 3;
+        const guildData = GUILDS[item.guild] || {};
+        return `
+          <div class="lb-full-item ${item.isCurrentUser ? 'current-user-row' : ''}">
+            <div class="lb-position" style="color:${isTop3?colors[i]:'var(--text-muted)'}">${isTop3?emojis[i]:'#'+item.rank}</div>
+            <div class="lb-avatar" style="background:${guildData.gradient||'linear-gradient(135deg,var(--primary),var(--secondary))'}">
+              ${item.avatar || item.name?.substring(0,2).toUpperCase()}
+            </div>
+            <div class="lb-info">
+              <div class="lb-full-name">${item.name} ${item.isCurrentUser ? '<span class="badge badge-primary" style="font-size:0.65rem">You</span>' : ''}</div>
+              <div style="font-size:0.75rem;color:var(--text-muted)">${guildData.emoji||''} ${guildData.name||'No Guild'}</div>
+            </div>
+            <span class="rank-badge rank-${(item.rankId||'e').toLowerCase()}">${item.rankId||'E'}-Rank</span>
+            <div class="lb-streak">🔥 ${item.streak||0}</div>
+            <div class="lb-xp" style="color:var(--primary);font-weight:700">⚡ ${fmt(item.xp)}</div>
+          </div>
+          ${i < data.length-1 ? '<div class="lb-separator"></div>' : ''}`;
+      }).join('');
+    }
+
+    function renderGuildBoard() {
+      // Compute guild stats from real users in localStorage
+      const allUsers = JSON.parse(localStorage.getItem('lvlbase_all_users') || '[]');
+      const guildStats = {};
+      const GUILD_KEYS = ['shadow', 'azure', 'inferno', 'titan', 'zenith'];
+      GUILD_KEYS.forEach(g => { guildStats[g] = { totalXP: 0, members: 0, wins: 0 }; });
+      allUsers.forEach(u => {
+        if (u.guild && guildStats[u.guild]) {
+          guildStats[u.guild].totalXP += (u.totalXP || 0);
+          guildStats[u.guild].members += 1;
+          guildStats[u.guild].wins += (u.battlesWon || 0);
+        }
+      });
+      // Also count current user if not in allUsers
+      if (profile && profile.guild && guildStats[profile.guild]) {
+        const alreadyCounted = allUsers.find(u => profile.uid && u.uid === profile.uid);
+        if (!alreadyCounted) {
+          guildStats[profile.guild].totalXP += (profile.totalXP || 0);
+          guildStats[profile.guild].members += 1;
+          guildStats[profile.guild].wins += (profile.battlesWon || 0);
+        }
+      }
+
+      allData = GUILD_KEYS.map(g => ({
+        guild: g,
+        name: GUILDS[g].name,
+        emoji: GUILDS[g].emoji,
+        members: guildStats[g].members,
+        totalXP: guildStats[g].totalXP,
+        avgXP: guildStats[g].members > 0 ? Math.round(guildStats[g].totalXP / guildStats[g].members) : 0,
+        wins: guildStats[g].wins
+      })).sort((a, b) => b.totalXP - a.totalXP).map((item, i) => ({ ...item, rank: i + 1 }));
+      const list = document.getElementById('board-list');
+      const colors = ['#FFD700','#C0C0C0','#CD7F32'];
+      const emojis = ['🥇','🥈','🥉'];
+      list.innerHTML = allData.map((item, i) => {
+        const guildData = GUILDS[item.guild] || {};
+        const isCurrentGuild = profile?.guild === item.guild;
+        return `
+          <div class="lb-full-item ${isCurrentGuild ? 'current-user-row' : ''}">
+            <div class="lb-position" style="color:${i<3?colors[i]:'var(--text-muted)'}">${i<3?emojis[i]:'#'+item.rank}</div>
+            <div class="lb-avatar" style="background:${guildData.gradient||'var(--primary)'}; font-size:1.3rem">${item.emoji}</div>
+            <div class="lb-info">
+              <div class="lb-full-name">${item.name} ${isCurrentGuild?'<span class="badge badge-primary" style="font-size:0.65rem">Your Guild</span>':''}</div>
+              <div style="font-size:0.75rem;color:var(--text-muted)">${item.members} members</div>
+            </div>
+            <div style="font-size:0.85rem;color:var(--success)">⚔️ ${item.wins} wins</div>
+            <div style="font-size:0.85rem;color:var(--text-muted)">Avg ⚡${fmt(item.avgXP)}</div>
+            <div class="lb-xp" style="color:var(--primary);font-weight:700">⚡ ${fmt(item.totalXP)}</div>
+          </div>
+          ${i < allData.length-1 ? '<div class="lb-separator"></div>' : ''}`;
+      }).join('');
+    }
+
+    function renderNationalBoard() {
+      // Build national board from all real users in localStorage
+      const allUsers = JSON.parse(localStorage.getItem('lvlbase_all_users') || '[]');
+      const schools = JSON.parse(localStorage.getItem('lvlbase_schools') || '[]');
+      const schoolMap = {};
+      schools.forEach(s => { schoolMap[s.id] = s.name; });
+
+      let nationalUsers = allUsers
+        .filter(u => u.role === 'student' && u.totalXP > 0)
+        .map(u => ({
+          name: u.displayName || u.email,
+          school: schoolMap[u.schoolId] || 'Independent',
+          xp: u.totalXP || 0,
+          subject: u.subject || (u.subjectProgress ? Object.keys(u.subjectProgress).reduce((a, b) => (u.subjectProgress[a] >= u.subjectProgress[b] ? a : b)) : 'All'),
+          rankId: getRankId(u.totalXP || 0),
+          isCurrentUser: profile && u.uid === profile.uid
+        }));
+
+      // Include current user if not already present
+      if (profile && profile.totalXP > 0) {
+        const exists = nationalUsers.find(u => u.isCurrentUser);
+        if (!exists) {
+          nationalUsers.push({
+            name: profile.displayName || 'You',
+            school: schoolMap[profile.schoolId] || 'Independent',
+            xp: profile.totalXP,
+            subject: 'All',
+            rankId: getRankId(profile.totalXP),
+            isCurrentUser: true
+          });
+        }
+      }
+
+      nationalUsers = nationalUsers.sort((a, b) => b.xp - a.xp).map((u, i) => ({ ...u, rank: i + 1 }));
+      allData = nationalUsers;
+
+      const list = document.getElementById('board-list');
+      if (nationalUsers.length === 0) {
+        list.innerHTML = '<div style="text-align:center;color:var(--text-muted);padding:2.5rem 1rem"><div style="font-size:2.5rem;margin-bottom:0.75rem">🌏</div><div style="font-weight:700;margin-bottom:0.4rem">No national entries yet</div><div style="font-size:0.85rem">Be the first to earn XP and claim the top spot!</div></div>';
+        return;
+      }
+      const colors = ['#FFD700','#C0C0C0','#CD7F32'];
+      const emojis = ['🥇','🥈','🥉'];
+      list.innerHTML = nationalUsers.map((item, i) => `
+        <div class="lb-full-item ${item.isCurrentUser ? 'current-user-row' : ''}">
+          <div class="lb-position" style="color:${i<3?colors[i]:'var(--text-muted)'}">${i<3?emojis[i]:'#'+item.rank}</div>
+          <div class="lb-avatar" style="background:linear-gradient(135deg,var(--primary),var(--secondary))">${item.name.substring(0,2)}</div>
+          <div class="lb-info">
+            <div class="lb-full-name">${item.name} ${item.isCurrentUser ? '<span class="badge badge-primary" style="font-size:0.65rem">You</span>' : ''}</div>
+            <div style="font-size:0.75rem;color:var(--text-muted)">🏫 ${item.school}</div>
+          </div>
+          <span class="rank-badge rank-${item.rankId.toLowerCase()}">${item.rankId}-Rank</span>
+          <div class="lb-xp" style="color:var(--primary);font-weight:700">⚡ ${fmt(item.xp)}</div>
+        </div>
+        ${i < nationalUsers.length-1 ? '<div class="lb-separator"></div>' : ''}`).join('');
+    }
+
+    function switchTab(tab, btn) {
+      currentTab = tab;
+      document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      document.getElementById('search-input').value = '';
+      document.getElementById('user-rank-card').style.display = 'none';
+      if (tab === 'individual') renderIndividual();
+      else if (tab === 'guild') renderGuildBoard();
+      else renderNationalBoard();
+    }
+
+    function filterBoard() {
+      const q = document.getElementById('search-input').value.toLowerCase();
+      if (!q) { if (currentTab === 'individual') renderIndividual(); else if (currentTab === 'guild') renderGuildBoard(); else renderNationalBoard(); return; }
+      const filtered = allData.filter(u => (u.name || '').toLowerCase().includes(q) || (u.school || '').toLowerCase().includes(q));
+      if (currentTab === 'individual' || currentTab === 'national') renderBoard(filtered);
+      // Guild board filtering not applicable (only 5 guilds)
+    }
+
+    function clearSearch() {
+      document.getElementById('search-input').value = '';
+      if (currentTab === 'individual') renderIndividual();
+      else if (currentTab === 'guild') renderGuildBoard();
+      else renderNationalBoard();
+    }
+
+    document.getElementById('hamburger').addEventListener('click', () => {
+      document.getElementById('mobile-menu')?.classList.toggle('open');
+    });
+
+    renderIndividual();
+  </script>
+</body>
+</html>

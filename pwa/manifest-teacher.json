@@ -1,0 +1,15 @@
+{
+  "name": "lvlBase Teacher",
+  "short_name": "lvlBase T",
+  "description": "Manage your classes and track student progress",
+  "start_url": "/app/teacher/dashboard.html",
+  "scope": "/app/teacher/",
+  "display": "standalone",
+  "background_color": "#0A0A1A",
+  "theme_color": "#00D1B2",
+  "icons": [
+    { "src": "/assets/icons/icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "/assets/icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ],
+  "categories": ["education", "productivity"]
+}
