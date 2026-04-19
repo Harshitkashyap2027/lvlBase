@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Testimonials | lvlBase</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <style>
+    :root {--primary:#6C63FF;--primary-dark:#5A52E8;--secondary:#FF6B6B;--accent:#FFD700;--success:#00D1B2;--warning:#FF9F43;--danger:#FF4444;--dark-bg:#0A0A1A;--card-bg:#1A1A2E;--border-color:rgba(108,99,255,0.2);--text-light:#E8E8FF;--text-muted:#8892A4;--radius:12px;--radius-xl:24px;--shadow:0 4px 20px rgba(0,0,0,0.3);--transition:all 0.3s ease;}
+    *{margin:0;padding:0;box-sizing:border-box;}
+    body{font-family:"Poppins",sans-serif;background:var(--dark-bg);color:var(--text-light);}
+    .navbar{position:fixed;top:0;left:0;right:0;height:65px;background:rgba(10,10,26,0.95);backdrop-filter:blur(20px);border-bottom:1px solid var(--border-color);display:flex;align-items:center;justify-content:space-between;padding:0 2rem;z-index:1000;}
+    .navbar-brand{font-size:1.3rem;font-weight:900;background:linear-gradient(135deg,var(--primary),var(--secondary));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;text-decoration:none;}
+    .navbar-nav{display:flex;gap:0.5rem;}
+    .nav-link{padding:0.5rem 1rem;border-radius:var(--radius);color:var(--text-muted);text-decoration:none;font-size:0.9rem;font-weight:500;transition:var(--transition);}
+    .nav-link:hover,.nav-link.active{color:var(--text-light);background:rgba(108,99,255,0.15);}
+    .navbar-actions{display:flex;align-items:center;gap:1rem;}
+    .page-wrapper{padding-top:65px;min-height:100vh;}
+    .container{max-width:1280px;margin:0 auto;padding:2rem;}
+    .card{background:var(--card-bg);border:1px solid var(--border-color);border-radius:var(--radius-xl);padding:1.5rem;transition:var(--transition);}
+    .card:hover{border-color:rgba(108,99,255,0.4);box-shadow:var(--shadow);}
+    .grid-2{display:grid;grid-template-columns:repeat(2,1fr);gap:1.5rem;}
+    .grid-3{display:grid;grid-template-columns:repeat(3,1fr);gap:1.5rem;}
+    .grid-4{display:grid;grid-template-columns:repeat(4,1fr);gap:1.5rem;}
+    .btn{padding:0.75rem 1.5rem;border-radius:var(--radius);font-family:inherit;font-size:0.9rem;font-weight:600;cursor:pointer;border:none;transition:var(--transition);text-decoration:none;display:inline-flex;align-items:center;gap:0.5rem;}
+    .btn-primary{background:linear-gradient(135deg,var(--primary),var(--primary-dark));color:white;}
+    .btn-primary:hover{transform:translateY(-2px);box-shadow:0 8px 25px rgba(108,99,255,0.4);}
+    .btn-ghost{background:transparent;color:var(--text-muted);border:1px solid var(--border-color);}
+    .page-title{font-size:1.8rem;font-weight:800;margin-bottom:0.25rem;}
+    .page-subtitle{color:var(--text-muted);font-size:0.95rem;}
+    .page-header{margin-bottom:2rem;}
+    .tag{display:inline-block;padding:0.25rem 0.75rem;border-radius:20px;font-size:0.75rem;font-weight:600;background:rgba(255,255,255,0.08);color:var(--text-muted);}
+    .tag-primary{background:rgba(108,99,255,0.2);color:var(--primary);}
+    .tag-success{background:rgba(0,209,178,0.2);color:var(--success);}
+    .tag-warning{background:rgba(255,159,67,0.2);color:var(--warning);}
+    footer{border-top:1px solid var(--border-color);padding:3rem 2rem;margin-top:4rem;}
+    .footer-grid{max-width:1280px;margin:0 auto;display:grid;grid-template-columns:repeat(4,1fr);gap:2rem;}
+    .footer-col h4{font-weight:700;margin-bottom:1rem;}
+    .footer-col a{display:block;color:var(--text-muted);text-decoration:none;margin-bottom:0.5rem;font-size:0.9rem;transition:var(--transition);}
+    .footer-col a:hover{color:var(--text-light);}
+    .footer-bottom{max-width:1280px;margin:2rem auto 0;padding-top:2rem;border-top:1px solid var(--border-color);display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:1rem;color:var(--text-muted);font-size:0.85rem;}
+    @media(max-width:768px){.grid-2,.grid-3,.grid-4{grid-template-columns:1fr;}.navbar-nav{display:none;}.footer-grid{grid-template-columns:1fr 1fr;}}
+  </style>
+</head>
+<body>
+<nav class="navbar">
+  <a href="../public/index.html" class="navbar-brand">lvlBase ⚡</a>
+  <div class="navbar-nav">
+    <a href="../public/index.html" class="nav-link">Home</a>
+    <a href="../public/features.html" class="nav-link">Features</a>
+    <a href="../public/pricing.html" class="nav-link">Pricing</a>
+    <a href="../public/about.html" class="nav-link">About</a>
+    <a href="../public/contact.html" class="nav-link">Contact</a>
+  </div>
+  <div class="navbar-actions">
+    <a href="../auth/portal-login.html" class="btn btn-ghost" style="padding:0.5rem 1rem;font-size:0.9rem;">Log in</a>
+    <a href="../auth/signup-student.html" class="btn btn-primary" style="padding:0.5rem 1rem;font-size:0.9rem;">Get Started</a>
+  </div>
+</nav>
+<div class="page-wrapper">
+  <div class="container">
+    
+<div style="text-align:center;padding:4rem 0 3rem;"><h1 style="font-size:3rem;font-weight:900;background:linear-gradient(135deg,var(--primary),var(--secondary));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;margin-bottom:1rem;">What Educators Say ❤️</h1><p style="color:var(--text-muted);font-size:1.1rem;">Trusted by 50,000+ students and 284 schools worldwide</p></div>
+<div class="grid-3" style="margin-bottom:2rem;">
+  <div class="card" style="background:linear-gradient(135deg,rgba(108,99,255,0.08),var(--card-bg));"><div style="font-size:1.5rem;margin-bottom:1rem;">⭐⭐⭐⭐⭐</div><p style="color:var(--text-muted);line-height:1.8;font-size:0.95rem;margin-bottom:1.5rem;">"lvlBase transformed my classroom completely. Students who used to dread assignments now rush to complete them to earn XP. Attendance went from 78% to 96%!"</p><div style="display:flex;align-items:center;gap:1rem;"><div style="width:44px;height:44px;border-radius:50%;background:linear-gradient(135deg,var(--primary),#8B85FF);display:flex;align-items:center;justify-content:center;font-weight:700;">RS</div><div><div style="font-weight:700;font-size:0.9rem;">Mr. Rahul Sharma</div><div style="font-size:0.8rem;color:var(--text-muted);">CS Teacher · Greenfield Academy</div></div></div></div>
+  <div class="card" style="background:linear-gradient(135deg,rgba(0,209,178,0.08),var(--card-bg));"><div style="font-size:1.5rem;margin-bottom:1rem;">⭐⭐⭐⭐⭐</div><p style="color:var(--text-muted);line-height:1.8;font-size:0.95rem;margin-bottom:1.5rem;">"As a school principal, I was skeptical about gamification. But the data speaks for itself — a 34% improvement in average scores and teachers are happier too."</p><div style="display:flex;align-items:center;gap:1rem;"><div style="width:44px;height:44px;border-radius:50%;background:linear-gradient(135deg,var(--success),#00A896);display:flex;align-items:center;justify-content:center;font-weight:700;">PM</div><div><div style="font-weight:700;font-size:0.9rem;">Dr. Priya Mehra</div><div style="font-size:0.8rem;color:var(--text-muted);">Principal · St. Xavier's College</div></div></div></div>
+  <div class="card" style="background:linear-gradient(135deg,rgba(255,215,0,0.08),var(--card-bg));"><div style="font-size:1.5rem;margin-bottom:1rem;">⭐⭐⭐⭐⭐</div><p style="color:var(--text-muted);line-height:1.8;font-size:0.95rem;margin-bottom:1.5rem;">"My daughter used to avoid studying. Now she wakes up early to maintain her streak! The parent dashboard helps me track her progress without being intrusive."</p><div style="display:flex;align-items:center;gap:1rem;"><div style="width:44px;height:44px;border-radius:50%;background:linear-gradient(135deg,#FF9F43,#FFB700);display:flex;align-items:center;justify-content:center;font-weight:700;">AK</div><div><div style="font-weight:700;font-size:0.9rem;">Anita Kumar</div><div style="font-size:0.8rem;color:var(--text-muted);">Parent of Class 10 Student</div></div></div></div>
+  <div class="card"><div style="font-size:1.5rem;margin-bottom:1rem;">⭐⭐⭐⭐⭐</div><p style="color:var(--text-muted);line-height:1.8;font-size:0.95rem;margin-bottom:1.5rem;">"The AI Sage is incredible. It's like having a personal tutor available 24/7. My weak spots in algorithms were identified and fixed within 2 weeks!"</p><div style="display:flex;align-items:center;gap:1rem;"><div style="width:44px;height:44px;border-radius:50%;background:linear-gradient(135deg,#FF6B6B,#FF4444);display:flex;align-items:center;justify-content:center;font-weight:700;">AJ</div><div><div style="font-weight:700;font-size:0.9rem;">Arjun Joshi</div><div style="font-size:0.8rem;color:var(--text-muted);">Student · Class 11</div></div></div></div>
+  <div class="card"><div style="font-size:1.5rem;margin-bottom:1rem;">⭐⭐⭐⭐⭐</div><p style="color:var(--text-muted);line-height:1.8;font-size:0.95rem;margin-bottom:1.5rem;">"The proctoring system is incredibly accurate. We caught 3 cheating incidents in our first exam that we would have missed otherwise. The AI analysis is next level."</p><div style="display:flex;align-items:center;gap:1rem;"><div style="width:44px;height:44px;border-radius:50%;background:linear-gradient(135deg,var(--primary),#8B85FF);display:flex;align-items:center;justify-content:center;font-weight:700;">VR</div><div><div style="font-weight:700;font-size:0.9rem;">Vijay Reddy</div><div style="font-size:0.8rem;color:var(--text-muted);">Exam Controller · DPS Noida</div></div></div></div>
+  <div class="card"><div style="font-size:1.5rem;margin-bottom:1rem;">⭐⭐⭐⭐⭐</div><p style="color:var(--text-muted);line-height:1.8;font-size:0.95rem;margin-bottom:1.5rem;">"ROI was clear within 3 months. Reduced remedial teaching hours by 40% because students were self-correcting through the AI feedback loop."</p><div style="display:flex;align-items:center;gap:1rem;"><div style="width:44px;height:44px;border-radius:50%;background:linear-gradient(135deg,var(--success),#00A896);display:flex;align-items:center;justify-content:center;font-weight:700;">SK</div><div><div style="font-weight:700;font-size:0.9rem;">Sunita Kapoor</div><div style="font-size:0.8rem;color:var(--text-muted);">Academic Director · Ryan International</div></div></div></div>
+</div>
+
+  </div>
+</div>
+<footer>
+  <div class="footer-grid">
+    <div class="footer-col"><h4>lvlBase ⚡</h4><p style="color:var(--text-muted);font-size:0.85rem;line-height:1.6;">The gamified learning platform that turns education into an epic adventure.</p></div>
+    <div class="footer-col"><h4>Product</h4><a href="../public/features.html">Features</a><a href="../public/pricing.html">Pricing</a><a href="../public/roi-calculator.html">ROI Calculator</a><a href="../public/demo.html">Request Demo</a></div>
+    <div class="footer-col"><h4>Company</h4><a href="../public/about.html">About Us</a><a href="../public/blog.html">Blog</a><a href="../public/careers.html">Careers</a><a href="../public/press.html">Press</a></div>
+    <div class="footer-col"><h4>Legal</h4><a href="../public/legal/privacy-policy.html">Privacy Policy</a><a href="../public/legal/terms-of-service.html">Terms of Service</a><a href="../public/legal/cookie-policy.html">Cookie Policy</a></div>
+  </div>
+  <div class="footer-bottom"><span>© 2026 lvlBase. All rights reserved.</span><span>Made with ❤️ in India</span></div>
+</footer>
+</body>
+</html>

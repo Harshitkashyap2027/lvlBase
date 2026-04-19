@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Badges & Achievements | lvlBase</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --primary: #FFD700;
+      --primary-dark: #5A52E8;
+      --secondary: #FF6B6B;
+      --accent: #FFD700;
+      --success: #00D1B2;
+      --warning: #FF9F43;
+      --danger: #FF4444;
+      --dark-bg: #0A0A1A;
+      --card-bg: #1A1A2E;
+      --border-color: rgba(108,99,255,0.2);
+      --text-light: #E8E8FF;
+      --text-muted: #8892A4;
+      --radius: 12px;
+      --radius-xl: 24px;
+      --shadow: 0 4px 20px rgba(0,0,0,0.3);
+      --transition: all 0.3s ease;
+    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: "Poppins", sans-serif; background: var(--dark-bg); color: var(--text-light); }
+    .navbar { position: fixed; top: 0; left: 0; right: 0; height: 65px; background: rgba(10,10,26,0.95); backdrop-filter: blur(20px); border-bottom: 1px solid var(--border-color); display: flex; align-items: center; justify-content: space-between; padding: 0 2rem; z-index: 1000; }
+    .navbar-brand { font-size: 1.3rem; font-weight: 900; background: linear-gradient(135deg, var(--primary), var(--secondary)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; text-decoration: none; }
+    .navbar-nav { display: flex; gap: 0.5rem; }
+    .nav-link { padding: 0.5rem 1rem; border-radius: var(--radius); color: var(--text-muted); text-decoration: none; font-size: 0.9rem; font-weight: 500; transition: var(--transition); }
+    .nav-link:hover, .nav-link.active { color: var(--text-light); background: rgba(108,99,255,0.15); }
+    .navbar-actions { display: flex; align-items: center; gap: 1rem; }
+    .badge { padding: 0.3rem 0.75rem; border-radius: 20px; font-size: 0.8rem; font-weight: 700; background: rgba(108,99,255,0.2); color: var(--primary); }
+    .avatar { width: 36px; height: 36px; border-radius: 50%; background: linear-gradient(135deg, var(--success), #00A896); display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 0.9rem; cursor: pointer; }
+    .page-wrapper { padding-top: 65px; min-height: 100vh; }
+    .container { max-width: 1280px; margin: 0 auto; padding: 2rem; }
+    .card { background: var(--card-bg); border: 1px solid var(--border-color); border-radius: var(--radius-xl); padding: 1.5rem; transition: var(--transition); }
+    .card:hover { border-color: rgba(108,99,255,0.4); box-shadow: var(--shadow); }
+    .grid-2 { display: grid; grid-template-columns: repeat(2,1fr); gap: 1.5rem; }
+    .grid-3 { display: grid; grid-template-columns: repeat(3,1fr); gap: 1.5rem; }
+    .grid-4 { display: grid; grid-template-columns: repeat(4,1fr); gap: 1.5rem; }
+    .btn { padding: 0.75rem 1.5rem; border-radius: var(--radius); font-family: inherit; font-size: 0.9rem; font-weight: 600; cursor: pointer; border: none; transition: var(--transition); text-decoration: none; display: inline-flex; align-items: center; gap: 0.5rem; }
+    .btn-primary { background: linear-gradient(135deg, var(--primary), var(--primary-dark)); color: white; }
+    .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 8px 25px rgba(108,99,255,0.4); }
+    .btn-ghost { background: transparent; color: var(--text-muted); border: 1px solid var(--border-color); }
+    .btn-danger { background: rgba(255,68,68,0.15); color: var(--danger); border: 1px solid rgba(255,68,68,0.3); }
+    .btn-success { background: rgba(0,209,178,0.15); color: var(--success); border: 1px solid rgba(0,209,178,0.3); }
+    .page-title { font-size: 1.8rem; font-weight: 800; margin-bottom: 0.25rem; }
+    .page-subtitle { color: var(--text-muted); font-size: 0.95rem; }
+    .page-header { margin-bottom: 2rem; }
+    .stat-card { background: var(--card-bg); border: 1px solid var(--border-color); border-radius: var(--radius-xl); padding: 1.5rem; display: flex; flex-direction: column; gap: 0.5rem; }
+    .stat-value { font-size: 2rem; font-weight: 800; }
+    .stat-label { color: var(--text-muted); font-size: 0.85rem; }
+    .tag { display: inline-block; padding: 0.25rem 0.75rem; border-radius: 20px; font-size: 0.75rem; font-weight: 600; }
+    .tag-primary { background: rgba(108,99,255,0.2); color: var(--primary); }
+    .tag-success { background: rgba(0,209,178,0.2); color: var(--success); }
+    .tag-warning { background: rgba(255,159,67,0.2); color: var(--warning); }
+    .tag-danger { background: rgba(255,68,68,0.2); color: var(--danger); }
+    .empty-state { text-align: center; padding: 4rem 2rem; color: var(--text-muted); }
+    .empty-state-icon { font-size: 4rem; margin-bottom: 1rem; }
+    .divider { border: none; border-top: 1px solid var(--border-color); margin: 1.5rem 0; }
+    @media (max-width: 768px) {
+      .grid-2, .grid-3, .grid-4 { grid-template-columns: 1fr; }
+      .navbar-nav { display: none; }
+    }
+  </style>
+  
+  <script>
+    (function() {
+      var u = JSON.parse(localStorage.getItem('lvlbase_current_user') || 'null');
+      if (!u) { window.location.replace('../../auth/portal-login.html'); throw ''; }
+      var allowed = ['student'];
+      if (allowed.indexOf(u.role) === -1) {
+        document.addEventListener('DOMContentLoaded', function() {
+          document.body.innerHTML = '<div style="min-height:100vh;background:#0A0A1A;display:flex;align-items:center;justify-content:center;font-family:Poppins,system-ui;padding:2rem"><div style="background:#1A1A2E;border:2px solid #FF4444;border-radius:28px;padding:3rem 2rem;max-width:460px;width:100%;text-align:center"><div style="font-size:4rem;margin-bottom:1rem">🚫</div><h1 style="color:#FF4444;font-size:1.5rem;font-weight:800;margin-bottom:0.75rem">Access Denied</h1><p style="color:#8892A4;margin-bottom:2rem">This page is for <strong style=\'color:#E8E8FF\'>Students</strong> only.</p><a href="../../auth/portal-login.html" style="display:block;padding:0.85rem;background:linear-gradient(135deg,#6C63FF,#8B85FF);color:white;border-radius:14px;font-weight:700;text-decoration:none">← Back to Login</a></div></div>';
+        });
+        throw 'ACCESS_DENIED';
+      }
+    })();
+  </script>
+</head>
+<body>
+<nav class="navbar">
+  <a href="../../public/index.html" class="navbar-brand">lvlBase ⚡</a>
+  <div class="navbar-nav">
+    <a href="../../app/student/dashboard.html" class="nav-link">🏠 Home</a>
+    <a href="../../app/student/quest-map.html" class="nav-link">📚 Learn</a>
+    <a href="../../app/student/arena/battle-stage.html" class="nav-link">⚔️ Arena</a>
+    <a href="../../app/student/guilds/guild-dashboard.html" class="nav-link">🏰 Guild</a>
+    <a href="../../app/student/ai/sage-chat.html" class="nav-link">🤖 AI Sage</a>
+  </div>
+  <div class="navbar-actions">
+    <span class="badge">⚡ 12,450 XP</span>
+    <div class="avatar">🏆</div>
+  </div>
+</nav>
+<div class="page-wrapper">
+  <div class="container">
+    
+<div class="page-header">
+  <h1 class="page-title">🏆 Badges & Achievements</h1>
+  <p class="page-subtitle">Your earned honors and progress toward new ones</p>
+</div>
+<div class="grid-4" style="margin-bottom:1.5rem;">
+  <div class="stat-card"><div class="stat-value" style="color:var(--accent);">28</div><div class="stat-label">Badges Earned</div></div>
+  <div class="stat-card"><div class="stat-value" style="color:var(--primary);">5</div><div class="stat-label">Rare Badges</div></div>
+  <div class="stat-card"><div class="stat-value" style="color:var(--success);">1</div><div class="stat-label">Legendary</div></div>
+  <div class="stat-card"><div class="stat-value" style="color:var(--text-muted);">44</div><div class="stat-label">Still Locked</div></div>
+</div>
+<div style="display:flex;gap:0.75rem;margin-bottom:1.5rem;flex-wrap:wrap;">
+  <button class="btn btn-primary">All</button>
+  <button class="btn btn-ghost">⭐ Common</button>
+  <button class="btn btn-ghost">💜 Rare</button>
+  <button class="btn btn-ghost">🔶 Epic</button>
+  <button class="btn btn-ghost">👑 Legendary</button>
+  <button class="btn btn-ghost">🔒 Locked</button>
+</div>
+<div class="grid-4">
+  <div class="card" style="text-align:center;border-color:rgba(255,215,0,0.4);"><div style="font-size:3rem;margin-bottom:0.75rem;filter:drop-shadow(0 0 8px rgba(255,215,0,0.5));">👑</div><h3 style="font-weight:700;font-size:0.95rem;margin-bottom:0.25rem;">Legend of the Arena</h3><p style="color:var(--text-muted);font-size:0.75rem;margin-bottom:0.75rem;">Won 100 battles</p><span class="tag" style="background:rgba(255,215,0,0.2);color:var(--accent);">Legendary</span></div>
+  <div class="card" style="text-align:center;border-color:rgba(147,51,234,0.4);"><div style="font-size:3rem;margin-bottom:0.75rem;filter:drop-shadow(0 0 8px rgba(147,51,234,0.5));">🔮</div><h3 style="font-weight:700;font-size:0.95rem;margin-bottom:0.25rem;">Code Wizard</h3><p style="color:var(--text-muted);font-size:0.75rem;margin-bottom:0.75rem;">Mastered 5 languages</p><span class="tag" style="background:rgba(147,51,234,0.2);color:#9F3DE8;">Epic</span></div>
+  <div class="card" style="text-align:center;"><div style="font-size:3rem;margin-bottom:0.75rem;">🔥</div><h3 style="font-weight:700;font-size:0.95rem;margin-bottom:0.25rem;">Streak Master</h3><p style="color:var(--text-muted);font-size:0.75rem;margin-bottom:0.75rem;">30-day streak</p><span class="tag tag-danger">Rare</span></div>
+  <div class="card" style="text-align:center;"><div style="font-size:3rem;margin-bottom:0.75rem;">🌟</div><h3 style="font-weight:700;font-size:0.95rem;margin-bottom:0.25rem;">Perfect Score</h3><p style="color:var(--text-muted);font-size:0.75rem;margin-bottom:0.75rem;">100% on a quiz</p><span class="tag tag-success">Common</span></div>
+  <div class="card" style="text-align:center;"><div style="font-size:3rem;margin-bottom:0.75rem;">🤝</div><h3 style="font-weight:700;font-size:0.95rem;margin-bottom:0.25rem;">Team Player</h3><p style="color:var(--text-muted);font-size:0.75rem;margin-bottom:0.75rem;">Joined a guild</p><span class="tag tag-success">Common</span></div>
+  <div class="card" style="text-align:center;opacity:0.5;"><div style="font-size:3rem;margin-bottom:0.75rem;">🛡️</div><h3 style="font-weight:700;font-size:0.95rem;margin-bottom:0.25rem;">Untouchable</h3><p style="color:var(--text-muted);font-size:0.75rem;margin-bottom:0.75rem;">Win 10 battles in a row</p><span class="tag">🔒 Locked</span></div>
+  <div class="card" style="text-align:center;opacity:0.5;"><div style="font-size:3rem;margin-bottom:0.75rem;">🌍</div><h3 style="font-weight:700;font-size:0.95rem;margin-bottom:0.25rem;">Global Rank #1</h3><p style="color:var(--text-muted);font-size:0.75rem;margin-bottom:0.75rem;">Reach the top of global leaderboard</p><span class="tag">🔒 Locked</span></div>
+  <div class="card" style="text-align:center;opacity:0.5;"><div style="font-size:3rem;margin-bottom:0.75rem;">💻</div><h3 style="font-weight:700;font-size:0.95rem;margin-bottom:0.25rem;">Full Stack Dev</h3><p style="color:var(--text-muted);font-size:0.75rem;margin-bottom:0.75rem;">Complete web + backend courses</p><span class="tag">🔒 Locked</span></div>
+</div>
+
+  </div>
+</div>
+</body>
+</html>

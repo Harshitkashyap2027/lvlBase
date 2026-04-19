@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Verify Your Email | lvlBase</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <style>
+    :root {--primary:#6C63FF;--primary-dark:#5A52E8;--secondary:#FF6B6B;--accent:#FFD700;--success:#00D1B2;--warning:#FF9F43;--danger:#FF4444;--dark-bg:#0A0A1A;--card-bg:#1A1A2E;--border-color:rgba(108,99,255,0.2);--text-light:#E8E8FF;--text-muted:#8892A4;--radius:12px;--radius-xl:24px;}
+    *{margin:0;padding:0;box-sizing:border-box;}
+    body{font-family:"Poppins",sans-serif;background:var(--dark-bg);color:var(--text-light);min-height:100vh;display:flex;align-items:center;justify-content:center;padding:2rem;}
+    .auth-card{background:var(--card-bg);border:1px solid var(--border-color);border-radius:var(--radius-xl);padding:2.5rem;width:100%;max-width:440px;}
+    .auth-brand{font-size:1.5rem;font-weight:900;background:linear-gradient(135deg,var(--primary),var(--secondary));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;text-align:center;margin-bottom:0.5rem;}
+    .auth-title{font-size:1.4rem;font-weight:800;text-align:center;margin-bottom:0.5rem;}
+    .auth-subtitle{color:var(--text-muted);text-align:center;font-size:0.9rem;margin-bottom:2rem;}
+    .form-group{margin-bottom:1.25rem;}
+    label{display:block;font-size:0.85rem;color:var(--text-muted);margin-bottom:0.4rem;font-weight:500;}
+    input{width:100%;background:rgba(255,255,255,0.05);border:1px solid var(--border-color);border-radius:var(--radius);padding:0.75rem 1rem;color:var(--text-light);font-family:inherit;font-size:0.9rem;outline:none;transition:border-color 0.3s;}
+    input:focus{border-color:var(--primary);}
+    .btn{width:100%;padding:0.85rem;border-radius:var(--radius);font-family:inherit;font-size:0.95rem;font-weight:700;cursor:pointer;border:none;transition:all 0.3s;text-decoration:none;display:block;text-align:center;margin-top:1.5rem;}
+    .btn-primary{background:linear-gradient(135deg,var(--primary),var(--primary-dark));color:white;}
+    .btn-primary:hover{transform:translateY(-2px);box-shadow:0 8px 25px rgba(108,99,255,0.4);}
+    .btn-ghost{background:transparent;color:var(--text-muted);border:1px solid var(--border-color);margin-top:0.75rem;}
+    .divider{display:flex;align-items:center;gap:1rem;margin:1.5rem 0;color:var(--text-muted);font-size:0.85rem;}
+    .divider::before,.divider::after{content:"";flex:1;height:1px;background:var(--border-color);}
+    .auth-link{color:var(--primary);text-decoration:none;font-size:0.9rem;}
+    .auth-footer{text-align:center;margin-top:1.5rem;color:var(--text-muted);font-size:0.85rem;}
+  </style>
+</head>
+<body>
+<div class="auth-card">
+  <div class="auth-brand">lvlBase ⚡</div>
+  
+<div class="auth-title">📧 Check Your Email</div>
+<div class="auth-subtitle">We've sent a verification link to <strong style="color:var(--text-light);">john@school.edu</strong></div>
+<div style="text-align:center;padding:2rem 0;">
+  <div style="width:80px;height:80px;border-radius:50%;background:rgba(0,209,178,0.15);border:3px solid var(--success);display:flex;align-items:center;justify-content:center;font-size:2rem;margin:0 auto 1.5rem;">📧</div>
+  <p style="color:var(--text-muted);font-size:0.9rem;line-height:1.7;margin-bottom:1.5rem;">Please click the verification link we just sent to your email. The link will expire in 24 hours.</p>
+  <div style="background:rgba(0,209,178,0.08);border:1px solid rgba(0,209,178,0.2);border-radius:var(--radius);padding:1rem;margin-bottom:1.5rem;">
+    <p style="font-size:0.85rem;color:var(--text-muted);">📌 Can't find the email? Check your spam folder.</p>
+  </div>
+</div>
+<button class="btn btn-primary" onclick="this.textContent='✅ Email Resent!'">🔄 Resend Verification Email</button>
+<a href="portal-login.html" class="btn btn-ghost" style="display:block;text-align:center;margin-top:0.75rem;">← Back to Login</a>
+
+</div>
+</body>
+</html>
