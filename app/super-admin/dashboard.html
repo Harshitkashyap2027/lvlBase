@@ -13,7 +13,7 @@
       var u = JSON.parse(localStorage.getItem('lvlbase_current_user') || 'null');
       var d = JSON.parse(localStorage.getItem('lvlbase_admin_session') || 'null');
       if (!(u && u.role === 'admin') && !(d && d.loggedIn && Date.now() - d.loginTime < 28800000)) {
-        window.location.replace('login.html');
+        window.location.replace('../../admin/login.html');
       }
     })();
   </script>

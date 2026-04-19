@@ -12,12 +12,12 @@
     // ── Role Guard (student only) ──
     (function() {
       var u = JSON.parse(localStorage.getItem('lvlbase_current_user') || 'null');
-      if (!u) { window.location.replace('login.html'); throw ''; }
+      if (!u) { window.location.replace('../../login.html'); throw ''; }
       var allowed = ['student'];
       if (allowed.indexOf(u.role) === -1) {
         document.addEventListener('DOMContentLoaded', function() {
-          var map = { teacher:'teacher-dashboard.html', parent:'parent-dashboard.html', school_admin:'school-dashboard.html', admin:'admin/index.html' };
-          var myUrl = map[u.role] || 'login.html';
+          var map = { teacher:'../../teacher-dashboard.html', parent:'../../parent-dashboard.html', school_admin:'../../school-dashboard.html', admin:'../../admin/index.html' };
+          var myUrl = map[u.role] || '../../login.html';
           document.body.innerHTML = '<div style="min-height:100vh;background:#0A0A1A;display:flex;align-items:center;justify-content:center;font-family:Poppins,system-ui;padding:2rem"><div style="background:#1A1A2E;border:2px solid #FF4444;border-radius:28px;padding:3rem 2rem;max-width:460px;width:100%;text-align:center;background:linear-gradient(135deg,rgba(255,68,68,0.07),#1A1A2E);box-shadow:0 20px 60px rgba(0,0,0,0.4)"><div style="font-size:4rem;margin-bottom:1rem">🚫</div><h1 style="color:#FF4444;font-size:1.5rem;font-weight:800;margin-bottom:0.75rem">Access Denied</h1><p style="color:#8892A4;font-size:0.9rem;line-height:1.7;margin-bottom:2rem">This page is for <strong style=\'color:#E8E8FF\'>Students only</strong>. You are logged in as <strong style=\'color:#E8E8FF\'>' + u.role.replace('_', ' ') + '</strong>. You cannot access this page.</p><a href="' + myUrl + '" style="display:block;padding:0.85rem;background:linear-gradient(135deg,#6C63FF,#8B85FF);color:white;border-radius:14px;font-weight:700;text-decoration:none;margin-bottom:0.75rem">📊 Go to My Dashboard</a><a href="../../auth/portal-login.html" style="display:block;padding:0.75rem;background:rgba(255,255,255,0.06);color:#8892A4;border-radius:14px;text-decoration:none;border:1px solid rgba(255,255,255,0.08)">← Back to Login</a></div></div>';
         });
         throw 'ACCESS_DENIED';
@@ -28,17 +28,17 @@
 <body>
   <!-- NAVBAR -->
   <nav class="navbar">
-    <a href="index.html" class="navbar-brand">lvlBase ⚡</a>
+    <a href="../../index.html" class="navbar-brand">lvlBase ⚡</a>
     <div class="navbar-nav">
-      <a href="../../app/student/dashboard.html" class="nav-link active">Dashboard</a>
-      <a href="subjects.html" class="nav-link">Study</a>
-      <a href="quiz.html" class="nav-link">Quiz</a>
-      <a href="battles.html" class="nav-link">Battle</a>
-      <a href="leaderboard.html" class="nav-link">Ranks</a>
+      <a href="../../dashboard.html" class="nav-link active">Dashboard</a>
+      <a href="../../subjects.html" class="nav-link">Study</a>
+      <a href="../../quiz.html" class="nav-link">Quiz</a>
+      <a href="../../battles.html" class="nav-link">Battle</a>
+      <a href="../../leaderboard.html" class="nav-link">Ranks</a>
     </div>
     <div class="navbar-actions">
       <span id="nav-xp" style="color:var(--accent);font-weight:700;font-size:0.9rem">⚡ 0 XP</span>
-      <a href="ai-assistant.html" class="btn btn-ghost btn-sm">🤖 AI Tutor</a>
+      <a href="../../ai-assistant.html" class="btn btn-ghost btn-sm">🤖 AI Tutor</a>
       <button onclick="handleLogout()" class="btn btn-sm" style="background:rgba(255,68,68,0.15);color:var(--danger)">Logout</button>
     </div>
     <div class="hamburger" id="hamburger"><span></span><span></span><span></span></div>
@@ -46,10 +46,10 @@
 
   <!-- MOBILE MENU -->
   <div class="mobile-menu" id="mobile-menu">
-    <a href="subjects.html" class="nav-link">Study</a>
-    <a href="quiz.html" class="nav-link">Quiz</a>
-    <a href="battles.html" class="nav-link">Battle</a>
-    <a href="leaderboard.html" class="nav-link">Leaderboard</a>
+    <a href="../../subjects.html" class="nav-link">Study</a>
+    <a href="../../quiz.html" class="nav-link">Quiz</a>
+    <a href="../../battles.html" class="nav-link">Battle</a>
+    <a href="../../leaderboard.html" class="nav-link">Leaderboard</a>
     <button onclick="handleLogout()" class="btn btn-danger btn-sm btn-full">Logout</button>
   </div>
 
@@ -75,26 +75,26 @@
 
       <nav class="sidebar-nav">
         <div class="sidebar-label">Main</div>
-        <a href="../../app/student/dashboard.html" class="sidebar-link active"><span class="icon">📊</span> Dashboard</a>
-        <a href="subjects.html" class="sidebar-link"><span class="icon">📚</span> Subjects</a>
-        <a href="learn.html" class="sidebar-link"><span class="icon">📖</span> Learn</a>
+        <a href="../../dashboard.html" class="sidebar-link active"><span class="icon">📊</span> Dashboard</a>
+        <a href="../../subjects.html" class="sidebar-link"><span class="icon">📚</span> Subjects</a>
+        <a href="../../learn.html" class="sidebar-link"><span class="icon">📖</span> Learn</a>
 
         <div class="sidebar-label">Practice</div>
-        <a href="quiz.html" class="sidebar-link"><span class="icon">🎯</span> Quiz Mode</a>
-        <a href="battles.html" class="sidebar-link"><span class="icon">⚔️</span> Battles</a>
-        <a href="guild-wars.html" class="sidebar-link"><span class="icon">🏰</span> Guild Wars</a>
-        <a href="ai-assistant.html" class="sidebar-link"><span class="icon">🤖</span> AI Assistant</a>
-        <a href="homework-scanner.html" class="sidebar-link"><span class="icon">📸</span> Homework Scanner</a>
-        <a href="science-lab.html" class="sidebar-link"><span class="icon">🔬</span> Science Lab</a>
+        <a href="../../quiz.html" class="sidebar-link"><span class="icon">🎯</span> Quiz Mode</a>
+        <a href="../../battles.html" class="sidebar-link"><span class="icon">⚔️</span> Battles</a>
+        <a href="../../guild-wars.html" class="sidebar-link"><span class="icon">🏰</span> Guild Wars</a>
+        <a href="../../ai-assistant.html" class="sidebar-link"><span class="icon">🤖</span> AI Assistant</a>
+        <a href="../../homework-scanner.html" class="sidebar-link"><span class="icon">📸</span> Homework Scanner</a>
+        <a href="../../science-lab.html" class="sidebar-link"><span class="icon">🔬</span> Science Lab</a>
 
         <div class="sidebar-label">Progress</div>
-        <a href="leaderboard.html" class="sidebar-link"><span class="icon">🏆</span> Leaderboard</a>
-        <a href="competition.html" class="sidebar-link"><span class="icon">🌍</span> World Competition</a>
-        <a href="certificate.html" class="sidebar-link"><span class="icon">🏅</span> Certificates</a>
-        <a href="goals.html" class="sidebar-link"><span class="icon">🎯</span> Goals</a>
+        <a href="../../leaderboard.html" class="sidebar-link"><span class="icon">🏆</span> Leaderboard</a>
+        <a href="../../competition.html" class="sidebar-link"><span class="icon">🌍</span> World Competition</a>
+        <a href="../../certificate.html" class="sidebar-link"><span class="icon">🏅</span> Certificates</a>
+        <a href="../../goals.html" class="sidebar-link"><span class="icon">🎯</span> Goals</a>
 
         <div class="sidebar-label">Account</div>
-        <a href="settings.html" class="sidebar-link"><span class="icon">⚙️</span> Settings</a>
+        <a href="../../settings.html" class="sidebar-link"><span class="icon">⚙️</span> Settings</a>
         <a href="#" onclick="handleLogout()" class="sidebar-link" style="color:var(--danger)"><span class="icon">🚪</span> Logout</a>
       </nav>
     </aside>
@@ -114,8 +114,8 @@
             </div>
           </div>
           <div style="display:flex;gap:0.75rem;flex-wrap:wrap">
-            <a href="quiz.html" class="btn btn-sm" style="background:rgba(255,255,255,0.2);color:white">🎯 Quick Quiz</a>
-            <a href="battles.html" class="btn btn-sm" style="background:rgba(255,255,255,0.2);color:white">⚔️ Battle Now</a>
+            <a href="../../quiz.html" class="btn btn-sm" style="background:rgba(255,255,255,0.2);color:white">🎯 Quick Quiz</a>
+            <a href="../../battles.html" class="btn btn-sm" style="background:rgba(255,255,255,0.2);color:white">⚔️ Battle Now</a>
           </div>
         </div>
         <div style="margin-top:1.5rem">
@@ -145,7 +145,7 @@
         <div>
           <div class="flex-between mb-2">
             <h2 style="font-size:1.1rem;font-weight:700">📚 Subject Progress</h2>
-            <a href="subjects.html" class="btn btn-ghost btn-sm">View All</a>
+            <a href="../../subjects.html" class="btn btn-ghost btn-sm">View All</a>
           </div>
           <div id="subject-progress" style="display:grid;grid-template-columns:repeat(3,1fr);gap:1rem"></div>
 
@@ -168,7 +168,7 @@
           <div class="card mb-3" style="padding:1.25rem">
             <div class="flex-between mb-2">
               <h3 style="font-size:1rem;font-weight:700">🏆 Top Rankers</h3>
-              <a href="leaderboard.html" class="btn btn-ghost btn-sm">Full Board</a>
+              <a href="../../leaderboard.html" class="btn btn-ghost btn-sm">Full Board</a>
             </div>
             <div id="leaderboard-mini"></div>
           </div>
@@ -177,7 +177,7 @@
           <div class="card" style="padding:1.25rem">
             <div class="flex-between mb-2">
               <h3 style="font-size:1rem;font-weight:700">🎯 Active Goals</h3>
-              <a href="goals.html" class="btn btn-ghost btn-sm">Manage</a>
+              <a href="../../goals.html" class="btn btn-ghost btn-sm">Manage</a>
             </div>
             <div id="goals-mini"></div>
           </div>
@@ -208,7 +208,7 @@
 
   <script type="module">
     const profile = JSON.parse(localStorage.getItem('lvlbase_user_profile') || 'null');
-    if (!profile) { window.location.href = 'login.html'; }
+    if (!profile) { window.location.href = '../../login.html'; }
 
     const RANKS = [
       { id: 'E', label: 'E-Rank', minXP: 0, maxXP: 500 },
@@ -346,7 +346,7 @@
       if (goalsMini) {
         const goals = JSON.parse(localStorage.getItem('lvlbase_goals') || '[]').filter(g => !g.completed).slice(0, 3);
         if (goals.length === 0) {
-          goalsMini.innerHTML = '<div style="text-align:center;color:var(--text-muted);padding:1rem;font-size:0.85rem">No active goals. <a href="goals.html" style="color:var(--primary)">Set one now!</a></div>';
+          goalsMini.innerHTML = '<div style="text-align:center;color:var(--text-muted);padding:1rem;font-size:0.85rem">No active goals. <a href="../../goals.html" style="color:var(--primary)">Set one now!</a></div>';
         } else {
           goalsMini.innerHTML = goals.map(g => {
             const pct = Math.min(100, Math.round((g.current / g.target) * 100));
@@ -374,7 +374,7 @@
 
     window.handleLogout = function() {
       localStorage.removeItem('lvlbase_current_user');
-      window.location.href = 'login.html';
+      window.location.href = '../../login.html';
     };
 
     document.getElementById('hamburger').addEventListener('click', () => {
