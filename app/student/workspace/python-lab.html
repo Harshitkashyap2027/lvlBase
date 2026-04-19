@@ -1,0 +1,704 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Virtual Science Lab – lvlBase ⚡</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <link rel="manifest" href="manifest.json">
+  <link rel="stylesheet" href="../../../core/css/base.css">
+  <style>
+    .lab-wrapper { max-width: 1200px; margin: 0 auto; padding: 5.5rem 1.5rem 3rem; }
+    .lab-hero { text-align: center; margin-bottom: 2rem; }
+    .lab-hero h1 { font-size: 2rem; font-weight: 800; background: linear-gradient(135deg, var(--success), var(--primary)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+    .lab-tabs { display: flex; gap: 0.5rem; flex-wrap: wrap; justify-content: center; margin-bottom: 2rem; }
+    .lab-tab { padding: 0.6rem 1.25rem; border-radius: 20px; border: 1px solid var(--border-color); background: transparent; color: var(--text-muted); cursor: pointer; font-family: var(--font); font-size: 0.88rem; font-weight: 600; transition: var(--transition); }
+    .lab-tab.active { background: linear-gradient(135deg, var(--primary), var(--primary-dark)); color: white; border-color: transparent; }
+    .lab-panel { display: none; }
+    .lab-panel.active { display: grid; grid-template-columns: 1fr 320px; gap: 1.5rem; }
+    @media(max-width:768px) { .lab-panel.active { grid-template-columns: 1fr; } }
+    .canvas-container { background: var(--card-bg); border: 1px solid var(--border-color); border-radius: var(--radius-lg); padding: 1.5rem; }
+    canvas { display: block; background: #0a0a1a; border-radius: var(--radius); width: 100%; }
+    .controls-panel { background: var(--card-bg); border: 1px solid var(--border-color); border-radius: var(--radius-lg); padding: 1.5rem; }
+    .controls-panel h3 { font-size: 1rem; font-weight: 700; margin-bottom: 1.25rem; }
+    .control-group { margin-bottom: 1.25rem; }
+    .control-label { font-size: 0.82rem; font-weight: 600; color: var(--text-muted); margin-bottom: 0.4rem; display: flex; justify-content: space-between; }
+    .control-label span { color: var(--primary-light); font-weight: 700; }
+    input[type=range] { width: 100%; accent-color: var(--primary); height: 6px; cursor: pointer; }
+    .info-box { background: rgba(108,99,255,0.08); border: 1px solid rgba(108,99,255,0.2); border-radius: var(--radius); padding: 1rem; font-size: 0.82rem; line-height: 1.7; color: var(--text-muted); margin-top: 1rem; }
+    .info-box strong { color: var(--primary-light); }
+    .sim-stats { display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; margin-top: 1rem; }
+    .sim-stat { background: rgba(255,255,255,0.04); border-radius: var(--radius); padding: 0.75rem; text-align: center; }
+    .sim-stat .value { font-size: 1.2rem; font-weight: 800; color: var(--primary-light); }
+    .sim-stat .label { font-size: 0.75rem; color: var(--text-muted); margin-top: 0.1rem; }
+    .action-btns { display: flex; gap: 0.75rem; flex-wrap: wrap; margin-top: 1rem; }
+    .lab-description { background: var(--card-bg); border: 1px solid var(--border-color); border-radius: var(--radius-lg); padding: 1.5rem; margin-top: 1.5rem; }
+    .lab-description h3 { font-weight: 700; margin-bottom: 0.75rem; }
+    .lab-description p { color: var(--text-muted); font-size: 0.88rem; line-height: 1.7; margin-bottom: 0.5rem; }
+  </style>
+</head>
+<body>
+  <nav class="navbar">
+    <a href="index.html" class="navbar-brand">lvlBase ⚡</a>
+    <div class="navbar-nav">
+      <a href="../../app/student/dashboard.html" class="nav-link">Dashboard</a>
+      <a href="quiz.html" class="nav-link">Quiz</a>
+      <a href="ai-assistant.html" class="nav-link">AI Tutor</a>
+    </div>
+    <div class="navbar-actions">
+      <span id="nav-xp" style="color:var(--accent);font-weight:700;font-size:0.9rem"></span>
+      <a href="../../app/student/dashboard.html" class="btn btn-ghost btn-sm">← Back</a>
+    </div>
+    <div class="hamburger" id="hamburger"><span></span><span></span><span></span></div>
+  </nav>
+
+  <div class="lab-wrapper">
+    <div class="lab-hero">
+      <h1>🔬 Virtual Science Lab</h1>
+      <p style="color:var(--text-muted)">Interactive physics and chemistry simulations — learn by experimenting!</p>
+    </div>
+
+    <div class="lab-tabs">
+      <button class="lab-tab active" onclick="switchLab('projectile', this)">🎯 Projectile Motion</button>
+      <button class="lab-tab" onclick="switchLab('pendulum', this)">🔮 Simple Pendulum</button>
+      <button class="lab-tab" onclick="switchLab('optics', this)">💡 Optics &amp; Lenses</button>
+      <button class="lab-tab" onclick="switchLab('waves', this)">〜 Wave Interference</button>
+    </div>
+
+    <!-- ── Projectile Motion ── -->
+    <div class="lab-panel active" id="lab-projectile">
+      <div class="canvas-container">
+        <canvas id="canvas-projectile" height="400"></canvas>
+      </div>
+      <div class="controls-panel">
+        <h3>⚙️ Parameters</h3>
+        <div class="control-group">
+          <div class="control-label">Initial Speed (m/s) <span id="val-speed">20</span></div>
+          <input type="range" id="ctrl-speed" min="5" max="50" value="20" oninput="updateProjectile()">
+        </div>
+        <div class="control-group">
+          <div class="control-label">Launch Angle (°) <span id="val-angle">45</span></div>
+          <input type="range" id="ctrl-angle" min="5" max="85" value="45" oninput="updateProjectile()">
+        </div>
+        <div class="control-group">
+          <div class="control-label">Gravity (m/s²) <span id="val-gravity">9.8</span></div>
+          <input type="range" id="ctrl-gravity" min="1" max="20" step="0.1" value="9.8" oninput="updateProjectile()">
+        </div>
+        <div class="sim-stats">
+          <div class="sim-stat"><div class="value" id="stat-range">—</div><div class="label">Range (m)</div></div>
+          <div class="sim-stat"><div class="value" id="stat-height">—</div><div class="label">Max Height (m)</div></div>
+          <div class="sim-stat"><div class="value" id="stat-time">—</div><div class="label">Flight Time (s)</div></div>
+          <div class="sim-stat"><div class="value" id="stat-vx">—</div><div class="label">Vx (m/s)</div></div>
+        </div>
+        <div class="action-btns">
+          <button class="btn btn-primary btn-sm" onclick="launchProjectile()">🚀 Launch</button>
+          <button class="btn btn-ghost btn-sm" onclick="resetProjectile()">↺ Reset</button>
+        </div>
+        <div class="info-box">
+          <strong>Key Formulas:</strong><br>
+          Range = v²sin(2θ)/g<br>
+          Max Height = v²sin²(θ)/2g<br>
+          Time = 2v·sin(θ)/g<br>
+          <strong>Optimum angle for max range = 45°</strong>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── Pendulum ── -->
+    <div class="lab-panel" id="lab-pendulum">
+      <div class="canvas-container">
+        <canvas id="canvas-pendulum" height="400"></canvas>
+      </div>
+      <div class="controls-panel">
+        <h3>⚙️ Parameters</h3>
+        <div class="control-group">
+          <div class="control-label">Length (m) <span id="val-length">1.0</span></div>
+          <input type="range" id="ctrl-length" min="0.1" max="3" step="0.1" value="1.0" oninput="updatePendulum()">
+        </div>
+        <div class="control-group">
+          <div class="control-label">Amplitude (°) <span id="val-amp">30</span></div>
+          <input type="range" id="ctrl-amp" min="5" max="75" value="30" oninput="updatePendulum()">
+        </div>
+        <div class="control-group">
+          <div class="control-label">Gravity (m/s²) <span id="val-pg">9.8</span></div>
+          <input type="range" id="ctrl-pg" min="1" max="20" step="0.1" value="9.8" oninput="updatePendulum()">
+        </div>
+        <div class="sim-stats">
+          <div class="sim-stat"><div class="value" id="stat-period">—</div><div class="label">Period (s)</div></div>
+          <div class="sim-stat"><div class="value" id="stat-freq">—</div><div class="label">Frequency (Hz)</div></div>
+        </div>
+        <div class="action-btns">
+          <button class="btn btn-primary btn-sm" id="pend-toggle" onclick="togglePendulum()">▶ Start</button>
+          <button class="btn btn-ghost btn-sm" onclick="resetPendulum()">↺ Reset</button>
+        </div>
+        <div class="info-box">
+          <strong>Period Formula:</strong><br>
+          T = 2π√(L/g)<br><br>
+          Period depends only on <strong>length</strong> and <strong>gravity</strong> — NOT on mass or amplitude (for small angles)!
+        </div>
+      </div>
+    </div>
+
+    <!-- ── Optics ── -->
+    <div class="lab-panel" id="lab-optics">
+      <div class="canvas-container">
+        <canvas id="canvas-optics" height="400"></canvas>
+      </div>
+      <div class="controls-panel">
+        <h3>⚙️ Parameters</h3>
+        <div class="control-group">
+          <div class="control-label">Lens Type</div>
+          <div style="display:flex;gap:0.5rem;margin-top:0.3rem">
+            <button class="btn btn-sm" id="opt-convex" onclick="setLensType('convex',this)" style="background:var(--primary);color:white">Convex</button>
+            <button class="btn btn-ghost btn-sm" id="opt-concave" onclick="setLensType('concave',this)">Concave</button>
+          </div>
+        </div>
+        <div class="control-group">
+          <div class="control-label">Focal Length (cm) <span id="val-focal">10</span></div>
+          <input type="range" id="ctrl-focal" min="5" max="30" value="10" oninput="updateOptics()">
+        </div>
+        <div class="control-group">
+          <div class="control-label">Object Distance (cm) <span id="val-obj">20</span></div>
+          <input type="range" id="ctrl-obj" min="5" max="50" value="20" oninput="updateOptics()">
+        </div>
+        <div class="sim-stats">
+          <div class="sim-stat"><div class="value" id="stat-img-dist">—</div><div class="label">Image Distance</div></div>
+          <div class="sim-stat"><div class="value" id="stat-magnif">—</div><div class="label">Magnification</div></div>
+          <div class="sim-stat"><div class="value" id="stat-img-type">—</div><div class="label">Image Type</div></div>
+          <div class="sim-stat"><div class="value" id="stat-img-nature">—</div><div class="label">Nature</div></div>
+        </div>
+        <div class="info-box">
+          <strong>Lens Formula:</strong><br>
+          1/v − 1/u = 1/f<br><br>
+          Magnification: m = v/u<br><br>
+          <strong>+f</strong> = Convex lens | <strong>−f</strong> = Concave lens
+        </div>
+      </div>
+    </div>
+
+    <!-- ── Waves ── -->
+    <div class="lab-panel" id="lab-waves">
+      <div class="canvas-container">
+        <canvas id="canvas-waves" height="400"></canvas>
+      </div>
+      <div class="controls-panel">
+        <h3>⚙️ Wave 1</h3>
+        <div class="control-group">
+          <div class="control-label">Amplitude 1 <span id="val-a1">50</span></div>
+          <input type="range" id="ctrl-a1" min="5" max="100" value="50" oninput="updateWaves()">
+        </div>
+        <div class="control-group">
+          <div class="control-label">Frequency 1 (Hz) <span id="val-f1">2</span></div>
+          <input type="range" id="ctrl-f1" min="1" max="10" value="2" oninput="updateWaves()">
+        </div>
+        <h3 style="margin-top:1rem">⚙️ Wave 2</h3>
+        <div class="control-group">
+          <div class="control-label">Amplitude 2 <span id="val-a2">50</span></div>
+          <input type="range" id="ctrl-a2" min="5" max="100" value="50" oninput="updateWaves()">
+        </div>
+        <div class="control-group">
+          <div class="control-label">Frequency 2 (Hz) <span id="val-f2">2</span></div>
+          <input type="range" id="ctrl-f2" min="1" max="10" value="2" oninput="updateWaves()">
+        </div>
+        <div class="action-btns">
+          <button class="btn btn-primary btn-sm" id="wave-toggle" onclick="toggleWaves()">▶ Animate</button>
+          <button class="btn btn-ghost btn-sm" onclick="resetWaves()">↺ Reset</button>
+        </div>
+        <div class="info-box">
+          <strong>Constructive Interference:</strong> Same frequency + in phase → amplitudes add<br><br>
+          <strong>Destructive Interference:</strong> Same frequency + out of phase → amplitudes cancel<br><br>
+          <strong>Beats:</strong> Different frequencies → periodic amplitude variation
+        </div>
+      </div>
+    </div>
+
+    <!-- Description -->
+    <div class="lab-description" id="lab-desc">
+      <h3 id="lab-desc-title">🎯 Projectile Motion</h3>
+      <p id="lab-desc-body">Projectile motion describes the curved path of an object launched into the air under gravity only. The horizontal and vertical components of motion are <strong>independent</strong>. Adjust the speed and angle to see how the trajectory changes — notice that 45° always gives the maximum range!</p>
+    </div>
+  </div>
+
+  <div id="toast-container" class="toast-container"></div>
+
+  <script>
+  // ── Utilities ──────────────────────────────────────────────────────────────
+  function resizeCanvas(canvasId) {
+    const canvas = document.getElementById(canvasId);
+    const container = canvas.parentElement;
+    canvas.width = container.clientWidth - 48; // account for padding
+    return canvas;
+  }
+
+  // ══════════════════════════════════════════════════════════════════════════
+  // 1. PROJECTILE MOTION
+  // ══════════════════════════════════════════════════════════════════════════
+  let projAnimId = null;
+  let projLaunched = false;
+  let projT = 0;
+  let projParams = {};
+
+  function getProjectileParams() {
+    const v0 = parseFloat(document.getElementById('ctrl-speed').value);
+    const angle = parseFloat(document.getElementById('ctrl-angle').value);
+    const g = parseFloat(document.getElementById('ctrl-gravity').value);
+    const rad = angle * Math.PI / 180;
+    const vx = v0 * Math.cos(rad);
+    const vy = v0 * Math.sin(rad);
+    const T = 2 * vy / g;
+    const R = vx * T;
+    const H = (vy * vy) / (2 * g);
+    return { v0, angle, rad, g, vx, vy, T, R, H };
+  }
+
+  function updateProjectile() {
+    const p = getProjectileParams();
+    document.getElementById('val-speed').textContent = p.v0;
+    document.getElementById('val-angle').textContent = p.angle;
+    document.getElementById('val-gravity').textContent = p.g;
+    document.getElementById('stat-range').textContent = p.R.toFixed(1);
+    document.getElementById('stat-height').textContent = p.H.toFixed(1);
+    document.getElementById('stat-time').textContent = p.T.toFixed(2);
+    document.getElementById('stat-vx').textContent = p.vx.toFixed(1);
+    drawProjectilePath(p, 0);
+  }
+
+  function drawProjectilePath(p, currentT) {
+    const canvas = resizeCanvas('canvas-projectile');
+    const ctx = canvas.getContext('2d');
+    const W = canvas.width, H = canvas.height;
+    ctx.clearRect(0, 0, W, H);
+
+    // Grid
+    ctx.strokeStyle = 'rgba(108,99,255,0.08)';
+    ctx.lineWidth = 1;
+    for (let x = 0; x < W; x += 50) { ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, H); ctx.stroke(); }
+    for (let y = 0; y < H; y += 50) { ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(W, y); ctx.stroke(); }
+
+    // Ground
+    ctx.strokeStyle = '#00D1B2';
+    ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.moveTo(0, H - 30); ctx.lineTo(W, H - 30); ctx.stroke();
+
+    if (p.R <= 0) return;
+    const scale = Math.min((W - 60) / p.R, (H - 60) / p.H);
+    const ox = 30, oy = H - 30;
+
+    // Full trajectory path
+    ctx.beginPath();
+    ctx.strokeStyle = 'rgba(108,99,255,0.35)';
+    ctx.lineWidth = 1.5;
+    ctx.setLineDash([4, 4]);
+    for (let t = 0; t <= p.T; t += 0.02) {
+      const px = p.vx * t * scale + ox;
+      const py = oy - (p.vy * t - 0.5 * p.g * t * t) * scale;
+      t === 0 ? ctx.moveTo(px, py) : ctx.lineTo(px, py);
+    }
+    ctx.stroke();
+    ctx.setLineDash([]);
+
+    // Animated path
+    if (currentT > 0) {
+      ctx.beginPath();
+      ctx.strokeStyle = '#6C63FF';
+      ctx.lineWidth = 2.5;
+      for (let t = 0; t <= Math.min(currentT, p.T); t += 0.02) {
+        const px = p.vx * t * scale + ox;
+        const py = oy - (p.vy * t - 0.5 * p.g * t * t) * scale;
+        t === 0 ? ctx.moveTo(px, py) : ctx.lineTo(px, py);
+      }
+      ctx.stroke();
+
+      // Ball
+      if (currentT <= p.T) {
+        const bx = p.vx * currentT * scale + ox;
+        const by = oy - (p.vy * currentT - 0.5 * p.g * currentT * currentT) * scale;
+        ctx.beginPath();
+        ctx.arc(bx, by, 8, 0, 2 * Math.PI);
+        ctx.fillStyle = '#FF6B6B';
+        ctx.fill();
+        // velocity arrow
+        const vCurX = p.vx, vCurY = p.vy - p.g * currentT;
+        const arrowScale = 4;
+        drawArrow(ctx, bx, by, bx + vCurX * arrowScale, by - vCurY * arrowScale, '#FFD700');
+      }
+    }
+
+    // Labels
+    ctx.fillStyle = '#8892A4';
+    ctx.font = '12px Poppins, sans-serif';
+    ctx.fillText('0', ox - 15, oy + 15);
+    ctx.fillText(`R=${p.R.toFixed(1)}m`, ox + p.R * scale - 20, oy + 15);
+    ctx.fillText(`H=${p.H.toFixed(1)}m`, ox + p.vx * (p.T / 2) * scale + 5, oy - p.H * scale - 5);
+  }
+
+  function drawArrow(ctx, x1, y1, x2, y2, color) {
+    const angle = Math.atan2(y2 - y1, x2 - x1);
+    const len = Math.hypot(x2 - x1, y2 - y1);
+    if (len < 5) return;
+    ctx.beginPath();
+    ctx.strokeStyle = color; ctx.lineWidth = 2;
+    ctx.moveTo(x1, y1); ctx.lineTo(x2, y2);
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.fillStyle = color;
+    ctx.moveTo(x2, y2);
+    ctx.lineTo(x2 - 8 * Math.cos(angle - 0.4), y2 - 8 * Math.sin(angle - 0.4));
+    ctx.lineTo(x2 - 8 * Math.cos(angle + 0.4), y2 - 8 * Math.sin(angle + 0.4));
+    ctx.closePath(); ctx.fill();
+  }
+
+  window.launchProjectile = function() {
+    if (projAnimId) { cancelAnimationFrame(projAnimId); projAnimId = null; }
+    projT = 0;
+    projParams = getProjectileParams();
+    projLaunched = true;
+    animateProjectile();
+  };
+
+  function animateProjectile() {
+    projT += 0.04;
+    drawProjectilePath(projParams, projT);
+    if (projT < projParams.T) {
+      projAnimId = requestAnimationFrame(animateProjectile);
+    } else {
+      projAnimId = null;
+    }
+  }
+
+  window.resetProjectile = function() {
+    if (projAnimId) { cancelAnimationFrame(projAnimId); projAnimId = null; }
+    projT = 0; projLaunched = false;
+    updateProjectile();
+  };
+
+  // ══════════════════════════════════════════════════════════════════════════
+  // 2. PENDULUM
+  // ══════════════════════════════════════════════════════════════════════════
+  let pendAnimId = null;
+  let pendRunning = false;
+  let pendTheta = 0, pendOmega = 0, pendTime = 0;
+
+  function getPendulumParams() {
+    const L = parseFloat(document.getElementById('ctrl-length').value);
+    const amp = parseFloat(document.getElementById('ctrl-amp').value) * Math.PI / 180;
+    const g = parseFloat(document.getElementById('ctrl-pg').value);
+    const T = 2 * Math.PI * Math.sqrt(L / g);
+    return { L, amp, g, T };
+  }
+
+  function updatePendulum() {
+    const p = getPendulumParams();
+    document.getElementById('val-length').textContent = p.L.toFixed(1);
+    document.getElementById('val-amp').textContent = document.getElementById('ctrl-amp').value;
+    document.getElementById('val-pg').textContent = p.g;
+    document.getElementById('stat-period').textContent = p.T.toFixed(3);
+    document.getElementById('stat-freq').textContent = (1 / p.T).toFixed(3);
+    if (!pendRunning) { pendTheta = p.amp; drawPendulum(p.amp, p.L); }
+  }
+
+  function drawPendulum(theta, L) {
+    const canvas = resizeCanvas('canvas-pendulum');
+    const ctx = canvas.getContext('2d');
+    const W = canvas.width, H = canvas.height;
+    ctx.clearRect(0, 0, W, H);
+
+    const pxPerM = Math.min(W, H) * 0.35;
+    const ox = W / 2, oy = 60;
+    const bx = ox + L * pxPerM * Math.sin(theta);
+    const by = oy + L * pxPerM * Math.cos(theta);
+
+    // Arc path
+    const p = getPendulumParams();
+    ctx.beginPath();
+    ctx.strokeStyle = 'rgba(108,99,255,0.2)';
+    ctx.arc(ox, oy, L * pxPerM, -Math.PI/2 - p.amp, -Math.PI/2 + p.amp);
+    ctx.stroke();
+
+    // String
+    ctx.beginPath();
+    ctx.strokeStyle = '#8892A4'; ctx.lineWidth = 1.5;
+    ctx.moveTo(ox, oy); ctx.lineTo(bx, by); ctx.stroke();
+
+    // Pivot
+    ctx.beginPath(); ctx.arc(ox, oy, 6, 0, 2*Math.PI);
+    ctx.fillStyle = '#6C63FF'; ctx.fill();
+
+    // Bob
+    const grad = ctx.createRadialGradient(bx - 4, by - 4, 2, bx, by, 18);
+    grad.addColorStop(0, '#FF9B9B'); grad.addColorStop(1, '#FF4444');
+    ctx.beginPath(); ctx.arc(bx, by, 18, 0, 2*Math.PI);
+    ctx.fillStyle = grad; ctx.fill();
+
+    // Stats on canvas
+    ctx.fillStyle = '#8892A4'; ctx.font = '13px Poppins, sans-serif';
+    ctx.fillText(`θ = ${(theta * 180 / Math.PI).toFixed(1)}°`, 10, 20);
+    ctx.fillText(`L = ${L.toFixed(1)} m`, 10, 38);
+  }
+
+  window.togglePendulum = function() {
+    if (pendRunning) {
+      pendRunning = false;
+      if (pendAnimId) { cancelAnimationFrame(pendAnimId); pendAnimId = null; }
+      document.getElementById('pend-toggle').textContent = '▶ Start';
+    } else {
+      pendRunning = true;
+      const p = getPendulumParams();
+      if (Math.abs(pendTheta) < 0.01) pendTheta = p.amp;
+      pendOmega = 0;
+      document.getElementById('pend-toggle').textContent = '⏸ Pause';
+      animatePendulum();
+    }
+  };
+
+  function animatePendulum() {
+    const p = getPendulumParams();
+    const dt = 0.025;
+    const alpha = -(p.g / p.L) * Math.sin(pendTheta);
+    pendOmega += alpha * dt;
+    pendTheta += pendOmega * dt;
+    pendOmega *= 0.9995; // tiny damping
+    drawPendulum(pendTheta, p.L);
+    if (pendRunning) pendAnimId = requestAnimationFrame(animatePendulum);
+  }
+
+  window.resetPendulum = function() {
+    pendRunning = false;
+    if (pendAnimId) { cancelAnimationFrame(pendAnimId); pendAnimId = null; }
+    document.getElementById('pend-toggle').textContent = '▶ Start';
+    updatePendulum();
+  };
+
+  // ══════════════════════════════════════════════════════════════════════════
+  // 3. OPTICS
+  // ══════════════════════════════════════════════════════════════════════════
+  let lensType = 'convex';
+
+  window.setLensType = function(type, btn) {
+    lensType = type;
+    document.getElementById('opt-convex').className = 'btn btn-sm btn-ghost';
+    document.getElementById('opt-concave').className = 'btn btn-sm btn-ghost';
+    btn.style.background = 'var(--primary)'; btn.style.color = 'white';
+    updateOptics();
+  };
+
+  function updateOptics() {
+    const f0 = parseFloat(document.getElementById('ctrl-focal').value);
+    const u = -parseFloat(document.getElementById('ctrl-obj').value);
+    const f = lensType === 'convex' ? f0 : -f0;
+    document.getElementById('val-focal').textContent = f0;
+    document.getElementById('val-obj').textContent = Math.abs(u);
+
+    const v = 1 / (1/f + 1/u) ; // lens formula: 1/v - 1/u = 1/f  →  v = fu/(u+f)
+    const m = v / u;
+    const imgDist = isFinite(v) ? v.toFixed(1) : '∞';
+    const magnif  = isFinite(m) ? Math.abs(m).toFixed(2) : '∞';
+    const imgType = !isFinite(v) ? 'At ∞' : v > 0 ? 'Real' : 'Virtual';
+    const imgNature = !isFinite(m) ? '—' : Math.abs(m) > 1 ? 'Magnified' : Math.abs(m) < 1 ? 'Diminished' : 'Same size';
+
+    document.getElementById('stat-img-dist').textContent = imgDist + (isFinite(v) ? ' cm' : '');
+    document.getElementById('stat-magnif').textContent = magnif + 'x';
+    document.getElementById('stat-img-type').textContent = imgType;
+    document.getElementById('stat-img-nature').textContent = imgNature;
+
+    drawOptics(f, u, isFinite(v) ? v : null, isFinite(m) ? m : null);
+  }
+
+  function drawOptics(f, u, v, m) {
+    const canvas = resizeCanvas('canvas-optics');
+    const ctx = canvas.getContext('2d');
+    const W = canvas.width, H = canvas.height;
+    ctx.clearRect(0, 0, W, H);
+
+    const cx = W / 2, cy = H / 2;
+    const scale = 4; // px per cm
+
+    // Principal axis
+    ctx.strokeStyle = 'rgba(255,255,255,0.15)'; ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.moveTo(0, cy); ctx.lineTo(W, cy); ctx.stroke();
+
+    // Lens
+    ctx.strokeStyle = lensType === 'convex' ? '#6C63FF' : '#FF6B6B';
+    ctx.lineWidth = 3;
+    ctx.beginPath(); ctx.moveTo(cx, cy - 80); ctx.lineTo(cx, cy + 80); ctx.stroke();
+    // Lens arrowheads
+    if (lensType === 'convex') {
+      drawArrow(ctx, cx, cy - 80, cx, cy - 95, '#6C63FF');
+      drawArrow(ctx, cx, cy + 80, cx, cy + 95, '#6C63FF');
+    }
+
+    // Focal points
+    const fpx = cx + f * scale;
+    const fpxN = cx - f * scale;
+    ctx.beginPath(); ctx.arc(fpx, cy, 5, 0, 2*Math.PI); ctx.fillStyle = '#FFD700'; ctx.fill();
+    ctx.beginPath(); ctx.arc(fpxN, cy, 5, 0, 2*Math.PI); ctx.fillStyle = '#FFD700'; ctx.fill();
+    ctx.fillStyle = '#FFD700'; ctx.font = '11px Poppins'; ctx.textAlign = 'center';
+    ctx.fillText('F', fpx, cy + 16); ctx.fillText("F'", fpxN, cy + 16);
+
+    // Object arrow
+    const objX = cx + u * scale;
+    const objH = 50;
+    ctx.strokeStyle = '#00D1B2'; ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.moveTo(objX, cy); ctx.lineTo(objX, cy - objH); ctx.stroke();
+    drawArrow(ctx, objX, cy - objH + 10, objX, cy - objH, '#00D1B2');
+    ctx.fillStyle = '#00D1B2'; ctx.font = '11px Poppins';
+    ctx.fillText('Object', objX, cy - objH - 8);
+
+    // Image arrow
+    if (v !== null) {
+      const imgX = cx + v * scale;
+      const imgH = objH * (m !== null ? m : 1);
+      ctx.strokeStyle = m < 0 ? '#FF6B6B' : '#FF9B9B';
+      ctx.lineWidth = 2; ctx.setLineDash([4, 3]);
+      ctx.beginPath(); ctx.moveTo(imgX, cy); ctx.lineTo(imgX, cy - imgH); ctx.stroke();
+      ctx.setLineDash([]);
+      if (Math.abs(imgX - cx) < W * 0.6) {
+        ctx.fillStyle = '#FF9B9B'; ctx.font = '11px Poppins';
+        ctx.fillText('Image', imgX, cy - imgH - 8);
+      }
+    }
+
+    // Refracted rays (two principal rays)
+    ctx.strokeStyle = 'rgba(255,215,0,0.5)'; ctx.lineWidth = 1.2; ctx.setLineDash([3, 3]);
+    const objX_ = cx + u * scale;
+    const objTip = cy - objH;
+    // Ray 1: parallel → through F'
+    ctx.beginPath(); ctx.moveTo(objX_, objTip); ctx.lineTo(cx, objTip);
+    if (lensType === 'convex') ctx.lineTo(fpx + (fpx - cx) * 3, cy + (objTip - cy) * -3); // diverges
+    else { /* concave - diverge */ ctx.lineTo(cx + 200, objTip + (objTip - cy) * 0.5); }
+    ctx.stroke();
+    ctx.setLineDash([]);
+  }
+
+  // ══════════════════════════════════════════════════════════════════════════
+  // 4. WAVE INTERFERENCE
+  // ══════════════════════════════════════════════════════════════════════════
+  let waveAnimId = null;
+  let waveRunning = false;
+  let waveTime = 0;
+
+  function updateWaves() {
+    document.getElementById('val-a1').textContent = document.getElementById('ctrl-a1').value;
+    document.getElementById('val-f1').textContent = document.getElementById('ctrl-f1').value;
+    document.getElementById('val-a2').textContent = document.getElementById('ctrl-a2').value;
+    document.getElementById('val-f2').textContent = document.getElementById('ctrl-f2').value;
+    if (!waveRunning) drawWaves(0);
+  }
+
+  function drawWaves(t) {
+    const canvas = resizeCanvas('canvas-waves');
+    const ctx = canvas.getContext('2d');
+    const W = canvas.width, H = canvas.height;
+    ctx.clearRect(0, 0, W, H);
+
+    const a1 = parseFloat(document.getElementById('ctrl-a1').value) * 0.6;
+    const f1 = parseFloat(document.getElementById('ctrl-f1').value);
+    const a2 = parseFloat(document.getElementById('ctrl-a2').value) * 0.6;
+    const f2 = parseFloat(document.getElementById('ctrl-f2').value);
+
+    const rowH = H / 3;
+    const drawWave = (yCenter, amp, freq, color, label) => {
+      ctx.strokeStyle = color; ctx.lineWidth = 2;
+      ctx.beginPath();
+      for (let x = 0; x < W; x++) {
+        const y = yCenter - amp * Math.sin(2 * Math.PI * freq * (x / W) + t);
+        x === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+      }
+      ctx.stroke();
+      ctx.fillStyle = color; ctx.font = '12px Poppins'; ctx.textAlign = 'left';
+      ctx.fillText(label, 8, yCenter - amp - 6);
+    };
+
+    // Axis lines
+    ctx.strokeStyle = 'rgba(255,255,255,0.06)'; ctx.lineWidth = 1;
+    [rowH * 0.5, rowH * 1.5, rowH * 2.5].forEach(y => {
+      ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(W, y); ctx.stroke();
+    });
+
+    drawWave(rowH * 0.5, a1, f1, '#6C63FF', `Wave 1 (A=${document.getElementById('ctrl-a1').value}, f=${f1}Hz)`);
+    drawWave(rowH * 1.5, a2, f2, '#FF6B6B', `Wave 2 (A=${document.getElementById('ctrl-a2').value}, f=${f2}Hz)`);
+
+    // Superposition
+    ctx.strokeStyle = '#FFD700'; ctx.lineWidth = 2.5;
+    ctx.beginPath();
+    for (let x = 0; x < W; x++) {
+      const y = rowH * 2.5
+        - a1 * Math.sin(2 * Math.PI * f1 * (x / W) + t)
+        - a2 * Math.sin(2 * Math.PI * f2 * (x / W) + t);
+      x === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+    }
+    ctx.stroke();
+    ctx.fillStyle = '#FFD700'; ctx.font = '12px Poppins'; ctx.textAlign = 'left';
+    ctx.fillText('Superposition (Wave 1 + 2)', 8, rowH * 2.5 - Math.max(a1, a2) - 6);
+  }
+
+  window.toggleWaves = function() {
+    if (waveRunning) {
+      waveRunning = false;
+      if (waveAnimId) { cancelAnimationFrame(waveAnimId); waveAnimId = null; }
+      document.getElementById('wave-toggle').textContent = '▶ Animate';
+    } else {
+      waveRunning = true;
+      document.getElementById('wave-toggle').textContent = '⏸ Pause';
+      animateWaves();
+    }
+  };
+
+  function animateWaves() {
+    waveTime += 0.04;
+    drawWaves(waveTime);
+    if (waveRunning) waveAnimId = requestAnimationFrame(animateWaves);
+  }
+
+  window.resetWaves = function() {
+    waveRunning = false;
+    if (waveAnimId) { cancelAnimationFrame(waveAnimId); waveAnimId = null; }
+    waveTime = 0;
+    document.getElementById('wave-toggle').textContent = '▶ Animate';
+    drawWaves(0);
+  };
+
+  // ── Lab switcher ──────────────────────────────────────────────────────────
+  const labDescriptions = {
+    projectile: { title: '🎯 Projectile Motion', body: 'Projectile motion is the curved path of an object under gravity. Horizontal and vertical components are <strong>independent</strong>. The 45° angle always gives maximum range. Adjust velocity and angle to explore!' },
+    pendulum:   { title: '🔮 Simple Pendulum',   body: 'A pendulum shows periodic motion under gravity. Period T = 2π√(L/g) depends only on length and gravity — not mass or amplitude (for small angles). Try changing length vs gravity to see the effect!' },
+    optics:     { title: '💡 Optics & Lenses',   body: 'Lenses refract light to form images. A <strong>convex lens</strong> converges light and can form real or virtual images. A <strong>concave lens</strong> always forms virtual, diminished images. The Lens Formula: 1/v − 1/u = 1/f.' },
+    waves:      { title: '〜 Wave Interference',  body: 'When two waves meet, their amplitudes add (superposition). Equal frequency + in phase = constructive interference (louder/brighter). Out of phase = destructive interference (silent/dark). Different frequencies = beats!' }
+  };
+
+  window.switchLab = function(lab, btn) {
+    document.querySelectorAll('.lab-tab').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    document.querySelectorAll('.lab-panel').forEach(p => p.classList.remove('active'));
+    document.getElementById('lab-' + lab).classList.add('active');
+    const d = labDescriptions[lab];
+    document.getElementById('lab-desc-title').textContent = d.title;
+    document.getElementById('lab-desc-body').innerHTML = d.body;
+    // Init selected lab
+    setTimeout(() => {
+      if (lab === 'projectile') updateProjectile();
+      else if (lab === 'pendulum') updatePendulum();
+      else if (lab === 'optics') { document.getElementById('opt-convex').style.background = 'var(--primary)'; document.getElementById('opt-convex').style.color = 'white'; updateOptics(); }
+      else if (lab === 'waves') updateWaves();
+    }, 50);
+  };
+
+  // Init
+  const profile = JSON.parse(localStorage.getItem('lvlbase_user_profile') || '{}');
+  if (profile.totalXP) document.getElementById('nav-xp').textContent = `⚡ ${profile.totalXP} XP`;
+  document.getElementById('hamburger').addEventListener('click', () => {
+    document.getElementById('mobile-menu')?.classList.toggle('open');
+  });
+  setTimeout(() => { updateProjectile(); updatePendulum(); updateOptics(); updateWaves(); }, 100);
+  window.addEventListener('resize', () => {
+    const active = document.querySelector('.lab-panel.active');
+    if (!active) return;
+    const id = active.id.replace('lab-', '');
+    if (id === 'projectile') updateProjectile();
+    else if (id === 'pendulum') updatePendulum();
+    else if (id === 'optics') updateOptics();
+    else if (id === 'waves') updateWaves();
+  });
+  </script>
+</body>
+</html>

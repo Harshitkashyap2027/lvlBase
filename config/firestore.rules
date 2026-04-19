@@ -1,0 +1,150 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ── Helper functions ────────────────────────────────────
+
+    // Returns true when the request comes from the platform admin
+    function isAdmin() {
+      return request.auth != null
+        && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
+    }
+
+    // Returns the calling user's Firestore profile document (if it exists)
+    function callerData() {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data;
+    }
+
+    // Returns true when the calling user is a school_admin for schoolId
+    function isSchoolAdmin(schoolId) {
+      return request.auth != null
+        && callerData().role == 'school_admin'
+        && callerData().schoolId == schoolId;
+    }
+
+    // ── /users/{uid} ────────────────────────────────────────
+    match /users/{uid} {
+      // Platform admin: full access to all user documents
+      allow read, write: if isAdmin();
+
+      // Any authenticated user can read their own document
+      allow read: if request.auth != null && request.auth.uid == uid;
+
+      // Any authenticated user can update their own document
+      // (status and role fields are server-only — clients should not self-escalate)
+      allow update: if request.auth != null && request.auth.uid == uid
+        && !('role'   in request.resource.data.diff(resource.data).affectedKeys())
+        && !('status' in request.resource.data.diff(resource.data).affectedKeys())
+        && !('schoolId' in request.resource.data.diff(resource.data).affectedKeys());
+
+      // School admin can read and update (approve/reject) users belonging to their school
+      allow read: if request.auth != null
+        && callerData().role == 'school_admin'
+        && resource.data.schoolId == callerData().schoolId;
+
+      allow update: if request.auth != null
+        && callerData().role == 'school_admin'
+        && resource.data.schoolId == callerData().schoolId
+        // School admin may only change the status field
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status', 'updatedAt']);
+    }
+
+    // ── /schools/{schoolId} ─────────────────────────────────
+    match /schools/{schoolId} {
+      // Platform admin: full access
+      allow read, write: if isAdmin();
+
+      // Any authenticated user can read school documents (needed for signup school list)
+      allow read: if request.auth != null;
+
+      // School admin can update their own school profile (but not id or status)
+      allow update: if request.auth != null
+        && callerData().role == 'school_admin'
+        && callerData().schoolId == schoolId
+        && !('id'     in request.resource.data.diff(resource.data).affectedKeys())
+        && !('status' in request.resource.data.diff(resource.data).affectedKeys())
+        && !('adminEmail' in request.resource.data.diff(resource.data).affectedKeys());
+
+      // Allow new school registrations (unauthenticated write for signup flow)
+      allow create: if true;
+    }
+
+    // ── /announcements/{annId} ──────────────────────────────
+    match /announcements/{annId} {
+      // Platform admin: full access
+      allow read, write: if isAdmin();
+
+      // School admin can create/update/delete announcements for their own school
+      allow read, write: if request.auth != null
+        && callerData().role == 'school_admin'
+        && (
+          // On create: the new document must carry the admin's schoolId
+          (request.resource != null && request.resource.data.schoolId == callerData().schoolId)
+          // On read/delete: the existing document must belong to the admin's school
+          || (resource != null && resource.data.schoolId == callerData().schoolId)
+        );
+
+      // Students, teachers and parents in the same school can read announcements
+      allow read: if request.auth != null
+        && resource.data.schoolId == callerData().schoolId;
+    }
+
+    // ── /tests/{testId} ─────────────────────────────────────
+    match /tests/{testId} {
+      // Platform admin: full access
+      allow read, write: if isAdmin();
+
+      // Teachers can create tests; they must tag their own schoolId
+      allow create: if request.auth != null
+        && callerData().role == 'teacher'
+        && request.resource.data.schoolId == callerData().schoolId
+        && request.resource.data.teacherUid == request.auth.uid;
+
+      // Teachers can update their own tests
+      allow update, delete: if request.auth != null
+        && callerData().role == 'teacher'
+        && resource.data.teacherUid == request.auth.uid;
+
+      // School admin can read and archive/enable tests in their school
+      allow read: if request.auth != null
+        && callerData().role == 'school_admin'
+        && resource.data.schoolId == callerData().schoolId;
+      allow update: if request.auth != null
+        && callerData().role == 'school_admin'
+        && resource.data.schoolId == callerData().schoolId
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['archived', 'updatedAt']);
+
+      // Students and parents can read tests belonging to their school
+      allow read: if request.auth != null
+        && resource.data.schoolId == callerData().schoolId;
+    }
+
+    // ── /cheat_reports/{reportId} ───────────────────────────
+    match /cheat_reports/{reportId} {
+      // Platform admin: full access
+      allow read, write: if isAdmin();
+
+      // School admin can read and update (allow retake) reports for their school
+      allow read: if request.auth != null
+        && callerData().role == 'school_admin'
+        && resource.data.schoolId == callerData().schoolId;
+      allow update: if request.auth != null
+        && callerData().role == 'school_admin'
+        && resource.data.schoolId == callerData().schoolId
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['retakeAllowed', 'terminated', 'warnings', 'updatedAt']);
+
+      // Exam system can create cheat reports
+      allow create: if request.auth != null;
+    }
+
+    // ── /quiz_history / leaderboard ─────────────────────────
+    match /quiz_history/{docId} {
+      allow read, write: if request.auth != null && request.auth.uid == resource.data.uid;
+      allow read: if isAdmin()
+        || (request.auth != null && callerData().role == 'school_admin'
+            && resource.data.schoolId == callerData().schoolId);
+      allow create: if request.auth != null && request.resource.data.uid == request.auth.uid;
+    }
+
+  }
+}

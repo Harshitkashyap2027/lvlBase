@@ -1,0 +1,412 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>lvlBase ⚡ – Level Up Your Learning</title>
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#6C63FF">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../core/css/base.css">
+  <style>
+    .features-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.5rem; }
+    .feature-card { background: var(--card-bg); border: 1px solid var(--border-color); border-radius: var(--radius-xl); padding: 2rem; transition: var(--transition); }
+    .feature-card:hover { transform: translateY(-6px); box-shadow: var(--shadow); border-color: var(--primary); }
+    .feature-icon { font-size: 2.5rem; margin-bottom: 1rem; }
+    .feature-title { font-size: 1.1rem; font-weight: 700; margin-bottom: 0.5rem; }
+    .feature-desc { color: var(--text-muted); font-size: 0.9rem; line-height: 1.6; }
+    .guilds-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 1rem; }
+    .ranks-display { display: flex; justify-content: center; flex-wrap: wrap; gap: 1rem; margin-top: 2rem; }
+    .rank-item { display: flex; flex-direction: column; align-items: center; gap: 0.5rem; }
+    .rank-icon { font-size: 2.5rem; }
+    .rank-label { font-size: 0.8rem; color: var(--text-muted); }
+    .testimonial-card { background: var(--card-bg); border: 1px solid var(--border-color); border-radius: var(--radius-xl); padding: 2rem; }
+    .testimonial-stars { color: var(--accent); margin-bottom: 0.75rem; }
+    .testimonial-text { color: var(--text-muted); font-size: 0.95rem; line-height: 1.7; margin-bottom: 1rem; font-style: italic; }
+    .testimonial-author { font-weight: 700; }
+    .testimonial-role { font-size: 0.8rem; color: var(--text-muted); }
+    .cta-section { background: linear-gradient(135deg, var(--primary), #4A00E0); border-radius: var(--radius-xl); padding: 4rem 2rem; text-align: center; margin: 2rem 0; }
+    .floating-card { background: var(--card-bg); border: 1px solid var(--border-color); border-radius: var(--radius-xl); padding: 1.5rem; animation: float 4s ease-in-out infinite; }
+    .hero-visual { position: relative; }
+    @media (max-width: 768px) { .features-grid { grid-template-columns: 1fr; } .guilds-grid { grid-template-columns: repeat(2, 1fr); } }
+  </style>
+</head>
+<body>
+  <!-- NAVBAR -->
+  <nav class="navbar">
+    <a href="index.html" class="navbar-brand">lvlBase ⚡</a>
+    <div class="navbar-nav">
+      <a href="#features" class="nav-link">Features</a>
+      <a href="#guilds" class="nav-link">Guilds</a>
+      <a href="#ranks" class="nav-link">Rankings</a>
+      <a href="leaderboard.html" class="nav-link">Leaderboard</a>
+    </div>
+    <div class="navbar-actions">
+      <button id="pwa-install-btn" onclick="installPWA()" style="display:none;align-items:center;gap:6px;padding:0.5rem 1rem;background:linear-gradient(135deg,#6C63FF,#8B85FF);color:white;border:none;border-radius:12px;font-family:Poppins,sans-serif;font-size:0.82rem;font-weight:700;cursor:pointer">📲 Install App</button>
+      <a href="../../auth/portal-login.html" id="nav-login" class="btn btn-ghost btn-sm">Login</a>
+      <a href="../../auth/signup-student.html" class="btn btn-primary btn-sm">Sign Up</a>
+      <a href="../../app/student/dashboard.html" id="nav-user" class="btn btn-primary btn-sm" style="display:none">Dashboard</a>
+    </div>
+    <div class="hamburger" id="hamburger">
+      <span></span><span></span><span></span>
+    </div>
+  </nav>
+
+  <!-- MOBILE MENU -->
+  <div class="mobile-menu" id="mobile-menu">
+    <a href="#features" class="nav-link">Features</a>
+    <a href="#guilds" class="nav-link">Guilds</a>
+    <a href="leaderboard.html" class="nav-link">Leaderboard</a>
+    <a href="../../auth/portal-login.html" class="btn btn-primary btn-sm">Get Started</a>
+  </div>
+
+  <!-- HERO -->
+  <section class="hero">
+    <div class="container">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:4rem;align-items:center">
+        <div class="hero-content animate-fadeIn">
+          <div class="hero-tag">🎮 The Future of Education</div>
+          <h1 class="hero-title">
+            Learn. Battle.<br>
+            <span class="gradient-text">Level Up.</span>
+          </h1>
+          <p class="hero-subtitle">Join 50,000+ students turning studying into an epic adventure. Earn XP, unlock ranks, battle opponents, and master every subject.</p>
+          <div class="hero-buttons">
+            <a href="../../auth/signup-student.html" class="btn btn-primary btn-xl">⚡ Start Free Now</a>
+            <a href="school-signup.html" class="btn btn-ghost btn-xl">🏫 Register School</a>
+          </div>
+          <div class="hero-stats">
+            <div class="hero-stat-item">
+              <div class="hero-stat-value">50K+</div>
+              <div class="hero-stat-label">Students</div>
+            </div>
+            <div class="hero-stat-item">
+              <div class="hero-stat-value">1M+</div>
+              <div class="hero-stat-label">Quizzes Done</div>
+            </div>
+            <div class="hero-stat-item">
+              <div class="hero-stat-value">95%</div>
+              <div class="hero-stat-label">Score Improvement</div>
+            </div>
+            <div class="hero-stat-item">
+              <div class="hero-stat-value">SS</div>
+              <div class="hero-stat-label">Top Rank</div>
+            </div>
+          </div>
+        </div>
+        <div class="hero-visual" style="display:flex;flex-direction:column;gap:1rem">
+          <div class="floating-card" style="animation-delay:0s">
+            <div style="display:flex;align-items:center;gap:1rem">
+              <div style="font-size:2.5rem">⚡</div>
+              <div>
+                <div style="font-weight:700">Arjun Sharma just ranked up!</div>
+                <div style="color:var(--accent);font-size:0.85rem">E-Rank → D-Rank 🎉</div>
+              </div>
+            </div>
+          </div>
+          <div class="floating-card" style="animation-delay:1s;background:linear-gradient(135deg,rgba(108,99,255,0.2),var(--card-bg))">
+            <div style="display:flex;align-items:center;gap:1rem;margin-bottom:1rem">
+              <div style="font-size:2rem">📐</div>
+              <div>
+                <div style="font-weight:700">Math Quiz</div>
+                <div style="font-size:0.8rem;color:var(--text-muted)">Question 8 of 10</div>
+              </div>
+              <span style="margin-left:auto;color:var(--warning);font-weight:700">⏱ 18s</span>
+            </div>
+            <div style="font-size:0.9rem;margin-bottom:0.75rem">What is the slope of y = 3x + 5?</div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.4rem">
+              <div style="padding:0.5rem;background:rgba(0,209,178,0.2);border:1px solid var(--success);border-radius:8px;font-size:0.8rem;text-align:center;color:var(--success)">✓ 3</div>
+              <div style="padding:0.5rem;background:rgba(255,255,255,0.04);border:1px solid var(--border-color);border-radius:8px;font-size:0.8rem;text-align:center">5</div>
+            </div>
+          </div>
+          <div class="floating-card" style="animation-delay:2s">
+            <div style="display:flex;align-items:center;gap:1rem">
+              <div style="font-size:2rem">🔥</div>
+              <div>
+                <div style="font-weight:700">Priya has a 32-day streak!</div>
+                <div style="font-size:0.8rem;color:var(--text-muted)">+320 streak bonus XP earned</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- FEATURES -->
+  <section class="section" id="features">
+    <div class="container">
+      <div class="section-header">
+        <div class="hero-tag" style="margin:0 auto 1rem">✨ Everything You Need</div>
+        <h2 class="section-title">Why Students <span class="gradient-text">Love lvlBase</span></h2>
+        <p class="section-subtitle">Gamified learning that actually works – backed by science, loved by students.</p>
+      </div>
+      <div class="features-grid">
+        <div class="feature-card">
+          <div class="feature-icon">🎯</div>
+          <div class="feature-title">Adaptive Quizzes</div>
+          <p class="feature-desc">Smart question bank across Math, Science & English. Earn XP for every correct answer with instant explanations.</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon">⚔️</div>
+          <div class="feature-title">Battle Mode</div>
+          <p class="feature-desc">Challenge AI opponents in real-time knowledge battles. Health bars, power-ups, and ranked matchmaking.</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon">📈</div>
+          <div class="feature-title">Rank Progression</div>
+          <p class="feature-desc">Rise from E-Rank to legendary SS-Rank. Every quiz, battle, and study session moves you forward.</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon">🤖</div>
+          <div class="feature-title">AI Study Buddy</div>
+          <p class="feature-desc">24/7 AI assistant explains concepts, gives study tips, and answers questions in seconds.</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon">🏆</div>
+          <div class="feature-title">Live Leaderboards</div>
+          <p class="feature-desc">Compete locally and nationally. Individual ranks, guild standings, and seasonal tournaments.</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon">🎯</div>
+          <div class="feature-title">Goal Tracking</div>
+          <p class="feature-desc">Set study goals, track progress daily, and earn massive XP bonuses on completion.</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon">🔥</div>
+          <div class="feature-title">Streak System</div>
+          <p class="feature-desc">Daily login streaks multiply your XP earnings. Keep your streak alive for massive bonuses!</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon">👨‍👩‍👧</div>
+          <div class="feature-title">Parent Dashboard</div>
+          <p class="feature-desc">Parents can monitor progress, set goals, and celebrate achievements with their children.</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon">📱</div>
+          <div class="feature-title">Works Everywhere</div>
+          <p class="feature-desc">Fully responsive on all devices. Study on phone, tablet, or desktop – anytime, anywhere.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- GUILDS -->
+  <section class="section" id="guilds" style="background:var(--card-bg)">
+    <div class="container">
+      <div class="section-header">
+        <h2 class="section-title">Choose Your <span class="gradient-text">Guild</span></h2>
+        <p class="section-subtitle">Join a guild to unlock special XP bonuses and compete in team battles.</p>
+      </div>
+      <div class="guilds-grid">
+        <div class="guild-card" style="background:linear-gradient(135deg,#4C1D95,#7C3AED)">
+          <div class="guild-emoji">🌙</div>
+          <div class="guild-name">Shadow Guild</div>
+          <div class="guild-tagline">Masters of Logic</div>
+          <div><span class="guild-trait">Strategic</span><span class="guild-trait">Analytical</span></div>
+          <div class="guild-bonus">+15% Math XP</div>
+        </div>
+        <div class="guild-card" style="background:linear-gradient(135deg,#1E3A8A,#2563EB)">
+          <div class="guild-emoji">💧</div>
+          <div class="guild-name">Azure Order</div>
+          <div class="guild-tagline">Wisdom Seekers</div>
+          <div><span class="guild-trait">Scientific</span><span class="guild-trait">Curious</span></div>
+          <div class="guild-bonus">+15% Science XP</div>
+        </div>
+        <div class="guild-card" style="background:linear-gradient(135deg,#7F1D1D,#DC2626)">
+          <div class="guild-emoji">🔥</div>
+          <div class="guild-name">Inferno Legion</div>
+          <div class="guild-tagline">Battle Champions</div>
+          <div><span class="guild-trait">Competitive</span><span class="guild-trait">Fierce</span></div>
+          <div class="guild-bonus">+20% Battle XP</div>
+        </div>
+        <div class="guild-card" style="background:linear-gradient(135deg,#14532D,#16A34A)">
+          <div class="guild-emoji">⚡</div>
+          <div class="guild-name">Titan Brotherhood</div>
+          <div class="guild-tagline">Language Masters</div>
+          <div><span class="guild-trait">Eloquent</span><span class="guild-trait">Persistent</span></div>
+          <div class="guild-bonus">+15% English XP</div>
+        </div>
+        <div class="guild-card" style="background:linear-gradient(135deg,#78350F,#D97706)">
+          <div class="guild-emoji">✨</div>
+          <div class="guild-name">Zenith Circle</div>
+          <div class="guild-tagline">All-Round Champions</div>
+          <div><span class="guild-trait">Balanced</span><span class="guild-trait">Leaders</span></div>
+          <div class="guild-bonus">+10% All XP</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- RANKS -->
+  <section class="section" id="ranks">
+    <div class="container">
+      <div class="section-header">
+        <h2 class="section-title">The <span class="gradient-text">Ranking System</span></h2>
+        <p class="section-subtitle">Rise through the ranks by earning XP. Each rank unlocks new features and bragging rights.</p>
+      </div>
+      <div class="ranks-display">
+        <div class="rank-item"><div class="rank-icon">⚫</div><span class="rank-badge rank-e">E-Rank</span><div class="rank-label">0 XP</div></div>
+        <div style="display:flex;align-items:center;color:var(--text-muted)">→</div>
+        <div class="rank-item"><div class="rank-icon">🟢</div><span class="rank-badge rank-d">D-Rank</span><div class="rank-label">500 XP</div></div>
+        <div style="display:flex;align-items:center;color:var(--text-muted)">→</div>
+        <div class="rank-item"><div class="rank-icon">🔵</div><span class="rank-badge rank-c">C-Rank</span><div class="rank-label">1,500 XP</div></div>
+        <div style="display:flex;align-items:center;color:var(--text-muted)">→</div>
+        <div class="rank-item"><div class="rank-icon">🟣</div><span class="rank-badge rank-b">B-Rank</span><div class="rank-label">3,500 XP</div></div>
+        <div style="display:flex;align-items:center;color:var(--text-muted)">→</div>
+        <div class="rank-item"><div class="rank-icon">🟡</div><span class="rank-badge rank-a">A-Rank</span><div class="rank-label">7,000 XP</div></div>
+        <div style="display:flex;align-items:center;color:var(--text-muted)">→</div>
+        <div class="rank-item"><div class="rank-icon">🔴</div><span class="rank-badge rank-s">S-Rank</span><div class="rank-label">15,000 XP</div></div>
+        <div style="display:flex;align-items:center;color:var(--text-muted)">→</div>
+        <div class="rank-item"><div class="rank-icon">⭐</div><span class="rank-badge rank-ss">SS-Rank</span><div class="rank-label">30,000 XP</div></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- TESTIMONIALS -->
+  <section class="section" style="background:var(--card-bg)">
+    <div class="container">
+      <div class="section-header">
+        <h2 class="section-title">Students <span class="gradient-text">Love It</span></h2>
+      </div>
+      <div class="grid grid-3">
+        <div class="testimonial-card">
+          <div class="testimonial-stars">★★★★★</div>
+          <p class="testimonial-text">"I went from failing Math to getting 92% in my board exams! The battle mode made me study harder than ever."</p>
+          <div class="testimonial-author">Arjun Sharma</div>
+          <div class="testimonial-role">Class 10 Student • SS-Rank</div>
+        </div>
+        <div class="testimonial-card">
+          <div class="testimonial-stars">★★★★★</div>
+          <p class="testimonial-text">"Finally an app that makes studying fun! I've maintained a 45-day streak and my grades have never been better."</p>
+          <div class="testimonial-author">Priya Patel</div>
+          <div class="testimonial-role">Class 9 Student • S-Rank</div>
+        </div>
+        <div class="testimonial-card">
+          <div class="testimonial-stars">★★★★★</div>
+          <p class="testimonial-text">"As a parent, I love how I can track my daughter's progress. She actually wants to study now – it's incredible!"</p>
+          <div class="testimonial-author">Mrs. Meera Kapoor</div>
+          <div class="testimonial-role">Parent of Class 8 Student</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- CTA -->
+  <section class="section">
+    <div class="container">
+      <div class="cta-section">
+        <h2 style="font-size:2.5rem;font-weight:900;margin-bottom:1rem">Ready to Level Up? ⚡</h2>
+        <p style="color:rgba(255,255,255,0.8);font-size:1.1rem;margin-bottom:2rem">Join 50,000+ students already on their journey to SS-Rank</p>
+        <a href="../../auth/portal-login.html" class="btn btn-xl" style="background:white;color:var(--primary)">🚀 Start Your Journey – It's Free!</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- FOOTER -->
+  <footer class="footer">
+    <div class="container">
+      <div class="footer-grid">
+        <div>
+          <div class="footer-brand">lvlBase ⚡</div>
+          <p class="footer-desc">The ultimate gamified learning platform for students. Turn every study session into an epic adventure.</p>
+        </div>
+        <div>
+          <div class="footer-heading">Platform</div>
+          <div class="footer-links">
+            <a href="../../app/student/dashboard.html" class="footer-link">Dashboard</a>
+            <a href="quiz.html" class="footer-link">Quiz Mode</a>
+            <a href="battles.html" class="footer-link">Battle Arena</a>
+            <a href="leaderboard.html" class="footer-link">Leaderboard</a>
+          </div>
+        </div>
+        <div>
+          <div class="footer-heading">Features</div>
+          <div class="footer-links">
+            <a href="ai-assistant.html" class="footer-link">AI Assistant</a>
+            <a href="subjects.html" class="footer-link">Subjects</a>
+            <a href="goals.html" class="footer-link">Goals</a>
+            <a href="parent-dashboard.html" class="footer-link">Parents</a>
+          </div>
+        </div>
+        <div>
+          <div class="footer-heading">Support</div>
+          <div class="footer-links">
+            <a href="#" class="footer-link">Help Center</a>
+            <a href="#" class="footer-link">Contact Us</a>
+            <a href="#" class="footer-link">Privacy Policy</a>
+            <a href="#" class="footer-link">Terms of Service</a>
+          </div>
+        </div>
+      </div>
+      <div class="footer-bottom">
+        <span>© 2025 lvlBase. All rights reserved.</span>
+        <span>Made with ❤️ for students everywhere</span>
+      </div>
+    </div>
+  </footer>
+
+  <div id="toast-container" class="toast-container"></div>
+
+  <script src="../core/js/core/ui-components.js"></script>
+  <script>
+    // Hamburger menu
+    document.getElementById('hamburger').addEventListener('click', () => {
+      document.getElementById('mobile-menu').classList.toggle('open');
+    });
+    // Check if logged in
+    const user = localStorage.getItem('lvlbase_current_user');
+    if (user) {
+      document.getElementById('nav-login').style.display = 'none';
+      document.getElementById('nav-user').style.display = 'flex';
+    }
+    // Smooth scroll
+    document.querySelectorAll('a[href^="#"]').forEach(a => {
+      a.addEventListener('click', e => {
+        e.preventDefault();
+        const target = document.querySelector(a.getAttribute('href'));
+        if (target) target.scrollIntoView({ behavior: 'smooth' });
+        document.getElementById('mobile-menu').classList.remove('open');
+      });
+    });
+
+    // ── PWA Install Button ──
+    let deferredPrompt = null;
+    window.addEventListener('beforeinstallprompt', (e) => {
+      e.preventDefault();
+      deferredPrompt = e;
+      const installBtn = document.getElementById('pwa-install-btn');
+      if (installBtn) installBtn.style.display = 'flex';
+    });
+
+    window.addEventListener('appinstalled', () => {
+      deferredPrompt = null;
+      const installBtn = document.getElementById('pwa-install-btn');
+      if (installBtn) installBtn.style.display = 'none';
+      lvlPopup.toast('lvlBase installed on your device! 🎉', 'success');
+    });
+
+    function installPWA() {
+      if (!deferredPrompt) return;
+      deferredPrompt.prompt();
+      deferredPrompt.userChoice.then((result) => {
+        deferredPrompt = null;
+        if (result.outcome === 'accepted') {
+          const installBtn = document.getElementById('pwa-install-btn');
+          if (installBtn) installBtn.style.display = 'none';
+        }
+      });
+    }
+
+    // ── Service Worker Registration ──
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('/sw.js').catch(err => {
+          console.warn('SW registration failed:', err);
+        });
+      });
+    }
+  </script>
+</body>
+</html>

@@ -1,0 +1,22 @@
+{
+  "name": "lvlBase Student",
+  "short_name": "lvlBase",
+  "description": "Your gamified learning adventure",
+  "start_url": "/app/student/dashboard.html",
+  "scope": "/app/student/",
+  "display": "standalone",
+  "background_color": "#0A0A1A",
+  "theme_color": "#6C63FF",
+  "orientation": "portrait-primary",
+  "icons": [
+    { "src": "/assets/icons/icon-72.png", "sizes": "72x72", "type": "image/png" },
+    { "src": "/assets/icons/icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "/assets/icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ],
+  "shortcuts": [
+    { "name": "My Dashboard", "url": "/app/student/dashboard.html", "description": "View your dashboard" },
+    { "name": "Battle Arena", "url": "/app/student/arena/battle-stage.html", "description": "Enter the arena" },
+    { "name": "AI Sage", "url": "/app/student/ai/sage-chat.html", "description": "Chat with AI" }
+  ],
+  "categories": ["education", "games"]
+}

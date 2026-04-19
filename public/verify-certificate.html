@@ -1,0 +1,428 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Certificates – lvlBase ⚡</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <link rel="manifest" href="manifest.json">
+  <link rel="stylesheet" href="../core/css/base.css">
+  <style>
+    .cert-wrapper { max-width: 900px; margin: 0 auto; padding: 5.5rem 1.5rem 3rem; }
+    .cert-hero { text-align: center; margin-bottom: 2rem; }
+    .cert-hero h1 { font-size: 2rem; font-weight: 800; background: linear-gradient(135deg, var(--accent), var(--primary)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+    .cert-type-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 1rem; margin-bottom: 2rem; }
+    .cert-type-card { background: var(--card-bg); border: 2px solid var(--border-color); border-radius: var(--radius-lg); padding: 1.5rem; text-align: center; cursor: pointer; transition: var(--transition); }
+    .cert-type-card.selected { border-color: var(--accent); background: rgba(255,215,0,0.05); }
+    .cert-type-card:hover { border-color: var(--primary); }
+    .cert-type-card .ct-icon { font-size: 2.5rem; margin-bottom: 0.5rem; }
+    .cert-type-card .ct-name { font-weight: 700; font-size: 0.9rem; }
+    .cert-type-card .ct-desc { font-size: 0.78rem; color: var(--text-muted); margin-top: 0.2rem; }
+    .cert-preview { background: var(--card-bg); border: 1px solid var(--border-color); border-radius: var(--radius-lg); padding: 1.5rem; margin-bottom: 1.5rem; }
+    #cert-canvas { display: block; max-width: 100%; margin: 0 auto; border-radius: var(--radius); }
+    .cert-actions { display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap; margin-top: 1.5rem; }
+    .customize-panel { background: var(--card-bg); border: 1px solid var(--border-color); border-radius: var(--radius-lg); padding: 1.5rem; margin-bottom: 1.5rem; }
+    .form-group { margin-bottom: 1rem; }
+    .form-group label { font-size: 0.85rem; font-weight: 600; display: block; margin-bottom: 0.4rem; color: var(--text-muted); }
+    .form-group input, .form-group select { width: 100%; background: rgba(255,255,255,0.04); border: 1px solid var(--border-color); border-radius: var(--radius); padding: 0.6rem 0.875rem; color: var(--text-light); font-family: var(--font); font-size: 0.9rem; }
+    .form-group input:focus, .form-group select:focus { outline: none; border-color: var(--primary); }
+    .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+    @media(max-width:500px) { .form-row { grid-template-columns: 1fr; } }
+    .earned-list { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin-top: 1.5rem; }
+    .earned-card { background: var(--card-bg); border: 1px solid var(--border-color); border-radius: var(--radius-lg); padding: 1.25rem; text-align: center; }
+    .earned-card .icon { font-size: 2rem; margin-bottom: 0.4rem; }
+    .earned-card .ename { font-weight: 700; font-size: 0.9rem; }
+    .earned-card .edesc { font-size: 0.78rem; color: var(--text-muted); margin: 0.2rem 0 0.75rem; }
+  </style>
+</head>
+<body>
+  <nav class="navbar">
+    <a href="index.html" class="navbar-brand">lvlBase ⚡</a>
+    <div class="navbar-nav">
+      <a href="../../app/student/dashboard.html" class="nav-link">Dashboard</a>
+      <a href="leaderboard.html" class="nav-link">Ranks</a>
+    </div>
+    <div class="navbar-actions">
+      <span id="nav-xp" style="color:var(--accent);font-weight:700;font-size:0.9rem"></span>
+      <a href="../../app/student/dashboard.html" class="btn btn-ghost btn-sm">← Back</a>
+    </div>
+    <div class="hamburger" id="hamburger"><span></span><span></span><span></span></div>
+  </nav>
+
+  <div class="cert-wrapper">
+    <div class="cert-hero">
+      <h1>🏅 Certificates &amp; Achievements</h1>
+      <p style="color:var(--text-muted)">Generate, download, and share your achievement certificates!</p>
+    </div>
+
+    <!-- Certificate type -->
+    <h3 style="font-weight:700;margin-bottom:1rem">Choose Certificate Type</h3>
+    <div class="cert-type-grid" id="cert-type-grid">
+      <div class="cert-type-card selected" onclick="selectCertType('rank', this)">
+        <div class="ct-icon">🏆</div><div class="ct-name">Rank Achievement</div><div class="ct-desc">Reached a new rank milestone</div>
+      </div>
+      <div class="cert-type-card" onclick="selectCertType('quiz', this)">
+        <div class="ct-icon">🎯</div><div class="ct-name">Quiz Excellence</div><div class="ct-desc">Perfect score or quiz milestone</div>
+      </div>
+      <div class="cert-type-card" onclick="selectCertType('battle', this)">
+        <div class="ct-icon">⚔️</div><div class="ct-name">Battle Champion</div><div class="ct-desc">Battle wins achievement</div>
+      </div>
+      <div class="cert-type-card" onclick="selectCertType('streak', this)">
+        <div class="ct-icon">🔥</div><div class="ct-name">Streak Master</div><div class="ct-desc">Consistent learning streak</div>
+      </div>
+      <div class="cert-type-card" onclick="selectCertType('completion', this)">
+        <div class="ct-icon">📚</div><div class="ct-name">Course Completion</div><div class="ct-desc">Completed a full subject</div>
+      </div>
+    </div>
+
+    <!-- Customize -->
+    <div class="customize-panel">
+      <h3 style="font-weight:700;margin-bottom:1rem">⚙️ Customize</h3>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Recipient Name</label>
+          <input type="text" id="cert-name" placeholder="Your full name" oninput="generateCert()">
+        </div>
+        <div class="form-group">
+          <label>Achievement Title</label>
+          <input type="text" id="cert-title" placeholder="e.g. S-Rank Scholar" oninput="generateCert()">
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Date</label>
+          <input type="date" id="cert-date" oninput="generateCert()">
+        </div>
+        <div class="form-group">
+          <label>Theme</label>
+          <select id="cert-theme" onchange="generateCert()">
+            <option value="dark">🌌 Dark (Default)</option>
+            <option value="gold">🌟 Gold & Purple</option>
+            <option value="ocean">🌊 Ocean Blue</option>
+            <option value="fire">🔥 Fire Red</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <!-- Preview -->
+    <div class="cert-preview">
+      <h3 style="font-weight:700;margin-bottom:1rem">👁️ Preview</h3>
+      <canvas id="cert-canvas" width="800" height="560"></canvas>
+    </div>
+
+    <!-- Actions -->
+    <div class="cert-actions">
+      <button class="btn btn-primary" onclick="downloadCert()">⬇️ Download PNG</button>
+      <button class="btn btn-ghost" onclick="shareCert()">🔗 Share</button>
+      <button class="btn btn-ghost" onclick="copyCertLink()">📋 Copy Link</button>
+    </div>
+
+    <!-- Earned certificates -->
+    <h3 style="font-weight:700;margin:2rem 0 1rem">🏅 Your Earned Certificates</h3>
+    <div class="earned-list" id="earned-list"></div>
+  </div>
+
+  <div id="toast-container" class="toast-container"></div>
+
+  <script>
+  let certType = 'rank';
+  const THEMES = {
+    dark:  { bg1:'#0A0A1A', bg2:'#1A1A2E', border:'#6C63FF', text:'#E8E8FF', accent:'#FFD700', sub:'#8892A4' },
+    gold:  { bg1:'#1A0E00', bg2:'#2D1A00', border:'#FFD700', text:'#FFF8E1', accent:'#FFD700', sub:'#D4AA70' },
+    ocean: { bg1:'#001E2E', bg2:'#002A40', border:'#00D1B2', text:'#E0F8FF', accent:'#00D1B2', sub:'#66B2C8' },
+    fire:  { bg1:'#1A0000', bg2:'#2D0500', border:'#FF6B6B', text:'#FFE8E8', accent:'#FF6B6B', sub:'#CC8080' }
+  };
+
+  const CERT_DETAILS = {
+    rank:       { icon:'🏆', subtitle:'has demonstrated exceptional academic achievement and reached a new rank in the' },
+    quiz:       { icon:'🎯', subtitle:'has shown outstanding performance in quizzes and demonstrated mastery of subject matter in the' },
+    battle:     { icon:'⚔️', subtitle:'has proven their competitive spirit and knowledge in academic battles in the' },
+    streak:     { icon:'🔥', subtitle:'has shown dedication and consistency in daily learning with an impressive streak in the' },
+    completion: { icon:'📚', subtitle:'has successfully completed a comprehensive course curriculum in the' }
+  };
+
+  window.selectCertType = function(type, el) {
+    certType = type;
+    document.querySelectorAll('.cert-type-card').forEach(c => c.classList.remove('selected'));
+    el.classList.add('selected');
+    generateCert();
+  };
+
+  function generateCert() {
+    const canvas = document.getElementById('cert-canvas');
+    const ctx = canvas.getContext('2d');
+    const W = canvas.width, H = canvas.height;
+    const themeKey = document.getElementById('cert-theme').value;
+    const t = THEMES[themeKey];
+    const name = document.getElementById('cert-name').value.trim() || 'Champion Scholar';
+    const title = document.getElementById('cert-title').value.trim() || defaultTitle();
+    const dateVal = document.getElementById('cert-date').value;
+    const dateStr = dateVal ? new Date(dateVal).toLocaleDateString('en-US', { year:'numeric', month:'long', day:'numeric' }) : new Date().toLocaleDateString('en-US', { year:'numeric', month:'long', day:'numeric' });
+    const det = CERT_DETAILS[certType];
+
+    // Background gradient
+    const grad = ctx.createLinearGradient(0, 0, W, H);
+    grad.addColorStop(0, t.bg1);
+    grad.addColorStop(1, t.bg2);
+    ctx.fillStyle = grad;
+    ctx.fillRect(0, 0, W, H);
+
+    // Decorative border
+    ctx.strokeStyle = t.border;
+    ctx.lineWidth = 4;
+    ctx.strokeRect(12, 12, W - 24, H - 24);
+    ctx.lineWidth = 1;
+    ctx.strokeStyle = t.border + '66';
+    ctx.strokeRect(22, 22, W - 44, H - 44);
+
+    // Corner ornaments
+    drawCornerOrnament(ctx, 35, 35, t.border);
+    drawCornerOrnament(ctx, W - 35, 35, t.border, true);
+    drawCornerOrnament(ctx, 35, H - 35, t.border, false, true);
+    drawCornerOrnament(ctx, W - 35, H - 35, t.border, true, true);
+
+    // Watermark stars
+    ctx.globalAlpha = 0.04;
+    ctx.font = '180px serif';
+    ctx.fillStyle = t.accent;
+    ctx.textAlign = 'center';
+    ctx.fillText('★', W * 0.2, H * 0.65);
+    ctx.fillText('★', W * 0.8, H * 0.65);
+    ctx.globalAlpha = 1;
+
+    // lvlBase branding
+    ctx.font = 'bold 16px Poppins, sans-serif';
+    ctx.fillStyle = t.border;
+    ctx.textAlign = 'center';
+    ctx.fillText('lvlBase ⚡', W / 2, 60);
+
+    // Achievement icon
+    ctx.font = '64px serif';
+    ctx.fillText(det.icon, W / 2, 145);
+
+    // Certificate of Achievement
+    ctx.font = 'bold 13px Poppins, sans-serif';
+    ctx.fillStyle = t.sub;
+    ctx.letterSpacing = '4px';
+    ctx.fillText('C E R T I F I C A T E   O F   A C H I E V E M E N T', W / 2, 180);
+    ctx.letterSpacing = '0';
+
+    // Separator line
+    const sepGrad = ctx.createLinearGradient(100, 0, W - 100, 0);
+    sepGrad.addColorStop(0, 'transparent');
+    sepGrad.addColorStop(0.3, t.border);
+    sepGrad.addColorStop(0.7, t.border);
+    sepGrad.addColorStop(1, 'transparent');
+    ctx.strokeStyle = sepGrad;
+    ctx.lineWidth = 1.5;
+    ctx.beginPath(); ctx.moveTo(100, 192); ctx.lineTo(W - 100, 192); ctx.stroke();
+
+    // "This certifies that"
+    ctx.font = 'italic 14px Georgia, serif';
+    ctx.fillStyle = t.sub;
+    ctx.fillText('This certifies that', W / 2, 225);
+
+    // Recipient name
+    ctx.font = 'bold 38px Georgia, serif';
+    ctx.fillStyle = t.text;
+    ctx.fillText(name, W / 2, 275);
+
+    // Name underline
+    const nameW = ctx.measureText(name).width;
+    ctx.strokeStyle = t.accent;
+    ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.moveTo(W/2 - nameW/2, 282); ctx.lineTo(W/2 + nameW/2, 282); ctx.stroke();
+
+    // Subtitle
+    ctx.font = '13px Poppins, sans-serif';
+    ctx.fillStyle = t.sub;
+    const subtitleLines = wrapText(ctx, det.subtitle, W - 160);
+    subtitleLines.forEach((line, i) => ctx.fillText(line, W / 2, 312 + i * 20));
+
+    // Achievement title (highlighted)
+    ctx.font = 'bold 22px Poppins, sans-serif';
+    ctx.fillStyle = t.accent;
+    ctx.fillText(title, W / 2, 370);
+
+    // Date
+    ctx.font = '13px Poppins, sans-serif';
+    ctx.fillStyle = t.sub;
+    ctx.fillText('Date of Issuance: ' + dateStr, W / 2, 410);
+
+    // Bottom signature line
+    const sigY = 468;
+    ctx.strokeStyle = t.sub + '88'; ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.moveTo(W/2 - 120, sigY); ctx.lineTo(W/2 + 120, sigY); ctx.stroke();
+    ctx.font = 'bold 13px Poppins, sans-serif';
+    ctx.fillStyle = t.sub;
+    ctx.fillText('lvlBase Platform', W / 2, sigY + 16);
+    ctx.font = '11px Poppins, sans-serif';
+    ctx.fillText('Authorised Digital Certificate', W / 2, sigY + 30);
+
+    // Certificate ID
+    const certId = 'LVL-' + btoa(name + title).replace(/[^A-Z0-9]/gi, '').substring(0, 8).toUpperCase();
+    ctx.font = '10px monospace';
+    ctx.fillStyle = t.sub + '88';
+    ctx.fillText('ID: ' + certId, W / 2, H - 30);
+  }
+
+  function drawCornerOrnament(ctx, x, y, color, flipX = false, flipY = false) {
+    ctx.save();
+    ctx.translate(x, y);
+    ctx.scale(flipX ? -1 : 1, flipY ? -1 : 1);
+    ctx.strokeStyle = color; ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    ctx.moveTo(-20, 0); ctx.lineTo(0, 0); ctx.lineTo(0, 20);
+    ctx.moveTo(-12, -8); ctx.lineTo(-8, -12);
+    ctx.stroke();
+    ctx.restore();
+  }
+
+  function wrapText(ctx, text, maxW) {
+    const words = text.split(' ');
+    const lines = [];
+    let line = '';
+    words.forEach(w => {
+      const test = line ? line + ' ' + w : w;
+      if (ctx.measureText(test).width > maxW) { lines.push(line); line = w; }
+      else line = test;
+    });
+    if (line) lines.push(line);
+    return lines;
+  }
+
+  function defaultTitle() {
+    const profile = JSON.parse(localStorage.getItem('lvlbase_user_profile') || '{}');
+    const defaults = { rank:'S-Rank Scholar', quiz:'Quiz Excellence', battle:'Battle Champion', streak:'30-Day Streak Master', completion:'Mathematics Completion' };
+    return defaults[certType] || 'Academic Excellence';
+  }
+
+  // ── Download ──────────────────────────────────────────────────────────────
+  window.downloadCert = function() {
+    generateCert();
+    const canvas = document.getElementById('cert-canvas');
+    const link = document.createElement('a');
+    const name = (document.getElementById('cert-name').value.trim() || 'certificate').replace(/\s+/g, '_');
+    link.download = `lvlBase_${name}_${certType}.png`;
+    link.href = canvas.toDataURL('image/png');
+    link.click();
+    showToast('Certificate downloaded! 🎉', 'success');
+  };
+
+  window.shareCert = function() {
+    const canvas = document.getElementById('cert-canvas');
+    canvas.toBlob(async (blob) => {
+      if (navigator.share && blob) {
+        try {
+          const file = new File([blob], 'certificate.png', { type: 'image/png' });
+          await navigator.share({ title: 'My lvlBase Certificate', files: [file] });
+        } catch (_) {
+          fallbackShare();
+        }
+      } else {
+        fallbackShare();
+      }
+    });
+  };
+
+  function fallbackShare() {
+    const url = window.location.href;
+    navigator.clipboard.writeText(url).then(() => showToast('Link copied to clipboard!', 'success')).catch(() => {});
+  }
+
+  window.copyCertLink = function() {
+    navigator.clipboard.writeText(window.location.href)
+      .then(() => showToast('Link copied!', 'success'))
+      .catch(() => {});
+  };
+
+  // ── Earned certificates (from profile) ────────────────────────────────────
+  function renderEarned() {
+    const profile = JSON.parse(localStorage.getItem('lvlbase_user_profile') || '{}');
+    const achievements = profile.achievements || [];
+    const list = document.getElementById('earned-list');
+
+    const certDefs = [
+      { id:'first_quiz',    icon:'🎯', name:'First Quiz',     desc:'Completed first quiz',        unlocked: achievements.includes('first_quiz') },
+      { id:'streak_7',      icon:'🔥', name:'Week Warrior',   desc:'7-day login streak',           unlocked: achievements.includes('streak_7') },
+      { id:'perfect_score', icon:'💯', name:'Perfectionist',  desc:'Scored 100% on a quiz',        unlocked: achievements.includes('perfect_score') },
+      { id:'battle_win',    icon:'⚔️',  name:'Battle Victor',  desc:'Won first guild battle',       unlocked: achievements.includes('battle_win') || (profile.battlesWon || 0) > 0 },
+      { id:'rank_up_c',     icon:'📈', name:'C-Rank Scholar', desc:'Reached C-Rank (1500 XP)',     unlocked: (profile.totalXP || 0) >= 1500 },
+      { id:'quiz_10',       icon:'📚', name:'Bookworm',       desc:'Completed 10 quizzes',         unlocked: achievements.includes('quiz_10') }
+    ];
+
+    const earned = certDefs.filter(c => c.unlocked);
+    const locked = certDefs.filter(c => !c.unlocked);
+
+    list.innerHTML = '';
+
+    if (earned.length === 0) {
+      list.innerHTML = `<div style="grid-column:1/-1;text-align:center;color:var(--text-muted);padding:2rem">
+        <div style="font-size:3rem;margin-bottom:0.75rem">🔒</div>
+        <div>No certificates earned yet. Complete quizzes and battles to unlock them!</div>
+      </div>`;
+      return;
+    }
+
+    earned.forEach(c => {
+      const div = document.createElement('div');
+      div.className = 'earned-card';
+      div.innerHTML = `<div class="icon">${c.icon}</div><div class="ename">${c.name}</div><div class="edesc">${c.desc}</div>
+        <button class="btn btn-sm btn-primary" onclick="autofillAndGenerate('${c.id}','${c.name}')">🎖️ Generate</button>`;
+      list.appendChild(div);
+    });
+
+    locked.forEach(c => {
+      const div = document.createElement('div');
+      div.className = 'earned-card';
+      div.style.opacity = '0.4';
+      div.innerHTML = `<div class="icon">🔒</div><div class="ename">${c.name}</div><div class="edesc">${c.desc} (Locked)</div>`;
+      list.appendChild(div);
+    });
+  }
+
+  window.autofillAndGenerate = function(id, name) {
+    const profile = JSON.parse(localStorage.getItem('lvlbase_user_profile') || '{}');
+    document.getElementById('cert-name').value = profile.displayName || 'Champion';
+    document.getElementById('cert-title').value = name;
+    document.getElementById('cert-date').valueAsDate = new Date();
+    // Map id to cert type
+    const typeMap = { first_quiz:'quiz', perfect_score:'quiz', streak_7:'streak', battle_win:'battle', rank_up_c:'rank', quiz_10:'quiz' };
+    const type = typeMap[id] || 'rank';
+    const typeEl = document.querySelector(`.cert-type-card[onclick*="${type}"]`);
+    if (typeEl) selectCertType(type, typeEl);
+    else generateCert();
+    document.getElementById('cert-canvas').scrollIntoView({ behavior:'smooth' });
+  };
+
+  // Toast helper
+  function showToast(msg, type = 'info') {
+    const container = document.getElementById('toast-container');
+    const toast = document.createElement('div');
+    toast.className = `toast toast-${type}`;
+    toast.textContent = msg;
+    container.appendChild(toast);
+    setTimeout(() => toast.classList.add('show'), 10);
+    setTimeout(() => { toast.classList.remove('show'); setTimeout(() => toast.remove(), 300); }, 3000);
+  }
+
+  // Init
+  const profile = JSON.parse(localStorage.getItem('lvlbase_user_profile') || '{}');
+  if (profile.displayName) document.getElementById('cert-name').value = profile.displayName;
+  if (profile.totalXP) {
+    document.getElementById('nav-xp').textContent = `⚡ ${profile.totalXP} XP`;
+    // Auto-fill title based on rank
+    const ranks = [{xp:30000,t:'SS-Rank Mythic'},{xp:15000,t:'S-Rank Legend'},{xp:7000,t:'A-Rank Master'},{xp:3500,t:'B-Rank Expert'},{xp:1500,t:'C-Rank Scholar'},{xp:500,t:'D-Rank Apprentice'}];
+    const rank = ranks.find(r => profile.totalXP >= r.xp);
+    if (rank) document.getElementById('cert-title').value = rank.t;
+  }
+  document.getElementById('cert-date').valueAsDate = new Date();
+  document.getElementById('hamburger').addEventListener('click', () => {
+    document.getElementById('mobile-menu')?.classList.toggle('open');
+  });
+  generateCert();
+  renderEarned();
+  </script>
+</body>
+</html>

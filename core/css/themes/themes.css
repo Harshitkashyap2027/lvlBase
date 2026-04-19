@@ -1,0 +1,39 @@
+/* Light Theme */
+[data-theme="light"] {
+  --primary: #6C63FF;
+  --primary-dark: #5A52E8;
+  --dark-bg: #F5F5FF;
+  --card-bg: #FFFFFF;
+  --border-color: rgba(108,99,255,0.2);
+  --text-light: #1A1A2E;
+  --text-muted: #666688;
+}
+/* Dark Theme (default) */
+[data-theme="dark"], :root {
+  --primary: #6C63FF;
+  --primary-dark: #5A52E8;
+  --secondary: #FF6B6B;
+  --accent: #FFD700;
+  --success: #00D1B2;
+  --warning: #FF9F43;
+  --danger: #FF4444;
+  --dark-bg: #0A0A1A;
+  --card-bg: #1A1A2E;
+  --border-color: rgba(108,99,255,0.2);
+  --text-light: #E8E8FF;
+  --text-muted: #8892A4;
+  --radius: 12px;
+  --radius-xl: 24px;
+  --shadow: 0 4px 20px rgba(0,0,0,0.3);
+  --shadow-heavy: 0 8px 40px rgba(0,0,0,0.5);
+  --transition: all 0.3s ease;
+}
+/* High Contrast Theme */
+[data-theme="high-contrast"] {
+  --primary: #00FF88;
+  --dark-bg: #000000;
+  --card-bg: #111111;
+  --text-light: #FFFFFF;
+  --text-muted: #AAAAAA;
+  --border-color: rgba(0,255,136,0.3);
+}
